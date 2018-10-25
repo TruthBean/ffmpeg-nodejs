@@ -1,0 +1,21 @@
+{
+  "name": "ffmpeg_nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "install": "npm install",
+    "configure": "node ./node_modules/node-gyp/bin/node-gyp.js configure",
+    "clean": "node ./node_modules/node-gyp/bin/node-gyp.js clean",
+    "build": "node ./node_modules/node-gyp/bin/node-gyp.js build",
+    "rebuild": "node ./node_modules/node-gyp/bin/node-gyp.js rebuild",
+    "test": "node ./test/test_video2images.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "jpeg-js": "^0.3.4",
+    "node-addon-api": "^1.5.0",
+    "node-gyp": "^3.8.0"
+  }
+}
