@@ -16,26 +16,28 @@
 #include <sys/time.h>
 
 #include <jpeglib.h>
-
-#include "./node_api.h"
+// #include <turbojpeg.h>
 
 typedef struct Video2ImageStream {
     AVFormatContext *format_context;
-    AVPacket *packet;
+    AVStream *video_stream;
     int video_stream_idx;
     AVCodecContext *video_codec_context;
-    AVFrame *frame;
     int ret;
+    char *error_message;
     bool isRtsp;
 } Video2ImageStream;
 
+typedef struct FrameData {
+    unsigned long file_size;
+    unsigned char *file_data;
+} FrameData;
+
 Video2ImageStream open_inputfile(const char *filename);
 
-int video2images_stream(Video2ImageStream vis, int quality, napi_env env, napi_value *result,
-    void (callback_fileinfo(napi_env env, int file_size, char *file_info, napi_value *result))
-    );
+FrameData video2images_stream(Video2ImageStream vis, int quality, int frame_persecond, int chose_frames);
 
-void release(AVPacket *packet, AVFrame *frame, AVCodecContext *video_codec_context, 
-    AVFormatContext *format_context, bool isRtsp);
+void release(AVCodecContext *video_codec_context,
+             AVFormatContext *format_context, bool isRtsp);
 
 #endif
