@@ -1,35 +1,71 @@
 const fs = require('fs');
-const ffmpeg_nodejs = require('../index');
+const FFmpegNode = require('../index');
 
 let rtsp_addr = "rtsp://admin:iec123456@192.168.1.71:554/unicast/c1/s0/live";
-
+let dir = "/mnt/h/oceanai-workspace/ffmpeg-node";
 async function main() {
+    let ffmpegNode = new FFmpegNode(rtsp_addr);
     try {
-        await ffmpeg_nodejs.initReadingVideo(rtsp_addr);
+        // await ffmpegNode.init(rtsp_addr);
     } catch (err) {
         console.error(err);
     }
-    let total_frame = 5 * 60 * 60 * 24;
-    let buffer;
-    for (let i = 0; i < total_frame; i++) {
-        let now = new Date();
-        console.info(now.getTime());
-        try {
-            buffer = await ffmpeg_nodejs.video2JpegStream(100, 25, 25);
-            await fs.writeFileSync("/opt/ffmpeg_nodejs/tmp/images/buffer" + now.getSeconds() + i + ".jpg", buffer, (err) => {
-                if (err) console.error(err);
+    let begin = new Date();
+    console.info(begin.getTime());
+
+    ffmpegNode.data(100, 1);
+
+    let i = 0;
+    ffmpegNode.on("data", async (buffer) => {
+        (function (buffer) {
+            console.info(buffer);
+            setInterval(async () => {
+                // 模拟延迟300ms
+                for (var start = Date.now(); Date.now() - start <= 300;) { }
+                let t1 = new Date();
+                console.info(buffer);
+                console.info(t1.getTime() - begin.getTime());
+                begin = new Date();
+                let name = dir + "/tmp/images/buffer-" + t1.getHours() + "-" + t1.getMinutes() + "-" + t1.getSeconds() + "-" + i + ".jpg";
+                console.info(name);
+                await fs.writeFileSync(name, buffer, (err) => {
+                    if (err) console.error(err);
+                });
+                console.info("====================================");
+                if (t1.getSeconds() % 59 === 0) ffmpegNode.destroy();
+                console.info("555555555555555555555");
+                console.info(i++);
+            }, 0);
+        })(buffer)
+    });
+
+    /* try {
+        for (let i = 0; i < 15; i++)
+            await ffmpegNode.readJpegStream(100, 1, async (buffer) => {
+                for (var start = Date.now(); Date.now() - start <= 300;) { }
+                let t1 = new Date();
+                console.info(buffer);
+                console.info(t1.getTime() - begin.getTime());
+                let name = "/mnt/h/oceanai-workspace/ffmpeg-node/tmp/images/buffer-" + t1.getHours() + "-" + t1.getMinutes() + "-" + t1.getSeconds() + ".jpg";
+                console.info(name);
+                await fs.writeFileSync(name, buffer, (err) => {
+                    if (err) console.error(err);
+                });
+                console.info("====================================");
+                if (i == 5) ffmpegNode.destroy();
             });
-        } catch (error) {
-            console.error(error);
-            // ffmpeg_nodejs.destroyStream();
-            // try {
-            //     await ffmpeg_nodejs.initReadingVideo(rtsp_addr);
-            // } catch (err) {
-            //     console.error(err);
-            // }
-        }
-    }
-    ffmpeg_nodejs.destroyStream();
+    } catch (error) {
+        console.error(error);
+        // ffmpeg_nodejs.destroyStream();
+        // try {
+        //     await ffmpeg_nodejs.initReadingVideo(rtsp_addr);
+        // } catch (err) {
+        //     console.error(err);
+        // }
+    }*/
+    // ffmpegNode.destroy();
+
+    console.info("----------------------");
 }
 
 main().then();

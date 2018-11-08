@@ -16,7 +16,6 @@
 #include <sys/time.h>
 
 #include <jpeglib.h>
-// #include <turbojpeg.h>
 
 typedef struct Video2ImageStream {
     AVFormatContext *format_context;
@@ -26,6 +25,7 @@ typedef struct Video2ImageStream {
     int ret;
     char *error_message;
     bool isRtsp;
+    int frame_rate;
 } Video2ImageStream;
 
 typedef struct FrameData {
@@ -35,7 +35,7 @@ typedef struct FrameData {
 
 Video2ImageStream open_inputfile(const char *filename);
 
-FrameData video2images_stream(Video2ImageStream vis, int quality, int frame_persecond, int chose_frames);
+FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames);
 
 void release(AVCodecContext *video_codec_context,
              AVFormatContext *format_context, bool isRtsp);

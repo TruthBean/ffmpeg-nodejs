@@ -84,7 +84,6 @@ napi_value handle_video2image_stream(napi_env env, napi_callback_info info)
 {
     av_log(NULL, AV_LOG_DEBUG, "begin handle_video2image_stream time: %ld\n", get_time());
     napi_status status;
-    napi_value result;
 
     size_t argc = 3;
     napi_value argv[3];
@@ -106,23 +105,26 @@ napi_value handle_video2image_stream(napi_env env, napi_callback_info info)
     }
     av_log(NULL, AV_LOG_DEBUG, "input quality: %d\n", quality);
 
-    // int frames_persecond
-    int frames_persecond = 25;
-    status = napi_get_value_int32(env, argv[1], &frames_persecond);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "frame_persecond is invalid number");
-    }
-    av_log(NULL, AV_LOG_DEBUG, "input frame_persecond: %d\n", frames_persecond);
-
     // int chose_frames
-    int chose_frames = 5;
-    status = napi_get_value_int32(env, argv[2], &chose_frames);
+    int chose_frames = 1;
+    status = napi_get_value_int32(env, argv[1], &chose_frames);
     if (status != napi_ok)
     {
         napi_throw_error(env, NULL, "chose_frames is invalid number");
     }
     av_log(NULL, AV_LOG_DEBUG, "input chose_frames: %d\n", chose_frames);
+
+    // callback
+    napi_valuetype callback;
+    status = napi_typeof(env, argv[2], &callback);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "wrong javascript type");
+    }
+    if (callback != napi_function)
+    {
+        napi_throw_error(env, NULL, "param is not a function");
+    }
 
     // 处理图片
     if (vis.ret < 0)
@@ -139,18 +141,23 @@ napi_value handle_video2image_stream(napi_env env, napi_callback_info info)
         napi_throw_error(env, NULL, "create promise error");
     }
 
-    FrameData frameData = video2images_stream(vis, quality, frames_persecond, chose_frames);
+    FrameData frameData = video2images_stream(vis, quality, chose_frames);
+
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Create buffer error");
+    }
 
     // 文件内容转换成javascript buffer
+    napi_value buffer_pointer;
     void *buffer_data;
-    status = napi_create_buffer_copy(env, frameData.file_size, frameData.file_data, &buffer_data, &result);
-    // status = napi_create_buffer(env, frameData.file_size, buffer_data, &result);
-    // memcpy(buffer_data, frameData.file_data, frameData.file_size);
-    // av_log(NULL, AV_LOG_DEBUG, "拷贝成功2\n");
+    status = napi_create_buffer_copy(env, frameData.file_size, frameData.file_data, &buffer_data, &buffer_pointer);
     av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frameData.file_size);
     av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
     free(frameData.file_data);
-    // free(tmp_file_data);
+
+    napi_value result;
+    napi_call_function(env, &thisArg, argv[2], 1, &buffer_pointer, &result);
 
     if (frameData.file_size == 0 || status != napi_ok)
     {
@@ -168,9 +175,11 @@ napi_value handle_video2image_stream(napi_env env, napi_callback_info info)
         {
             napi_throw_error(env, NULL, "promise reject error");
         }
-    } else {
+    }
+    else
+    {
         av_log(NULL, AV_LOG_DEBUG, "---> 2 ---> promise resolve\n");
-        status = napi_resolve_deferred(env, deferred, result);
+        status = napi_resolve_deferred(env, deferred, buffer_pointer);
         if (status != napi_ok)
         {
             napi_throw_error(env, NULL, "promise resolve error");

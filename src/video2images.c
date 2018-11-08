@@ -17,16 +17,6 @@ time_t get_time() {
     return result;
 }
 
-// static void rgb2jpeg_with_turbo(uint8_t *raw_data, int quality, unsigned int width, unsigned int height,
-//                                 unsigned char **jpeg_data, unsigned long *jpeg_size) {
-//     const int COLOR_COMPONENTS = 3;
-//     tjhandle _jpegCompressor = tjInitCompress();
-//     tjCompress2(_jpegCompressor, raw_data, width, 0, height, TJPF_RGB,
-//                 jpeg_data, jpeg_size, TJSAMP_444, quality,
-//                 TJFLAG_FASTDCT);
-//     tjDestroy(_jpegCompressor);
-// }
-
 static void jpeg_write_mem(uint8_t *raw_data, int quality, unsigned int width, unsigned int height,
                            unsigned char **jpeg_data, unsigned long *jpeg_size) {
 
@@ -107,10 +97,7 @@ static FrameData copy_frame_data(const AVFrame *frame, int quality, const AVCode
     /* 图片是解码器分配的内存，不需要释放 */
     target_frame->quality = 1;
 
-    //保存jpeg图片
-    // enum AVPixelFormat target_pixel_format = AV_PIX_FMT_YUVJ420P;
-    // const char *suffix = "yuv";
-
+    //保存jpeg格式
     enum AVPixelFormat target_pixel_format = AV_PIX_FMT_RGB24;
 
     int align = 1; // input_pixel_format->linesize[0] % 32;
@@ -127,8 +114,28 @@ static FrameData copy_frame_data(const AVFrame *frame, int quality, const AVCode
     // 设置图像转换上下文
     int target_width = codec_context->width;
     int target_height = codec_context->height;
+
+    enum AVPixelFormat pixFormat;
+    switch (codec_context->pix_fmt) {
+        case AV_PIX_FMT_YUVJ420P :
+            pixFormat = AV_PIX_FMT_YUV420P;
+            break;
+        case AV_PIX_FMT_YUVJ422P  :
+            pixFormat = AV_PIX_FMT_YUV422P;
+            break;
+        case AV_PIX_FMT_YUVJ444P   :
+            pixFormat = AV_PIX_FMT_YUV444P;
+            break;
+        case AV_PIX_FMT_YUVJ440P :
+            pixFormat = AV_PIX_FMT_YUV440P;
+            break;
+        default:
+            pixFormat = codec_context->pix_fmt;
+            break;
+    }
+
     struct SwsContext *sws_context = sws_getContext(codec_context->width, codec_context->height,
-                                                    codec_context->pix_fmt,
+                                                    pixFormat,
                                                     target_width, target_height,
                                                     target_pixel_format,
                                                     SWS_BICUBIC, NULL, NULL, NULL);
@@ -154,7 +161,6 @@ static FrameData copy_frame_data(const AVFrame *frame, int quality, const AVCode
     unsigned long jpeg_size = 0;
     jpeg_write_mem(images_dst_data[0], quality, (unsigned int) target_width, (unsigned int) target_height, &jpeg_data,
                    &jpeg_size);
-    // rgb2jpeg_with_turbo(images_dst_data[0], quality, target_width, target_height, &jpeg_data, &jpeg_size);
     result.file_data = (unsigned char*) malloc((size_t) (jpeg_size + 1));
     memcpy(result.file_data, jpeg_data, jpeg_size);
     free(jpeg_data);
@@ -288,6 +294,10 @@ Video2ImageStream open_inputfile(const char *filename) {
 
     video_stream = format_context->streams[video_stream_idx];
 
+    // 每秒多少帧
+    int input_frame_rate = video_stream->r_frame_rate.num / video_stream->r_frame_rate.den;
+    av_log(NULL, AV_LOG_DEBUG, "input video frame rate: %d\n", input_frame_rate);
+
     AVCodec *codec = NULL;
     enum AVCodecID codec_id = video_stream->codecpar->codec_id;
     if (codec_id == AV_CODEC_ID_H264) {
@@ -359,6 +369,7 @@ Video2ImageStream open_inputfile(const char *filename) {
     result.video_stream = video_stream;
     result.video_codec_context = video_codec_context;
     result.ret = 0;
+    result.frame_rate = input_frame_rate;
 
     return result;
 }
@@ -397,7 +408,9 @@ static void close(AVFrame *frame, AVPacket *packet) {
     }
 }
 
-FrameData video2images_stream(Video2ImageStream vis, int quality, int frame_persecond, int chose_frames) {
+static int pts = 0;
+
+FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames) {
 
     FrameData result = {
             .file_size = 0,
@@ -434,11 +447,20 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int frame_pers
         if (orig_pkt->stream_index == vis.video_stream_idx) {
             if (orig_pkt->flags & AV_PKT_FLAG_KEY) {
                 av_log(NULL, AV_LOG_DEBUG, "key frame\n");
+                if (orig_pkt->pts < 0) {
+                    pts = 0;
+                }
             }
             if (vis.video_stream == NULL) {
                 av_log(NULL, AV_LOG_ERROR, "error\n");
             }
-            long pts_time = (long) (orig_pkt->pts * av_q2d(vis.video_stream->time_base) * frame_persecond);
+
+            long pts_time = 0;
+            if (orig_pkt->pts >= 0)
+                pts_time = (long) (orig_pkt->pts * av_q2d(vis.video_stream->time_base) * vis.frame_rate);
+            else
+                pts_time = pts++;
+
             // 大概50微秒
             ret = avcodec_send_packet(vis.video_codec_context, orig_pkt);
 #ifdef _WIN32
@@ -452,7 +474,9 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int frame_pers
                 return result;
             }
 
-            do {
+            int c = vis.frame_rate / chose_frames;
+            long check = pts_time % c;
+            // do {
                 // 大概30微秒
                 ret = avcodec_receive_frame(vis.video_codec_context, frame);
 #ifdef _WIN32
@@ -463,35 +487,40 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int frame_pers
                 //解码一帧数据
                 if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                     av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
-                    break;
+                    //break;
+                    continue;
                 }
                 if (ret < 0) {
                     av_log(NULL, AV_LOG_ERROR, "Decode error\n");
                     close(frame, orig_pkt);
-                    break;
+                    // break;
+                    continue;
                 }
                 
-                av_log(NULL, AV_LOG_INFO, "pts_time: %ld chose_frames: %d\n", pts_time, chose_frames);
-                if (pts_time % chose_frames == 0) {
+                av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d\n", pts_time, chose_frames);
+                if (check == c - 1) {
                     result = copy_frame_data(frame, quality, vis.video_codec_context);
                     av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", result.file_size);
                     if (result.file_data == NULL) {
                         av_log(NULL, AV_LOG_DEBUG, "file_data NULL\n");
-                        break;
+                        // break;
+                        continue;
                     }
                     if (result.file_size > 0) {
                         close(frame, orig_pkt);
                         return result;
                     }
                 } else {
-                    break;
+                    // break;
+                    continue;
                 }
 
-                ret = (int) orig_pkt->data;
-                orig_pkt->data += ret;
-                orig_pkt->size -= ret;
+            //     ret = *(int*) orig_pkt->data;
+            //     orig_pkt->data += ret;
+            //     orig_pkt->size -= ret;
+            //     av_frame_unref(frame);
 
-            } while (orig_pkt->size > 0);
+            // } while (orig_pkt->size > 0);
             av_packet_unref(orig_pkt);
         }
     }

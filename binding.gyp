@@ -12,8 +12,7 @@
                 "-lavformat",
                 "-lavutil",
                 "-lavdevice",
-                "-ljpeg",
-                # "-lturbojpeg"
+                "-ljpeg"
                 ]
         }
     ]

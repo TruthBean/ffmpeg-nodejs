@@ -1,40 +1,62 @@
+const EventEmitter = require('events').EventEmitter;
 const ffmpeg_nodejs = require('./build/Release/ffmpeg_nodejs');
 
-const exportObj = {};
+class FFmpegNode extends EventEmitter {
+    /**
+     * 
+     * @param {string} url 
+     */
+    constructor(url) {
+        super();
+        if (typeof url !== "string")
+            throw Error("url must be string type");
+        this.url = url;
+        this.__destroy = false;
+        ffmpeg_nodejs.initReadingVideo(this.url);
+    }
 
-/**
- * @param {string} input_filename
- * @return {Promise<void>} promise
- */
-exportObj.initReadingVideo = (input_filename) => {
-    if (typeof input_filename !== "string")
-        throw Error("input_filename must be string type");
-    return ffmpeg_nodejs.initReadingVideo(input_filename);
+    /**
+     * read jpeg data of frame from this url video stream
+     * @param {number} jpeg_quality default 80
+     * @param {number} frames: chose frames per second, default 1
+     * @param {Function} callback callback function
+     * @return {Promise<Buffer>} jpeg buffer
+     */
+    readJpegStream(quality, frames, callback) {
+        if (!this.__destroy) {
+            if (typeof quality !== "number") quality = 80;
+            else if (quality <= 0) quality = 80;
+            else if (quality >= 100) quality = 100;
+    
+            if (typeof frames !== "number" || frames <= 0) frames = 1;
+    
+            if (typeof callback !== "function") callback = function (buffer) { };
+    
+            return ffmpeg_nodejs.video2JpegStream(parseInt(quality), parseInt(frames), callback);
+        }
+    }
+
+    async data(quality, frames, callback) {
+        let buffer;
+        try {
+            while ((buffer = await this.readJpegStream(quality, frames, callback)) !== undefined) {
+                this.emit("data", buffer);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    /**
+     * destroy this url video stream
+     */
+    destroy() {
+        if (!this.__destroy) {
+            console.info("destroy...");
+            this.__destroy = true;
+            return ffmpeg_nodejs.destroyStream();
+        }
+    }
 }
 
-/**
- * @param {string} input_filename
- * @param {number} jpeg quality percent, default 80
- * @param {number} frames_per_second default 25
- * @param {number} chose_frames_per_second default 5
- * @param {Function} callback callback function with param returned buffer
- * @return {Promise<Buffer>} buffer
- */
-exportObj.video2JpegStream = (quality, frames_per_second, chose_frames_per_second) => {
-    if (typeof quality !== "number") quality = 80;
-    else if (quality <= 0) quality = 80;
-    else if (quality >= 100) quality = 100;
-    
-    if (typeof frames_per_second !== "number" || frames_per_second <= 0) frames_per_second = 25;
-
-    if (typeof chose_frames_per_second !== "number" || chose_frames_per_second <= 0 
-        || chose_frames_per_second > frames_per_second) chose_frames_per_second = 5;
-
-    return ffmpeg_nodejs.video2JpegStream(parseInt(quality), parseInt(frames_per_second), parseInt(chose_frames_per_second));
-};
-
-exportObj.destroyStream = () => {
-    return ffmpeg_nodejs.destroyStream();
-};
-
-module.exports = exportObj;
+module.exports = FFmpegNode;
