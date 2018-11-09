@@ -58,7 +58,7 @@ static void jpeg_write_mem(uint8_t *raw_data, int quality, unsigned int width, u
         // 需要压缩成jpeg图片的位图数据缓冲区
         row_pointer[0] = &raw_data[jpeg_struct.next_scanline * row_stride];
         // 1表示写入一行
-        (void) jpeg_write_scanlines(&jpeg_struct, row_pointer, 1);
+        (void)jpeg_write_scanlines(&jpeg_struct, row_pointer, 1);
     }
 
     // 结束压缩循环
@@ -82,9 +82,8 @@ static FrameData copy_frame_data(const AVFrame *frame, int quality, const AVCode
     int images_dst_linesize[4];
 
     FrameData result = {
-            .file_size = 0,
-            .file_data = NULL
-    };
+        .file_size = 0,
+        .file_data = NULL};
 
     AVFrame *target_frame = av_frame_alloc();
     if (!target_frame) {
@@ -107,7 +106,7 @@ static FrameData copy_frame_data(const AVFrame *frame, int quality, const AVCode
                                                 align);
 
     // 申请一张图片数据的存储空间
-    uint8_t *outBuff = (uint8_t *) av_malloc((size_t) picture_size);
+    uint8_t *outBuff = (uint8_t *)av_malloc((size_t)picture_size);
     av_image_fill_arrays(target_frame->data, target_frame->linesize, outBuff, target_pixel_format,
                          codec_context->width, codec_context->height, align);
 
@@ -117,16 +116,16 @@ static FrameData copy_frame_data(const AVFrame *frame, int quality, const AVCode
 
     enum AVPixelFormat pixFormat;
     switch (codec_context->pix_fmt) {
-        case AV_PIX_FMT_YUVJ420P :
+        case AV_PIX_FMT_YUVJ420P:
             pixFormat = AV_PIX_FMT_YUV420P;
             break;
-        case AV_PIX_FMT_YUVJ422P  :
+        case AV_PIX_FMT_YUVJ422P:
             pixFormat = AV_PIX_FMT_YUV422P;
             break;
-        case AV_PIX_FMT_YUVJ444P   :
+        case AV_PIX_FMT_YUVJ444P:
             pixFormat = AV_PIX_FMT_YUV444P;
             break;
-        case AV_PIX_FMT_YUVJ440P :
+        case AV_PIX_FMT_YUVJ440P:
             pixFormat = AV_PIX_FMT_YUV440P;
             break;
         default:
@@ -151,17 +150,16 @@ static FrameData copy_frame_data(const AVFrame *frame, int quality, const AVCode
     av_image_alloc(images_dst_data, images_dst_linesize,
                    target_frame->width, target_frame->height, target_frame->format, 16);
 
-
     /* copy decoded frame to destination buffer: this is required since rawvideo expects non aligned data */
     av_image_copy(images_dst_data, images_dst_linesize,
-                  (const uint8_t **) (target_frame->data), target_frame->linesize,
+                  (const uint8_t **)(target_frame->data), target_frame->linesize,
                   target_frame->format, target_frame->width, target_frame->height);
 
     unsigned char *jpeg_data;
     unsigned long jpeg_size = 0;
-    jpeg_write_mem(images_dst_data[0], quality, (unsigned int) target_width, (unsigned int) target_height, &jpeg_data,
+    jpeg_write_mem(images_dst_data[0], quality, (unsigned int)target_width, (unsigned int)target_height, &jpeg_data,
                    &jpeg_size);
-    result.file_data = (unsigned char*) malloc((size_t) (jpeg_size + 1));
+    result.file_data = (unsigned char *)malloc((size_t)(jpeg_size + 1));
     memcpy(result.file_data, jpeg_data, jpeg_size);
     free(jpeg_data);
     jpeg_data = NULL;
@@ -202,15 +200,15 @@ Video2ImageStream open_inputfile(const char *filename) {
     AVDictionary *dictionary = NULL;
 
     Video2ImageStream result = {
-            .format_context         = NULL,
-            .video_stream_idx       = -1,
-            .video_codec_context    = NULL,
-            .ret                    = -1
-    };
+        .format_context = NULL,
+        .video_stream_idx = -1,
+        .video_codec_context = NULL,
+        .ret = -1
+        };
 
     // handle rtsp addr
     const char *PREFIX = "rtsp://";
-    size_t lenpre = strlen(PREFIX),
+    size_t lenpre = strlen(PREFIX), 
             lenstr = strlen(filename);
     bool _bool = lenstr < lenpre ? false : strncmp(filename, PREFIX, lenpre) == 0;
     result.isRtsp = _bool;
@@ -230,14 +228,16 @@ Video2ImageStream open_inputfile(const char *filename) {
 
             if (av_dict_set(&dictionary, "rtsp_transport", "udp", 0) < 0) {
                 av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to udp error\n");
+                av_dict_set(&dictionary, "flush_packets", "1", 0);
             }
         }
 
         // -r 1
-        av_dict_set(&dictionary, "analyzeduration", "0", 0);
-        av_dict_set(&dictionary, "flush_packets", "1", 0);
-        av_dict_set(&dictionary, "fflags", "nobuffer", 0);
-        av_dict_set(&dictionary, "buffer_size", "1024000", 0);
+        // av_dict_set(&dictionary, "analyzeduration", "0", 0);
+        // av_dict_set(&dictionary, "fflags", "nobuffer", 0);
+        // av_dict_set(&dictionary, "max_delay", "500000", 0);
+        // av_dict_set(&dictionary, "buffer_size", "4096", 0); //327680
+        // av_dict_set(&dictionary, "rtbufsize", "4096", 0);
 
         if (av_dict_set(&dictionary, "hwaccel_device", "1", 0) < 0) {
             av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
@@ -296,14 +296,14 @@ Video2ImageStream open_inputfile(const char *filename) {
 
     // 每秒多少帧
     int input_frame_rate = video_stream->r_frame_rate.num / video_stream->r_frame_rate.den;
-    av_log(NULL, AV_LOG_DEBUG, "input video frame rate: %d\n", input_frame_rate);
+    av_log(NULL, AV_LOG_INFO, "input video frame rate: %d\n", input_frame_rate);
 
     AVCodec *codec = NULL;
     enum AVCodecID codec_id = video_stream->codecpar->codec_id;
     if (codec_id == AV_CODEC_ID_H264) {
         codec = avcodec_find_decoder_by_name("h264_cuvid");
     } else if (codec_id == AV_CODEC_ID_HEVC) {
-        codec = avcodec_find_decoder_by_name("h264_cuvid");
+        codec = avcodec_find_decoder_by_name("hevc_nvenc");
     }
     if (codec == NULL)
         codec = avcodec_find_decoder(video_stream->codecpar->codec_id);
@@ -386,7 +386,6 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
     if (video_codec_context)
         avcodec_free_context(&video_codec_context);
 
-
     if (format_context) {
         avformat_close_input(&format_context);
         avformat_free_context(format_context);
@@ -413,9 +412,9 @@ static int pts = 0;
 FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames) {
 
     FrameData result = {
-            .file_size = 0,
-            .file_data = NULL
-    };
+        .file_size = 0,
+        .file_data = NULL
+        };
 
     int ret;
     AVFrame *frame = av_frame_alloc();
@@ -457,7 +456,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
             long pts_time = 0;
             if (orig_pkt->pts >= 0)
-                pts_time = (long) (orig_pkt->pts * av_q2d(vis.video_stream->time_base) * vis.frame_rate);
+                pts_time = (long)(orig_pkt->pts * av_q2d(vis.video_stream->time_base) * vis.frame_rate);
             else
                 pts_time = pts++;
 
@@ -476,51 +475,40 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
             int c = vis.frame_rate / chose_frames;
             long check = pts_time % c;
-            // do {
-                // 大概30微秒
-                ret = avcodec_receive_frame(vis.video_codec_context, frame);
+
+            // 大概30微秒
+            ret = avcodec_receive_frame(vis.video_codec_context, frame);
 #ifdef _WIN32
-                av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %lli\n", get_time());
+            av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %lli\n", get_time());
 #else
-                av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %li\n", get_time());
+            av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %li\n", get_time());
 #endif
-                //解码一帧数据
-                if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                    av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
-                    //break;
+            //解码一帧数据
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
+                continue;
+            }
+            if (ret < 0) {
+                av_log(NULL, AV_LOG_ERROR, "Decode error\n");
+                close(frame, orig_pkt);
+                return result;
+            }
+
+            av_log(NULL, AV_LOG_INFO, "pts_time: %ld chose_frames: %d frame_rate: %d\n", pts_time, chose_frames, vis.frame_rate);
+            if (check == c - 1) {
+                result = copy_frame_data(frame, quality, vis.video_codec_context);
+                av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", result.file_size);
+                if (result.file_data == NULL) {
+                    av_log(NULL, AV_LOG_DEBUG, "file_data NULL\n");
                     continue;
                 }
-                if (ret < 0) {
-                    av_log(NULL, AV_LOG_ERROR, "Decode error\n");
+                if (result.file_size > 0) {
                     close(frame, orig_pkt);
-                    // break;
-                    continue;
+                    return result;
                 }
-                
-                av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d\n", pts_time, chose_frames);
-                if (check == c - 1) {
-                    result = copy_frame_data(frame, quality, vis.video_codec_context);
-                    av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", result.file_size);
-                    if (result.file_data == NULL) {
-                        av_log(NULL, AV_LOG_DEBUG, "file_data NULL\n");
-                        // break;
-                        continue;
-                    }
-                    if (result.file_size > 0) {
-                        close(frame, orig_pkt);
-                        return result;
-                    }
-                } else {
-                    // break;
-                    continue;
-                }
-
-            //     ret = *(int*) orig_pkt->data;
-            //     orig_pkt->data += ret;
-            //     orig_pkt->size -= ret;
-            //     av_frame_unref(frame);
-
-            // } while (orig_pkt->size > 0);
+            } else {
+                // continue;
+            }
             av_packet_unref(orig_pkt);
         }
     }

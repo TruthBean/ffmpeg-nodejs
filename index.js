@@ -2,6 +2,7 @@ const EventEmitter = require('events').EventEmitter;
 const ffmpeg_nodejs = require('./build/Release/ffmpeg_nodejs');
 
 class FFmpegNode extends EventEmitter {
+
     /**
      * 
      * @param {string} url 
@@ -12,7 +13,16 @@ class FFmpegNode extends EventEmitter {
             throw Error("url must be string type");
         this.url = url;
         this.__destroy = false;
-        ffmpeg_nodejs.initReadingVideo(this.url);
+        ffmpeg_nodejs.initReadingVideo(this.url).then();
+    }
+
+    config() {
+        this.fflags = "nobuffer";
+        // 500ms
+        this.maxDelay = "500000";
+        // max 327680
+        this.bufferSize = "4096";
+        this.rtbufsize = "4096";
     }
 
     /**
@@ -27,11 +37,11 @@ class FFmpegNode extends EventEmitter {
             if (typeof quality !== "number") quality = 80;
             else if (quality <= 0) quality = 80;
             else if (quality >= 100) quality = 100;
-    
+
             if (typeof frames !== "number" || frames <= 0) frames = 1;
-    
+
             if (typeof callback !== "function") callback = function (buffer) { };
-    
+
             return ffmpeg_nodejs.video2JpegStream(parseInt(quality), parseInt(frames), callback);
         }
     }
