@@ -8,6 +8,8 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavfilter/buffersink.h>
+#include <libavfilter/buffersrc.h>
 #include <libswscale/swscale.h>
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
@@ -28,14 +30,23 @@ typedef struct Video2ImageStream {
     int frame_rate;
 } Video2ImageStream;
 
+enum ImageStreamType {
+    YUV,
+    JPEG,
+    RGB
+};
+
 typedef struct FrameData {
     unsigned long file_size;
     unsigned char *file_data;
 } FrameData;
 
-Video2ImageStream open_inputfile(const char *filename);
+Video2ImageStream open_inputfile(const char *filename, const bool nobuffer);
 
-FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames);
+int init_filters(const char *filters_descr, AVCodecContext *dec_ctx, AVRational time_base,
+                    AVFilterContext *buffersink_ctx, AVFilterContext *buffersrc_ctx);
+
+FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type);
 
 void release(AVCodecContext *video_codec_context,
              AVFormatContext *format_context, bool isRtsp);
