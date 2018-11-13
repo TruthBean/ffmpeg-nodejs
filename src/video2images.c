@@ -19,12 +19,7 @@ time_t get_time() {
 
 static void jpeg_write_mem(uint8_t *raw_data, int quality, unsigned int width, unsigned int height,
                            unsigned char **jpeg_data, unsigned long *jpeg_size) {
-
-#ifdef _WIN32
-    av_log(NULL, AV_LOG_DEBUG, "begin jpeg_write_mem time: %lli\n", get_time());
-#else
     av_log(NULL, AV_LOG_DEBUG, "begin jpeg_write_mem time: %li\n", get_time());
-#endif
 
     // 分配和一个jpeg压缩对象
     struct jpeg_compress_struct jpeg_struct;
@@ -65,146 +60,14 @@ static void jpeg_write_mem(uint8_t *raw_data, int quality, unsigned int width, u
     jpeg_finish_compress(&jpeg_struct);
     // 释放jpeg压缩对象
     jpeg_destroy_compress(&jpeg_struct);
-#ifdef _WIN32
-    av_log(NULL, AV_LOG_DEBUG, "compress one picture success: %lld.\n", get_time());
-#else
+
     av_log(NULL, AV_LOG_DEBUG, "compress one picture success: %li.\n", get_time());
-#endif
+
 }
 
-// static AVBufferRef *hw_device_ctx = NULL;
-// static enum AVPixelFormat hw_pix_fmt;
-// static bool isGpu = false;
+static FrameData copy_frame_raw_data(const AVFrame *frame, const AVCodecContext *codec_context, enum ImageStreamType type) {
 
-// static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type) {
-//     int err = 0;
-
-//     if ((err = av_hwdevice_ctx_create(&hw_device_ctx, type,
-//                                       NULL, NULL, 0)) < 0) {
-//         fprintf(stderr, "Failed to create specified HW device.\n");
-//         return err;
-//     }
-//     ctx->hw_device_ctx = av_buffer_ref(hw_device_ctx);
-
-//     return err;
-// }
-
-// static enum AVPixelFormat get_hw_format(AVCodecContext *ctx,
-//                                         const enum AVPixelFormat *pix_fmts) {
-//     const enum AVPixelFormat *p;
-
-    
-
-//     for (p = pix_fmts; *p != -1; p++) {
-//         fprintf(stdout, "1. get_hw_format: %d\n", hw_pix_fmt);
-//         fprintf(stdout, "2. p: %d\n", *p);
-
-//         enum AVPixelFormat pixFormat;
-//         switch (*p) {
-//             case AV_PIX_FMT_YUVJ420P:
-//                 pixFormat = AV_PIX_FMT_YUV420P;
-//                 break;
-//             case AV_PIX_FMT_YUVJ422P:
-//                 pixFormat = AV_PIX_FMT_YUV422P;
-//                 break;
-//             case AV_PIX_FMT_YUVJ444P:
-//                 pixFormat = AV_PIX_FMT_YUV444P;
-//                 break;
-//             case AV_PIX_FMT_YUVJ440P:
-//                 pixFormat = AV_PIX_FMT_YUV440P;
-//                 break;
-//             default:
-//                 pixFormat = *p;
-//                 break;
-//         }
-
-//         if (pixFormat == hw_pix_fmt)
-//             return *p;
-//     }
-
-//     fprintf(stderr, "Failed to get HW surface format.\n");
-//     return AV_PIX_FMT_NONE;
-// }
-
-static FrameData copy_frame_data(const AVFrame *frame, const AVCodecContext *codec_context) {
-
-#ifdef _WIN32
-    av_log(NULL, AV_LOG_DEBUG, "begin copy_frame_data time: %lld\n", get_time());
-#else
-    av_log(NULL, AV_LOG_DEBUG, "begin copy_frame_data time: %li\n", get_time());
-#endif
-
-    FrameData result = {
-        .file_size = 0,
-        .file_data = NULL
-        };
-
-    av_log(NULL, AV_LOG_DEBUG, "saving frame %3d\n", codec_context->frame_number);
-
-    // =====================================================================================================================
-    // uint8_t *images_dst_data[4] = {NULL};
-    // int images_dst_linesize[4];
-    // int yuv_data_size = av_image_alloc(images_dst_data, images_dst_linesize, frame->width, frame->height, frame->format, 1);
-
-    // /* copy decoded frame to destination buffer:
-    //  * this is required since rawvideo expects non aligned data
-    //  */
-    // ptrdiff_t dst_linesizes[4], src_linesizes[4];
-    // int i = 0;
-    // for (i = 0; i < 4; i++) {
-    //     dst_linesizes[i] = images_dst_linesize[i];
-    //     src_linesizes[i] = frame->linesize[i];
-    // }
-
-    // av_image_copy_uc_from(images_dst_data, dst_linesizes,(const uint8_t **) (frame->data), src_linesizes,
-    //                      frame->format, frame->width, frame->height);
-    // =====================================================================================================================
-
-    // yuv_data_size = av_image_get_buffer_size(frame->format, frame->width, frame->height, 1);
-    // av_log(NULL, AV_LOG_INFO, "buffer size: %d\n", yuv_data_size);
-    // result.file_data = (unsigned char *)malloc((size_t) (yuv_data_size));
-    // result.file_size = (unsigned long)av_image_copy_to_buffer(result.file_data, yuv_data_size,
-    //                                                           (const uint8_t **) images_dst_data, dst_linesizes,
-    //                                                           frame->format, frame->width, frame->height, 1);
-
-    // =====================================================================================================================
-    // AVFrame *sw_frame = av_frame_alloc();
-    // AVFrame *tmp_frame = NULL;
-
-    // av_log(NULL, AV_LOG_DEBUG, "hw_pix_fmt : %d\n", hw_pix_fmt);
-    // if (frame->format == hw_pix_fmt) {
-    //     /* retrieve data from GPU to CPU */
-    //     av_log(NULL, AV_LOG_INFO, "retrieve data from GPU to CPU\n");
-    //     if (av_hwframe_transfer_data(sw_frame, frame, 0) < 0) {
-    //         av_log(NULL, AV_LOG_ERROR, "Error transferring the data to system memory\n");
-    //     }
-    //     tmp_frame = sw_frame;
-    // } else {
-    //     av_log(NULL, AV_LOG_INFO, "origin frame\n");
-    //     tmp_frame = frame;
-    // }
-
-    // int yuv_data_size = av_image_get_buffer_size(tmp_frame->format, tmp_frame->width, tmp_frame->height, 1);
-    // av_log(NULL, AV_LOG_DEBUG, "buffer size: %d\n", yuv_data_size);
-    // result.file_data = (unsigned char *)malloc((size_t) (yuv_data_size));
-    // result.file_size = (unsigned long)av_image_copy_to_buffer(result.file_data, yuv_data_size,
-    //                                                           (const uint8_t **) tmp_frame->data, tmp_frame->linesize,
-    //                                                           tmp_frame->format, tmp_frame->width, tmp_frame->height, 1);
-
-    // av_frame_unref(sw_frame);
-    // av_frame_free(&sw_frame);
-
-    // ========================================================================================================================
-
-    return result;
-}
-
-static FrameData copy_frame_rgb_data(const AVFrame *frame, const AVCodecContext *codec_context) {
-    #ifdef _WIN32
-    av_log(NULL, AV_LOG_DEBUG, "begin copy_frame_rgb_data time: %lld\n", get_time());
-#else
     av_log(NULL, AV_LOG_DEBUG, "begin copy_frame_rgb_data time: %li\n", get_time());
-#endif
 
     FrameData result = {
         .file_size = 0,
@@ -221,7 +84,9 @@ static FrameData copy_frame_rgb_data(const AVFrame *frame, const AVCodecContext 
     target_frame->quality = 1;
 
     //保存jpeg格式
-    enum AVPixelFormat target_pixel_format = AV_PIX_FMT_RGB24;
+    enum AVPixelFormat target_pixel_format = AV_PIX_FMT_YUV420P;
+    if (type == RGB) target_pixel_format = AV_PIX_FMT_RGB24;
+    
 
     int align = 1; // input_pixel_format->linesize[0] % 32;
 
@@ -286,11 +151,8 @@ static FrameData copy_frame_rgb_data(const AVFrame *frame, const AVCodecContext 
 
 static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int quality, 
                                                         const AVCodecContext *codec_context) {
-#ifdef _WIN32
-    av_log(NULL, AV_LOG_DEBUG, "begin copy_frame_data time: %lld\n", get_time());
-#else
     av_log(NULL, AV_LOG_DEBUG, "begin copy_frame_data time: %li\n", get_time());
-#endif
+
     uint8_t *images_dst_data[4] = {NULL};
     int images_dst_linesize[4];
 
@@ -398,11 +260,9 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
 }
 
 Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
-#ifdef _WIN32
-    av_log(NULL, AV_LOG_DEBUG, "start time: %lld\n", get_time());
-#else
+
     av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
-#endif
+
     int video_stream_idx = -1;
 
     AVStream *video_stream = NULL;
@@ -478,16 +338,6 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
         }
     }
 
-    // enum AVHWDeviceType type = av_hwdevice_find_type_by_name("cuda");
-    // fprintf(stdout, "AVHWDeviceType %d\n", type);
-    // if (type == AV_HWDEVICE_TYPE_NONE) {
-    //     av_log(NULL, AV_LOG_ERROR, "Device type cuda is not supported.\n");
-    //     av_log(NULL, AV_LOG_DEBUG, "Available device types:");
-    //     while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE)
-    //         av_log(NULL, AV_LOG_DEBUG, " %s", av_hwdevice_get_type_name(type));
-    //     av_log(NULL, AV_LOG_DEBUG, "\n");
-    // }
-
     format_context = NULL;
     av_log(NULL, AV_LOG_DEBUG, "input file: %s\n", filename);
     // format_context必须初始化，否则报错
@@ -554,22 +404,6 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
         return result;
     }
 
-    // enum AVPixelFormat hw_pix_fmt = AV_PIX_FMT_NONE;
-    // for (int i = 0;; i++) {
-    //     const AVCodecHWConfig *config = avcodec_get_hw_config(codec, i);
-    //     if (!config) {
-    //         av_log(NULL, AV_LOG_ERROR, "Decoder %s does not support device type %s.\n",
-    //                 codec->name, av_hwdevice_get_type_name(type));
-    //         break;
-    //     }
-    //     if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
-    //         config->device_type == type) {
-    //         hw_pix_fmt = config->pix_fmt;
-    //         isGpu = true;
-    //         break;
-    //     }
-    // }
-
     video_codec_context = avcodec_alloc_context3(codec);
     if (!video_codec_context) {
         av_log(NULL, AV_LOG_ERROR, "Failed to allocate the %s codec context\n",
@@ -588,15 +422,6 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
         result.ret = -8;
         return result;
     }
-
-    // if (hw_pix_fmt != AV_PIX_FMT_NONE) {
-    //     video_codec_context->get_format  = get_hw_format;
-    //     av_opt_set_int(video_codec_context, "refcounted_frames", 1, 0);
-
-    //     if (hw_decoder_init(video_codec_context, type) < 0) {
-    //         av_log(NULL, AV_LOG_ERROR, "decoder init error\n");
-    //     }
-    // }
 
     if (avcodec_open2(video_codec_context, codec, &opts) < 0) {
         av_log(NULL, AV_LOG_WARNING, "Failed to open %s codec\n", av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
@@ -819,18 +644,10 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
     }
 
     /* read frames from the file */
-#ifdef _WIN32
-    av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %lld\n", get_time());
-#else
     av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_time());
-#endif
     // 大概300微秒
     while (av_read_frame(vis.format_context, orig_pkt) >= 0) {
-#ifdef _WIN32
-        av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %lld\n", get_time());
-#else
         av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_time());
-#endif
         if (orig_pkt->stream_index == vis.video_stream_idx) {
             if (orig_pkt->flags & AV_PKT_FLAG_KEY) {
                 av_log(NULL, AV_LOG_DEBUG, "key frame\n");
@@ -850,27 +667,22 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
             // 大概50微秒
             ret = avcodec_send_packet(vis.video_codec_context, orig_pkt);
-#ifdef _WIN32
-            av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %lld\n", get_time());
-#else
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_time());
-#endif
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Error while sending a packet to the decoder\n");
                 close(frame, orig_pkt);
                 return result;
             }
 
+            chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
             int c = vis.frame_rate / chose_frames;
+            fprintf(stdout, "frame_rate %d chose_frames %d c %ld\n", vis.frame_rate, chose_frames ,c);
             long check = pts_time % c;
+            fprintf(stdout, "check %ld\n", check);
 
             // 大概30微秒
             ret = avcodec_receive_frame(vis.video_codec_context, frame);
-#ifdef _WIN32
-            av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %lli\n", get_time());
-#else
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %li\n", get_time());
-#endif
             //解码一帧数据
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
@@ -887,22 +699,17 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
             if (check == c - 1) {
                 if (type == JPEG)
                     result = copy_frame_data_and_transform_2_jpeg(frame, quality, vis.video_codec_context);
-                if (type == RGB)
-                    result = copy_frame_rgb_data(frame, vis.video_codec_context);
                 else
-                    result = copy_frame_data(frame, vis.video_codec_context);
+                    result = copy_frame_raw_data(frame, vis.video_codec_context, type);
                 av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", result.file_size);
                 if (result.file_data == NULL) {
                     av_log(NULL, AV_LOG_DEBUG, "file_data NULL\n");
                     continue;
                 } else {
-                    // close(frame, orig_pkt);
                     av_packet_unref(orig_pkt);
                     av_packet_free(&orig_pkt);
                     return result;
                 }
-            } else {
-                // continue;
             }
             av_packet_unref(orig_pkt);
         }

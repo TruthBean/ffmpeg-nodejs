@@ -19,18 +19,9 @@ class FFmpegNode extends EventEmitter {
         ffmpeg_nodejs.initReadingVideo(this.url, nobuffer).then();
     }
 
-    config() {
-        this.fflags = "nobuffer";
-        // 500ms
-        this.maxDelay = "500000";
-        // max 327680
-        this.bufferSize = "4096";
-        this.rtbufsize = "4096";
-    }
-
     /**
      * read jpeg data of frame from this url video stream
-     * @param {number} jpeg_quality default 80
+     * @param {number} quality default 80
      * @param {number} frames: chose frames per second, default 1
      * @param {Function} callback callback function
      * @return {Promise<Buffer>} jpeg buffer
@@ -50,42 +41,44 @@ class FFmpegNode extends EventEmitter {
     }
 
     /**
-     * read raw yuv data of frame from this url video stream
+     * read raw data of frame from this url video stream
      * @param {number} frames: chose frames per second, default 1
+     * @param {string} type: rgb or yuv
      * @param {Function} callback callback function
      * @return {Promise<Buffer>} jpeg buffer
      */
-    readYuvStream(frames, callback) {
+    readRawStream(frames, type, callback) {
         if (!this.__destroy) {
             if (typeof frames !== "number" || frames <= 0) frames = 1;
 
-            if (typeof callback !== "function") callback = function (buffer) { };
-
-            return ffmpeg_nodejs.video2YuvImageStream(parseInt(frames), callback);
-        }
-    }
-
-    /**
-     * read raw rgb data of frame from this url video stream
-     * @param {number} frames: chose frames per second, default 1
-     * @param {Function} callback callback function
-     * @return {Promise<Buffer>} jpeg buffer
-     */
-    readRgbStream(frames, callback) {
-        if (!this.__destroy) {
-            if (typeof frames !== "number" || frames <= 0) frames = 1;
+            if (type === "rgb" || type === "yuv") type = "rgb";
 
             if (typeof callback !== "function") callback = function (buffer) { };
 
-            return ffmpeg_nodejs.video2RgbImageStream(parseInt(frames), callback);
+            let typeNo = 0;
+            if (type === "yuv") typeNo = 0;
+            else if (type === "rgb") typeNo = 1;
+            return ffmpeg_nodejs.video2RawImageStream(parseInt(frames), typeNo, callback);
         }
     }
 
-    async data(quality, frames, callback) {
+    async data(quality, type, frames, callback) {
         let buffer;
         try {
-            while ((buffer = await this.readYuvStream(quality, frames, callback)) !== undefined) {
-                this.emit("data", buffer);
+            if (type === "jpeg") {
+                while ((buffer = await this.readJpegStream(quality, frames, callback)) && buffer !== undefined) {
+                    this.emit("data", buffer);
+                }
+            } else {
+                while (true) {
+                    await this.readRawStream(frames, type, (buffer) => {
+                        console.info(buffer);
+                        if (buffer === undefined) {
+                            console.info("..............");
+                        }
+                        this.emit("data", buffer);
+                    });
+                }
             }
         } catch (error) {
             console.error(error);

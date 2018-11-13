@@ -31,9 +31,9 @@ typedef struct Video2ImageStream {
 } Video2ImageStream;
 
 enum ImageStreamType {
-    YUV,
-    JPEG,
-    RGB
+    YUV = 0,
+    RGB,
+    JPEG
 };
 
 typedef struct FrameData {

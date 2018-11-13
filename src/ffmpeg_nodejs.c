@@ -75,12 +75,12 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     return promise;
 }
 
-void handle_video_to_yuv_image_stream(napi_env env, napi_callback_info info) {
+void handle_video_to_raw_image_stream(napi_env env, napi_callback_info info) {
     av_log(NULL, AV_LOG_DEBUG, "begin handle_video_to_yuv_image_stream time: %ld\n", get_time());
     napi_status status;
 
-    size_t argc = 2;
-    napi_value argv[2];
+    size_t argc = 3;
+    napi_value argv[3];
     napi_value *thisArg = NULL;
     void *data = NULL;
     status = napi_get_cb_info(env, info, &argc, argv, thisArg, &data);
@@ -97,8 +97,16 @@ void handle_video_to_yuv_image_stream(napi_env env, napi_callback_info info) {
     }
     av_log(NULL, AV_LOG_DEBUG, "input chose_frames: %d\n", chose_frames);
 
+    // string type
+    int type = 1;
+    status = napi_get_value_int32(env, argv[0], &type);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "type is invalid number");
+    }
+    av_log(NULL, AV_LOG_DEBUG, "input type: %d\n", type);
+
     // callback
-    napi_value callback = argv[1];
+    napi_value callback = argv[2];
     napi_valuetype argv2_type;
     status = napi_typeof(env, callback, &argv2_type);
     if (status != napi_ok) {
@@ -113,68 +121,7 @@ void handle_video_to_yuv_image_stream(napi_env env, napi_callback_info info) {
         napi_throw_error(env, NULL, "initReadingVideo method should be invoke first");
     }
 
-    FrameData frameData = video2images_stream(vis, 0, chose_frames, YUV);
-
-    if (status != napi_ok) {
-        napi_throw_error(env, NULL, "Create buffer error");
-    }
-
-    // char数组 转换成 javascript buffer
-    napi_value buffer_pointer;
-    void *buffer_data;
-    status = napi_create_buffer_copy(env, frameData.file_size, (const void*)frameData.file_data, &buffer_data, &buffer_pointer);
-    av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frameData.file_size);
-    av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
-
-    napi_value result;
-    status = napi_call_function(env, &thisArg, callback, 1, &buffer_pointer, &result);
-
-    av_freep(&frameData.file_data);
-    free(frameData.file_data);
-    frameData.file_data = NULL;
-
-    av_log(NULL, AV_LOG_DEBUG, "end handle_video_to_yuv_image_stream time: %ld\n", get_time());
-}
-
-void handle_video_to_rgb_image_stream(napi_env env, napi_callback_info info) {
-    av_log(NULL, AV_LOG_DEBUG, "begin handle_video_to_yuv_image_stream time: %ld\n", get_time());
-    napi_status status;
-
-    size_t argc = 2;
-    napi_value argv[2];
-    napi_value *thisArg = NULL;
-    void *data = NULL;
-    status = napi_get_cb_info(env, info, &argc, argv, thisArg, &data);
-
-    if (status != napi_ok) {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-    }
-
-    // int chose_frames
-    int chose_frames = 1;
-    status = napi_get_value_int32(env, argv[0], &chose_frames);
-    if (status != napi_ok) {
-        napi_throw_error(env, NULL, "chose_frames is invalid number");
-    }
-    av_log(NULL, AV_LOG_DEBUG, "input chose_frames: %d\n", chose_frames);
-
-    // callback
-    napi_value callback = argv[1];
-    napi_valuetype argv2_type;
-    status = napi_typeof(env, callback, &argv2_type);
-    if (status != napi_ok) {
-        napi_throw_error(env, NULL, "wrong javascript type");
-    }
-    if (argv2_type != napi_function) {
-        napi_throw_error(env, NULL, "param is not a function");
-    }
-
-    // 处理图片
-    if (vis.ret < 0) {
-        napi_throw_error(env, NULL, "initReadingVideo method should be invoke first");
-    }
-
-    FrameData frameData = video2images_stream(vis, 0, chose_frames, RGB);
+    FrameData frameData = video2images_stream(vis, 0, chose_frames, type);
 
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Create buffer error");
@@ -313,12 +260,11 @@ napi_value handle_destroy_stream(napi_env env, napi_callback_info info) {
 
 napi_value init(napi_env env, napi_value exports) {
     napi_status status;
-    av_log_set_level(AV_LOG_INFO);
+    av_log_set_level(AV_LOG_DEBUG);
 
     napi_property_descriptor methods[] = {
         DECLARE_NAPI_METHOD("initReadingVideo", handle_init_read_video),
-        DECLARE_NAPI_METHOD("video2YuvImageStream", handle_video_to_yuv_image_stream),
-        DECLARE_NAPI_METHOD("video2RgbImageStream", handle_video_to_rgb_image_stream),
+        DECLARE_NAPI_METHOD("video2RawImageStream", handle_video_to_raw_image_stream),
         DECLARE_NAPI_METHOD("video2JpegStream", handle_video_to_jpeg_image_stream),
         DECLARE_NAPI_METHOD("destroyStream", handle_destroy_stream)};
 
