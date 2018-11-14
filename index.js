@@ -4,19 +4,47 @@ const ffmpeg_nodejs = require('./build/Release/ffmpeg_nodejs');
 class FFmpegNode extends EventEmitter {
 
     /**
-     * 
-     * @param {string} url
+     * init
+     * @param {stirng} url 
      * @param {boolean} nobuffer
+     * @return {Promise<FFmpegNode>}
      */
-    constructor(url, nobuffer) {
-        super();
+    static init(url, nobuffer) {
+        let self = new FFmpegNode();
+
         if (typeof url !== "string")
-            throw Error("url must be string type");
-        this.url = url;
+        throw Error("url must be string type");
+        self.url = url;
         if (typeof nobuffer !== "boolean")
             throw Error("nobuffer must be boolean type");
-        this.__destroy = false;
-        ffmpeg_nodejs.initReadingVideo(this.url, nobuffer).then();
+
+        self.destroy = false;
+        return new Promise((resolve, reject) => {
+            ffmpeg_nodejs.initReadingVideo(self.url, nobuffer).then((value) => {
+                resolve(self);
+            }).catch((err) => {
+                self.destroy = true;
+                // self.emit("error", err);
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * record video
+     * @param {string} url 
+     * @param {string} filename 
+     * @param {number} recordSeconds 
+     */
+    static recordVideo(url, filename, recordSeconds) {
+        if (typeof url !== "string") {
+            throw Error("url must be string type");
+        }
+        if (typeof filename !== "string")
+            throw Error("filename must be string type");
+        if (typeof recordSeconds !== "number")
+            throw Error("recordSeconds must be number");
+        ffmpeg_nodejs.recordVideo(url, filename, recordSeconds);
     }
 
     /**
@@ -27,7 +55,7 @@ class FFmpegNode extends EventEmitter {
      * @return {Promise<Buffer>} jpeg buffer
      */
     readJpegStream(quality, frames, callback) {
-        if (!this.__destroy) {
+        if (!this.destroy) {
             if (typeof quality !== "number") quality = 80;
             else if (quality <= 0) quality = 80;
             else if (quality >= 100) quality = 100;
@@ -38,6 +66,7 @@ class FFmpegNode extends EventEmitter {
 
             return ffmpeg_nodejs.video2JpegStream(parseInt(quality), parseInt(frames), callback);
         }
+
     }
 
     /**
@@ -45,10 +74,10 @@ class FFmpegNode extends EventEmitter {
      * @param {number} frames: chose frames per second, default 1
      * @param {string} type: rgb or yuv
      * @param {Function} callback callback function
-     * @return {Promise<Buffer>} jpeg buffer
+     * @return {Promise<Buffer>} image buffer
      */
     readRawStream(frames, type, callback) {
-        if (!this.__destroy) {
+        if (!this.destroy) {
             if (typeof frames !== "number" || frames <= 0) frames = 1;
 
             if (type === "rgb" || type === "yuv") type = "rgb";
@@ -62,26 +91,32 @@ class FFmpegNode extends EventEmitter {
         }
     }
 
-    async data(quality, type, frames, callback) {
-        let buffer;
-        try {
-            if (type === "jpeg") {
+    async onData(quality, type, frames, callback) {
+        if (type === "jpeg") {
+            try {
+                let buffer;
                 while ((buffer = await this.readJpegStream(quality, frames, callback)) && buffer !== undefined) {
-                    this.emit("data", buffer);
+                    // this.emit("data", buffer);
                 }
-            } else {
-                while (true) {
-                    await this.readRawStream(frames, type, (buffer) => {
-                        console.info(buffer);
-                        if (buffer === undefined) {
-                            console.info("..............");
-                        }
+            } catch (error) {
+                this.emit("error", error);
+            }
+        } else {
+            let result = 0;
+            while (result === 0) {
+                try {
+                    result = await this.readRawStream(frames, type, (buffer) => {
                         this.emit("data", buffer);
                     });
+                    break;
+                } catch (err) {
+                    this.emit("error", err);
+                    break;
                 }
             }
-        } catch (error) {
-            console.error(error);
+            if (result === 1) {
+                this.emit("error", "read video error !");
+            }
         }
     }
 
@@ -89,9 +124,9 @@ class FFmpegNode extends EventEmitter {
      * destroy this url video stream
      */
     destroy() {
-        if (!this.__destroy) {
+        if (!this.destroy) {
             console.info("destroy...");
-            this.__destroy = true;
+            this.destroy = true;
             return ffmpeg_nodejs.destroyStream();
         }
     }

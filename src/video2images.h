@@ -39,6 +39,8 @@ enum ImageStreamType {
 typedef struct FrameData {
     unsigned long file_size;
     unsigned char *file_data;
+    int ret;
+    char *error_message;
 } FrameData;
 
 Video2ImageStream open_inputfile(const char *filename, const bool nobuffer);

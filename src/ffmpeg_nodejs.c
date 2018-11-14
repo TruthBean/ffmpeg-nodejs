@@ -39,9 +39,8 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     bool nobuffer = false;
     status = napi_get_value_bool(env, argv[1], &nobuffer);
 
-    // return promise
     napi_value promise;
-    napi_deferred deferred = NULL;
+    napi_deferred deferred;
     status = napi_create_promise(env, &deferred, &promise);
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "create promise error");
@@ -52,14 +51,14 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     av_log(NULL, AV_LOG_DEBUG, "---> 1 ---> ret: %d\n", vis.ret);
     if (vis.ret < 0) {
         av_log(NULL, AV_LOG_DEBUG, "---> 1 ---> promise reject\n");
-        napi_value code;
-        napi_create_int64(env, vis.ret + 10000, &code);
-        napi_value message;
-        napi_create_string_utf8(env, vis.error_message, NAPI_AUTO_LENGTH, &message);
-        napi_value error;
-        napi_create_error(env, code, message, &error);
 
-        status = napi_reject_deferred(env, deferred, error);
+        napi_value message;
+        status = napi_create_string_utf8(env, vis.error_message, NAPI_AUTO_LENGTH, &message);
+        if (status != napi_ok) {
+            napi_throw_error(env, NULL, "error message create error");
+        }
+
+        status = napi_reject_deferred(env, deferred, message);
         if (status != napi_ok) {
             napi_throw_error(env, NULL, "promise reject error");
         }
@@ -75,8 +74,8 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     return promise;
 }
 
-void handle_video_to_raw_image_stream(napi_env env, napi_callback_info info) {
-    av_log(NULL, AV_LOG_DEBUG, "begin handle_video_to_yuv_image_stream time: %ld\n", get_time());
+napi_value handle_video_to_raw_image_stream(napi_env env, napi_callback_info info) {
+    av_log(NULL, AV_LOG_DEBUG, "begin handle_video_to_raw_image_stream time: %ld\n", get_time());
     napi_status status;
 
     size_t argc = 3;
@@ -97,7 +96,7 @@ void handle_video_to_raw_image_stream(napi_env env, napi_callback_info info) {
     }
     av_log(NULL, AV_LOG_DEBUG, "input chose_frames: %d\n", chose_frames);
 
-    // string type
+    // int type
     int type = 1;
     status = napi_get_value_int32(env, argv[0], &type);
     if (status != napi_ok) {
@@ -127,21 +126,64 @@ void handle_video_to_raw_image_stream(napi_env env, napi_callback_info info) {
         napi_throw_error(env, NULL, "Create buffer error");
     }
 
-    // char数组 转换成 javascript buffer
-    napi_value buffer_pointer;
-    void *buffer_data;
-    status = napi_create_buffer_copy(env, frameData.file_size, (const void*)frameData.file_data, &buffer_data, &buffer_pointer);
-    av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frameData.file_size);
-    av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
+    napi_value *buffer_pointer = NULL;
+    int isNil = 1;
+    if (frameData.ret == 0 && frameData.file_size > 0) {
+        isNil = 0;
+
+        // char数组 转换成 javascript buffer
+        void *buffer_data;
+        status = napi_create_buffer_copy(env, frameData.file_size, (const void*)frameData.file_data, &buffer_data, buffer_pointer);
+        av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frameData.file_size);
+        av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
+    }
 
     napi_value result;
-    status = napi_call_function(env, &thisArg, callback, 1, &buffer_pointer, &result);
+    status = napi_call_function(env, &thisArg, callback, 1, buffer_pointer, &result);
 
     av_freep(&frameData.file_data);
     free(frameData.file_data);
     frameData.file_data = NULL;
 
-    av_log(NULL, AV_LOG_DEBUG, "end handle_video_to_yuv_image_stream time: %ld\n", get_time());
+    av_log(NULL, AV_LOG_DEBUG, "end handle_video_to_raw_image_stream time: %ld\n", get_time());
+
+    napi_value promise;
+    napi_deferred deferred;
+    status = napi_create_promise(env, &deferred, &promise);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "create promise error");
+    }
+
+    av_log(NULL, AV_LOG_DEBUG, "isNil %d\n", isNil);
+
+    if (isNil == 1) {
+
+        char * _err_msg = frameData.error_message;
+        if (frameData.ret == 0) {
+            _err_msg = "image data is null, network may connect wrong";
+        }
+
+        napi_value message;
+        status = napi_create_string_utf8(env, _err_msg, NAPI_AUTO_LENGTH, &message);
+        if (status != napi_ok) {
+            napi_throw_error(env, NULL, "error message create error");
+        }
+
+        status = napi_reject_deferred(env, deferred, message);
+        if (status != napi_ok) {
+            napi_throw_error(env, NULL, "promise reject error");
+        }
+    } else {
+        napi_value return_value;
+        napi_create_int32(env, isNil, &return_value);
+
+        status = napi_resolve_deferred(env, deferred, return_value);
+        if (status != napi_ok) {
+            napi_throw_error(env, NULL, "promise resolve error");
+        }
+    }
+
+    return promise;
 }
 
 napi_value handle_video_to_jpeg_image_stream(napi_env env, napi_callback_info info) {
@@ -218,15 +260,14 @@ napi_value handle_video_to_jpeg_image_stream(napi_env env, napi_callback_info in
     status = napi_call_function(env, &thisArg, callback, 1, &buffer_pointer, &result);
 
     if (frameData.file_size == 0 || status != napi_ok) {
-        av_log(NULL, AV_LOG_ERROR, "---> 2 ---> promise reject\n");
-        napi_value code;
-        napi_create_int64(env, vis.ret + 10000, &code);
+        char * _err_msg = frameData.error_message;
+        if (frameData.ret == 0) {
+            _err_msg = "image data is null, network may connect wrong";
+        }
         napi_value message;
-        napi_create_string_utf8(env, "Create buffer error", NAPI_AUTO_LENGTH, &message);
-        napi_value error;
-        napi_create_error(env, code, message, &error);
+        napi_create_string_utf8(env, _err_msg, NAPI_AUTO_LENGTH, &message);
 
-        status = napi_reject_deferred(env, deferred, error);
+        status = napi_reject_deferred(env, deferred, message);
         av_log(NULL, AV_LOG_ERROR, "promise reject error status: %d\n", status);
         if (status != napi_ok) {
             napi_throw_error(env, NULL, "promise reject error");
@@ -258,6 +299,65 @@ napi_value handle_destroy_stream(napi_env env, napi_callback_info info) {
     return NULL;
 }
 
+void handle_record_video(napi_env env, napi_callback_info info) {
+    size_t argc = 3;
+    napi_value argv[3];
+    napi_value *thisArg = NULL;
+    void *data = NULL;
+    
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, thisArg, &data);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+    }
+
+    // input filename
+    size_t length;
+    status = napi_get_value_string_utf8(env, argv[0], NULL, 0, &length);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Invalid number was passed as argument");
+    }
+
+    // put param value into char array
+    size_t input_filename_res;
+    const size_t input_filename_len = length + 1;
+    char input_filename[input_filename_len];
+    status = napi_get_value_string_utf8(env, argv[0], input_filename, length + 1, &input_filename_res);
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Invalid value was passed as argument by input_filename");
+    }
+    av_log(NULL, AV_LOG_DEBUG, "input filename : %s\n", input_filename);
+
+    // output filename
+    length = 0;
+    status = napi_get_value_string_utf8(env, argv[1], NULL, 0, &length);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Invalid number was passed as argument");
+    }
+
+    // put param value into char array
+    size_t output_filename_res;
+    const size_t output_filename_len = length + 1;
+    char output_filename[output_filename_len];
+    status = napi_get_value_string_utf8(env, argv[1], output_filename, length + 1, &output_filename_res);
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Invalid value was passed as argument by output_filename");
+    }
+    av_log(NULL, AV_LOG_DEBUG, "output filename : %s\n", output_filename);
+
+    // record seconds
+    int record_seconds = 0;
+    status = napi_get_value_int32(env, argv[2], &record_seconds);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Invalid number was passed as argument");
+    }
+    av_log(NULL, AV_LOG_DEBUG, "record_seconds : %d\n", record_seconds);
+
+    int result = record_rtsp(input_filename, output_filename, record_seconds);
+    av_log(NULL, AV_LOG_DEBUG, "record rtsp result : %d\n", result);
+}
+
 napi_value init(napi_env env, napi_value exports) {
     napi_status status;
     av_log_set_level(AV_LOG_DEBUG);
@@ -266,7 +366,9 @@ napi_value init(napi_env env, napi_value exports) {
         DECLARE_NAPI_METHOD("initReadingVideo", handle_init_read_video),
         DECLARE_NAPI_METHOD("video2RawImageStream", handle_video_to_raw_image_stream),
         DECLARE_NAPI_METHOD("video2JpegStream", handle_video_to_jpeg_image_stream),
-        DECLARE_NAPI_METHOD("destroyStream", handle_destroy_stream)};
+        DECLARE_NAPI_METHOD("destroyStream", handle_destroy_stream),
+        DECLARE_NAPI_METHOD("recordVideo", handle_record_video)
+        };
 
     status = napi_define_properties(env, exports, sizeof(methods) / sizeof(methods[0]), methods);
     if (status != napi_ok)

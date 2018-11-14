@@ -71,14 +71,17 @@ static FrameData copy_frame_raw_data(const AVFrame *frame, const AVCodecContext 
 
     FrameData result = {
         .file_size = 0,
-        .file_data = NULL
+        .file_data = NULL,
+        .ret = 0
         };
 
     av_log(NULL, AV_LOG_DEBUG, "saving frame %3d\n", codec_context->frame_number);
 
     AVFrame *target_frame = av_frame_alloc();
     if (!target_frame) {
-        av_log(NULL, AV_LOG_ERROR, "Could not allocate images frame\n");
+        av_log(NULL, AV_LOG_ERROR, "Could not allocate target images frame\n");
+        result.ret = -20;
+        result.error_message = "Could not allocate target images frame";
         return result;
     }
     target_frame->quality = 1;
@@ -158,12 +161,15 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
 
     FrameData result = {
         .file_size = 0,
-        .file_data = NULL
+        .file_data = NULL,
+        .ret = 0
         };
 
     AVFrame *target_frame = av_frame_alloc();
     if (!target_frame) {
-        av_log(NULL, AV_LOG_ERROR, "Could not allocate images frame\n");
+        av_log(NULL, AV_LOG_ERROR, "Could not allocate target images frame\n");
+        result.ret = -10;
+        result.error_message = "Could not allocate target images frame";
         return result;
     }
 
@@ -304,6 +310,7 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
 
             if (av_dict_set(&dictionary, "rtsp_transport", "udp", 0) < 0) {
                 av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to udp error\n");
+            } else {
                 av_dict_set(&dictionary, "flush_packets", "1", 0);
             }
         }
@@ -342,14 +349,14 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
     av_log(NULL, AV_LOG_DEBUG, "input file: %s\n", filename);
     // format_context必须初始化，否则报错
     if ((ret = avformat_open_input(&format_context, filename, NULL, &dictionary)) != 0) {
-        av_log(NULL, AV_LOG_ERROR, "Couldn't open file %s: %d", filename, ret);
+        av_log(NULL, AV_LOG_ERROR, "Couldn't open file %s: %d\n", filename, ret);
         release(video_codec_context, format_context, _bool);
-        result.error_message = "avformat_open_input error";
+        result.error_message = "avformat_open_input error, Couldn't open this file";
         result.ret = -2;
         return result;
     }
 
-    if (avformat_find_stream_info(format_context, &dictionary) < 0) {
+    if (avformat_find_stream_info(format_context, NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
         release(video_codec_context, format_context, _bool);
         result.error_message = "avformat_find_stream_info error";
@@ -626,19 +633,24 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
     FrameData result = {
         .file_size = 0,
-        .file_data = NULL
+        .file_data = NULL,
+        .ret = 0
         };
 
     int ret;
     AVFrame *frame = av_frame_alloc();
     if (!frame) {
-        av_log(NULL, AV_LOG_ERROR, "Could not allocate video frame\n");
+        av_log(NULL, AV_LOG_ERROR, "Could not allocate image frame\n");
+        result.ret = -1;
+        result.error_message = "Could not allocate image frame";
         return result;
     }
 
     AVPacket *orig_pkt = av_packet_alloc();
     if (!orig_pkt) {
         av_log(NULL, AV_LOG_ERROR, "Couldn't alloc packet\n");
+        result.ret = -2;
+        result.error_message = "Couldn't alloc packet";
         close(frame, orig_pkt);
         return result;
     }
@@ -656,7 +668,11 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
                 }
             }
             if (vis.video_stream == NULL) {
-                av_log(NULL, AV_LOG_ERROR, "error\n");
+                av_log(NULL, AV_LOG_ERROR, "error: video stream is null\n");
+                result.ret = -3;
+                result.error_message = "video stream is null";
+                close(frame, orig_pkt);
+                return result;
             }
 
             long pts_time = 0;
@@ -671,14 +687,16 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Error while sending a packet to the decoder\n");
                 close(frame, orig_pkt);
+                result.ret = -4;
+                result.error_message = "Error while sending a packet to the decoder";
                 return result;
             }
 
             chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
             int c = vis.frame_rate / chose_frames;
-            fprintf(stdout, "frame_rate %d chose_frames %d c %ld\n", vis.frame_rate, chose_frames ,c);
+            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %ld\n", vis.frame_rate, chose_frames ,c);
             long check = pts_time % c;
-            fprintf(stdout, "check %ld\n", check);
+            av_log(NULL, AV_LOG_DEBUG, "check %ld\n", check);
 
             // 大概30微秒
             ret = avcodec_receive_frame(vis.video_codec_context, frame);
@@ -691,6 +709,8 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Decode error\n");
                 close(frame, orig_pkt);
+                result.ret = -4;
+                result.error_message = "Error while receive frame from a packet";
                 return result;
             }
 
@@ -702,10 +722,15 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
                 else
                     result = copy_frame_raw_data(frame, vis.video_codec_context, type);
                 av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", result.file_size);
-                if (result.file_data == NULL) {
+                if (result.file_size == 0 || result.file_data == NULL) {
                     av_log(NULL, AV_LOG_DEBUG, "file_data NULL\n");
+                    close(frame, orig_pkt);
                     continue;
                 } else {
+                    if (result.ret < 0 ) {
+                        result.ret = -5;
+                        result.error_message = "image data is null";
+                    }
                     av_packet_unref(orig_pkt);
                     av_packet_free(&orig_pkt);
                     return result;

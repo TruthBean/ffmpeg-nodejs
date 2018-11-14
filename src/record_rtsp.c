@@ -14,30 +14,27 @@ static int release_record_rtsp_action(AVFormatContext *rtsp_format_context, AVFo
 }
 
 int record_rtsp(const char *rtsp_url, const char *output_filename, int record_seconds) {
-#ifdef _WIN32
-    fprintf(stdout, "start time: %lli\n", get_time());
-#else
-    fprintf(stdout, "start time: %li\n", get_time());
-#endif
+    av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
+
     time_t timenow, timestart;
     int got_key_frame = 0;
 
     AVFormatContext *rtsp_format_context = NULL;
     AVFormatContext *output_format_context = NULL;
 
-    // Initialize library
-    // av_log_set_level(AV_LOG_DEBUG);
     int error = avformat_network_init();
     if (error != 0) {
-        printf("network init error\n");
+        av_log(NULL, AV_LOG_ERROR, "network init error\n");
     }
+
+    av_log(NULL, AV_LOG_DEBUG, "111111111111111111111111\n");
 
     AVDictionary *dictionary = NULL;
     if (av_dict_set(&dictionary, "rtsp_transport", "tcp", 0) < 0) {
-        fprintf(stderr, "set rtsp_transport to tcp error\n");
+        av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to tcp error\n");
 
         if (av_dict_set(&dictionary, "rtsp_transport", "udp", 0) < 0) {
-            fprintf(stderr, "set rtsp_transport to udp error\n");
+            av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to udp error\n");
         }
     }
     /*if (av_dict_set(&dictionary, "fflags", "nobuffer", 0) < 0) {
@@ -50,24 +47,28 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
 
     // ============================== rtsp ========================================
 
+    av_log(NULL, AV_LOG_DEBUG, "22222222222222222222222222222\n");
+
     // open rtsp
     if (avformat_open_input(&rtsp_format_context, rtsp_url, NULL, &dictionary) != 0) {
-        fprintf(stderr, "Cannot open input file %s\n", rtsp_url);
+        av_log(NULL, AV_LOG_ERROR, "Cannot open input file %s\n", rtsp_url);
         return release_record_rtsp_action(rtsp_format_context, output_format_context, -1);
     }
 
     // find stream info
     if (avformat_find_stream_info(rtsp_format_context, NULL) < 0) {
-        fprintf(stderr, "Cannot find stream info\n");
+        av_log(NULL, AV_LOG_ERROR, "Cannot find stream info\n");
         return release_record_rtsp_action(rtsp_format_context, output_format_context, -2);
     }
 
-    snprintf(rtsp_format_context->filename, sizeof(rtsp_format_context->filename), "%s", rtsp_url);
+    av_log(NULL, AV_LOG_DEBUG, "3333333333333333333333333333333333333333\n");
 
     // search video stream
     int rtsp_video_stream_idx = -1;
     AVCodecParameters *rtsp_codec_parms;
     AVStream *rtsp_stream;
+    
+    av_log(NULL, AV_LOG_DEBUG, "4444444444444444444444444444444444444444444444\n");
     for (int ix = 0; ix < rtsp_format_context->nb_streams; ix++) {
         rtsp_codec_parms = rtsp_format_context->streams[ix]->codecpar;
         if (rtsp_codec_parms->codec_type == AVMEDIA_TYPE_VIDEO) {
@@ -76,16 +77,16 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
             break;
         }
     }
+
     if (rtsp_video_stream_idx < 0) {
-        fprintf(stderr, "Cannot find input video stream\n");
+        av_log(NULL, AV_LOG_ERROR, "Cannot find input video stream\n");
         return release_record_rtsp_action(rtsp_format_context, output_format_context, -3);
     }
 
-#ifdef _WIN32
-    fprintf(stdout, "start out time: %lli\n", get_time());
-#else
-    fprintf(stdout, "start out time: %li\n", get_time());
-#endif
+    // 每秒多少帧
+    int input_frame_rate = rtsp_stream->r_frame_rate.num / rtsp_stream->r_frame_rate.den;
+
+    av_log(NULL, AV_LOG_DEBUG, "start out time: %li\n", get_time());
     
     // ======================================== output ========================================
 
@@ -95,7 +96,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
     output_format_context = avformat_alloc_context();
     output_format_context->oformat = output_format;
     if (avio_open2(&output_format_context->pb, output_filename, AVIO_FLAG_WRITE, NULL, NULL) < 0) {
-        fprintf(stderr, "Cannot open or create input output file\n");
+        av_log(NULL, AV_LOG_ERROR, "Cannot open or create input output file\n");
         return release_record_rtsp_action(rtsp_format_context, output_format_context, -4);
     }
 
@@ -104,7 +105,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
     AVStream *out_stream = avformat_new_stream(output_format_context, NULL);
 
     if (avcodec_parameters_copy(out_stream->codecpar, rtsp_codec_parms) < 0) {
-        fprintf(stderr, "copy codec params error\n");
+        av_log(NULL, AV_LOG_ERROR, "copy codec params error\n");
         return release_record_rtsp_action(rtsp_format_context, output_format_context, -5);
     }
 
@@ -130,14 +131,11 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
     AVPacket pkt;
     av_init_packet(&pkt);
 
-#ifdef _WIN32
-    fprintf(stdout, "end out time: %lli\n", get_time());
-#else
-    fprintf(stdout, "end out time: %li\n", get_time());
-#endif
+    av_log(NULL, AV_LOG_DEBUG, "end out time: %li\n", get_time());
+
     int ret = 0;
     int i = 0;
-    const int count_frame = 25 * record_seconds;
+    const int count_frame = input_frame_rate * record_seconds;
     while (av_read_frame(rtsp_format_context, &pkt) >= 0 && i <= count_frame) {
         // packet is video
         if (pkt.stream_index == rtsp_video_stream_idx) {
@@ -178,10 +176,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
     // 写文件尾
     av_write_trailer(output_format_context);
 
-#ifdef _WIN32
-    fprintf(stdout, "end time: %lli\n", get_time());
-#else
-    fprintf(stdout, "end time: %li\n", get_time());
-#endif
+    av_log(NULL, AV_LOG_DEBUG, "end time: %li\n", get_time());
+
     return release_record_rtsp_action(rtsp_format_context, output_format_context, EXIT_SUCCESS);
 }
