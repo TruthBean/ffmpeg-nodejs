@@ -1,0 +1,59 @@
+syntax = "proto2";
+package verifier;
+message DetectReq {
+  required int32 interface = 1;
+  required string apiKey = 2;
+  required bytes image = 3;
+  required sint32 rows = 4;
+  required sint32 cols = 5;
+  enum Format {
+    MAT = 0;
+    YUV = 1;
+  }
+  required Format format = 6 [ default = YUV ];
+  optional sint32 minfaceSize = 7 [ default = 80 ];
+  optional sint32 maxfaceSize = 8 [ default = 300 ];
+  optional string field = 9 [ default = "normal" ];
+  optional string imageId = 10;
+  optional string cameraId = 11;
+}
+
+message DetectRes {
+  required string requestId = 1;
+  required sint32 timeUsed = 2;
+  required sint32 errorMessage = 3;
+  required sint32 detectNums = 4;
+  required sint32 trackNums = 5;
+
+  message DetectInfo {
+    required sint32 left = 1;
+    required sint32 top = 2;
+    required sint32 width = 3;
+    required sint32 height = 4;
+    required sint32 sideFace = 5;
+    required sint32 quality = 6;
+    required float score = 7;
+    required sint32 glasses = 8;
+    repeated sint32 x = 9 [ packed = true ];
+    repeated sint32 y = 10 [ packed = true ];
+  }
+
+  message TrackInfo {
+    required sint32 left = 1;
+    required sint32 top = 2;
+    required sint32 width = 3;
+    required sint32 height = 4;
+    required sint32 sideFace = 5;
+    required sint32 quality = 6;
+    required float score = 7;
+    required sint32 glasses = 8;
+    repeated sint32 x = 9;
+    repeated sint32 y = 10;
+    required string imageId = 11;
+    required fixed64 inTime = 12;
+    required fixed64 outTIme = 13;
+    required fixed64 bestTIme = 14;
+  }
+  repeated DetectInfo detect = 6;
+  repeated TrackInfo track = 7;
+}
