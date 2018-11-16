@@ -1,5 +1,8 @@
 #include "./record_rtsp.h"
 
+/**
+ * 释放内存
+ **/
 static int release_record_rtsp_action(AVFormatContext *rtsp_format_context, AVFormatContext *output_format_context, int result) {
     if (output_format_context) {
         avio_close(output_format_context->pb);
@@ -13,6 +16,12 @@ static int release_record_rtsp_action(AVFormatContext *rtsp_format_context, AVFo
     return result;
 }
 
+/**
+ * rtsp视频录频
+ * @param rtsp_url: rtsp地址
+ * @param output_filename: 录制视频的存储路径
+ * @param record_seconds: 录制视频的时长，单位秒
+ **/
 int record_rtsp(const char *rtsp_url, const char *output_filename, int record_seconds) {
     av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
 
@@ -22,6 +31,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
     AVFormatContext *rtsp_format_context = NULL;
     AVFormatContext *output_format_context = NULL;
 
+    // 初始化网络
     int error = avformat_network_init();
     if (error != 0) {
         av_log(NULL, AV_LOG_ERROR, "network init error\n");
@@ -37,13 +47,6 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
             av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to udp error\n");
         }
     }
-    /*if (av_dict_set(&dictionary, "fflags", "nobuffer", 0) < 0) {
-        fprintf(stderr, "set rtsp_flags to listen error\n");
-    }
-
-    if (av_dict_set(&dictionary, "allowed_media_types", "video", 0) < 0) {
-        fprintf(stderr, "set allowed_media_types to video error\n");
-    }*/
 
     // ============================== rtsp ========================================
 

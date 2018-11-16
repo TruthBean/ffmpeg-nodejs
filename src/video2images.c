@@ -1,22 +1,14 @@
 #include "./video2images.h"
 
-time_t get_time() {
-    time_t result;
-    time_t now_seconds;
-
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    now_seconds = tv.tv_sec;
-
-    result = 1000000 * tv.tv_sec + tv.tv_usec;
-
-    char buff[20];
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now_seconds));
-    av_log(NULL, AV_LOG_DEBUG, "now: %s\n", buff);
-
-    return result;
-}
-
+/**
+ * 将rgb 数据 转换成 jpeg数据，存储在内存中
+ * @param raw_data: [in] rgb数据
+ * @param quality: [in] jpeg 质量，1~100
+ * @param width: [in] 图片宽度
+ * @param height: [in] 图片高度
+ * @param jpeg_data: [out] 存储在内存中的JPEG数据
+ * @param jpeg_size: [out] JPEG数据的大小
+ **/
 static void jpeg_write_mem(uint8_t *raw_data, int quality, unsigned int width, unsigned int height,
                            unsigned char **jpeg_data, unsigned long *jpeg_size) {
     av_log(NULL, AV_LOG_DEBUG, "begin jpeg_write_mem time: %li\n", get_time());
@@ -65,6 +57,13 @@ static void jpeg_write_mem(uint8_t *raw_data, int quality, unsigned int width, u
 
 }
 
+/**
+ * 拷贝avframe的数据，并转变成YUV或RGB格式
+ * @param frame: 图片帧
+ * @param codec_context: 视频AVCodecContext
+ * @param type: 转换的格式, YUV 或 RGB @see ImageStreamType
+ * @return FrameData @see FrameData
+ **/
 static FrameData copy_frame_raw_data(const AVFrame *frame, const AVCodecContext *codec_context, enum ImageStreamType type) {
 
     av_log(NULL, AV_LOG_DEBUG, "begin copy_frame_rgb_data time: %li\n", get_time());
@@ -77,6 +76,7 @@ static FrameData copy_frame_raw_data(const AVFrame *frame, const AVCodecContext 
 
     av_log(NULL, AV_LOG_DEBUG, "saving frame %3d\n", codec_context->frame_number);
 
+    // 申请一个新的 frame, 用于转换格式
     AVFrame *target_frame = av_frame_alloc();
     if (!target_frame) {
         av_log(NULL, AV_LOG_ERROR, "Could not allocate target images frame\n");
@@ -125,13 +125,14 @@ static FrameData copy_frame_raw_data(const AVFrame *frame, const AVCodecContext 
             break;
     }
 
+    // 转换图像格式
     struct SwsContext *sws_context = sws_getContext(codec_context->width, codec_context->height,
                                                     pixFormat,
                                                     target_width, target_height,
                                                     target_pixel_format,
                                                     SWS_BICUBIC, NULL, NULL, NULL);
 
-    // 转换图像格式
+    // 图片拉伸，数据转换
     sws_scale(sws_context, frame->data, frame->linesize, 0, frame->height,
               target_frame->data, target_frame->linesize);
 
@@ -139,6 +140,7 @@ static FrameData copy_frame_raw_data(const AVFrame *frame, const AVCodecContext 
     target_frame->width = target_width;
     target_frame->format = target_pixel_format;
 
+    // avframe data to buffer
     int yuv_data_size = av_image_get_buffer_size(target_frame->format, target_frame->width, target_frame->height, 1);
     av_log(NULL, AV_LOG_DEBUG, "buffer size: %d\n", yuv_data_size);
     result.file_data = (unsigned char *)malloc((size_t) (yuv_data_size));
@@ -152,6 +154,12 @@ static FrameData copy_frame_raw_data(const AVFrame *frame, const AVCodecContext 
     return result;
 }
 
+/**
+ * 拷贝avframe的数据，并转变成JPEG格式数据
+ * @param frame: 图片帧
+ * @param quality: jpeg 图片质量，1~100
+ * @param codec_context: 视频AVCodecContext
+ **/
 static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int quality, 
                                                         const AVCodecContext *codec_context) {
     av_log(NULL, AV_LOG_DEBUG, "begin copy_frame_data time: %li\n", get_time());
@@ -175,7 +183,6 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
 
     av_log(NULL, AV_LOG_DEBUG, "saving frame %3d\n", codec_context->frame_number);
 
-    /* 图片是解码器分配的内存，不需要释放 */
     target_frame->quality = 1;
 
     //保存jpeg格式
@@ -239,6 +246,7 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
                   (const uint8_t **)(target_frame->data), target_frame->linesize,
                   target_frame->format, target_frame->width, target_frame->height);
 
+    // 图片压缩成Jpeg格式
     unsigned char *jpeg_data;
     unsigned long jpeg_size = 0;
     jpeg_write_mem(images_dst_data[0], quality, (unsigned int)target_width, 
@@ -250,6 +258,7 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
 
     result.file_size = jpeg_size;
 
+    // 释放内存
     av_freep(&images_dst_data[0]);
     images_dst_data[0] = NULL;
     *images_dst_data = NULL;
@@ -265,6 +274,13 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
     return result;
 }
 
+/**
+ * 连接视频地址，获取数据流
+ * @param filename: 视频地址
+ * @param nobuffer: rtsp 是否设置缓存
+ * 
+ * @return @see Video2ImageStream
+ **/
 Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
 
     av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
@@ -318,6 +334,7 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
         if (nobuffer) {
             av_dict_set(&dictionary, "fflags", "nobuffer", 0);
         } else {
+            // 设置缓存大小
             av_dict_set(&dictionary, "buffer_size", "4096", 0);
             av_dict_set(&dictionary, "flush_packets", "1", 0);
             av_dict_set(&dictionary, "max_delay", "0", 0);
@@ -328,14 +345,17 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
             av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
         }
 
+        // 使用cuda
         if (av_dict_set(&dictionary, "hwaccel", "cuda", 0) < 0) {
             av_log(NULL, AV_LOG_ERROR, "cuda acceleration error\n");
         }
 
+        // 使用 cuvid
         if (av_dict_set(&dictionary, "hwaccel", "cuvid", 0) < 0) {
             av_log(NULL, AV_LOG_ERROR, "cuvid acceleration error\n");
         }
 
+        // 使用 opencl
         if (av_dict_set(&dictionary, "hwaccel", "opencl", 0) < 0) {
             av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
         }
@@ -371,6 +391,7 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
     AVDictionary *opts = NULL;
     av_dict_set(&opts, "refcounted_frames", "false", 0);
     enum AVCodecID codec_id = video_stream->codecpar->codec_id;
+    // 判断摄像头视频格式是h264还是h265
     if (codec_id == AV_CODEC_ID_H264) {
         codec = avcodec_find_decoder_by_name("h264_cuvid");
     } else if (codec_id == AV_CODEC_ID_HEVC) {
@@ -504,96 +525,6 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
     return result;
 }
 
-int init_filters(const char *filters_descr, AVCodecContext *dec_ctx, AVRational time_base,
-                    AVFilterContext *buffersink_ctx, AVFilterContext *buffersrc_ctx) {
-    char args[512];
-    int ret = 0;
-    const AVFilter *buffersrc = avfilter_get_by_name("buffer");
-    const AVFilter *buffersink = avfilter_get_by_name("buffersink");
-    AVFilterInOut *outputs = avfilter_inout_alloc();
-    AVFilterInOut *inputs = avfilter_inout_alloc();
-    // AVRational time_base = fmt_ctx->streams[video_stream_index]->time_base;
-    enum AVPixelFormat pix_fmts[] = {AV_PIX_FMT_YUV420P, AV_PIX_FMT_YUVJ420P, AV_PIX_FMT_NONE};
-
-    AVFilterGraph *filter_graph = avfilter_graph_alloc();
-    if (!outputs || !inputs || !filter_graph) {
-        ret = AVERROR(ENOMEM);
-        goto end;
-    }
-
-    /* buffer video source: the decoded frames from the decoder will be inserted here. */
-    snprintf(args, sizeof(args),
-             "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
-             dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
-             time_base.num, 25,
-             dec_ctx->sample_aspect_ratio.num, dec_ctx->sample_aspect_ratio.den);
-
-    fprintf(stdout, args);
-
-
-    ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
-                                       args, NULL, filter_graph);
-    if (ret < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot create buffer source\n");
-        goto end;
-    }
-
-    /* buffer video sink: to terminate the filter chain. */
-    ret = avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out",
-                                       NULL, NULL, filter_graph);
-    if (ret < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot create buffer sink\n");
-        goto end;
-    }
-
-    ret = av_opt_set_int_list(buffersink_ctx, "pix_fmts", pix_fmts,
-                              AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
-    if (ret < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot set output pixel format\n");
-        goto end;
-    }
-
-    /*
-     * Set the endpoints for the filter graph. The filter_graph will
-     * be linked to the graph described by filters_descr.
-     */
-
-    /*
-     * The buffer source output must be connected to the input pad of
-     * the first filter described by filters_descr; since the first
-     * filter input label is not specified, it is set to "in" by
-     * default.
-     */
-    outputs->name = av_strdup("in");
-    outputs->filter_ctx = buffersrc_ctx;
-    outputs->pad_idx = 0;
-    outputs->next = NULL;
-
-    /*
-     * The buffer sink input must be connected to the output pad of
-     * the last filter described by filters_descr; since the last
-     * filter output label is not specified, it is set to "out" by
-     * default.
-     */
-    inputs->name = av_strdup("out");
-    inputs->filter_ctx = buffersink_ctx;
-    inputs->pad_idx = 0;
-    inputs->next = NULL;
-
-    if ((ret = avfilter_graph_parse_ptr(filter_graph, filters_descr,
-                                        &inputs, &outputs, NULL)) < 0)
-        goto end;
-
-    if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0)
-        goto end;
-
-    end:
-    avfilter_inout_free(&inputs);
-    avfilter_inout_free(&outputs);
-
-    return ret;
-}
-
 /**
  * 释放内存
  */
@@ -629,6 +560,14 @@ static void close(AVFrame *frame, AVPacket *packet) {
 
 static int pts = 0;
 
+/**
+ * 视频流获取 图片帧
+ * @param vis: 存储在全局变量中的视频流数据变量
+ * @param quality: jpeg 图片质量，1~100
+ * @param chose_frames: 一秒取多少帧, 超过视频帧率则为视频帧率
+ * @param type: 图片类型 @see ImageStreamType
+ * @return @see FrameData
+ **/
 FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type) {
 
     FrameData result = {
@@ -657,7 +596,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
     /* read frames from the file */
     av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_time());
-    // 大概300微秒
+
     while (av_read_frame(vis.format_context, orig_pkt) >= 0) {
         av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_time());
         if (orig_pkt->stream_index == vis.video_stream_idx) {
@@ -676,12 +615,12 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
             }
 
             long pts_time = 0;
+            // 获取帧数
             if (orig_pkt->pts >= 0)
                 pts_time = (long)(orig_pkt->pts * av_q2d(vis.video_stream->time_base) * vis.frame_rate);
             else
                 pts_time = pts++;
 
-            // 大概50微秒
             ret = avcodec_send_packet(vis.video_codec_context, orig_pkt);
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_time());
             if (ret < 0) {
@@ -698,10 +637,10 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
             long check = pts_time % c;
             av_log(NULL, AV_LOG_DEBUG, "check %ld\n", check);
 
-            // 大概30微秒
+
             ret = avcodec_receive_frame(vis.video_codec_context, frame);
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %li\n", get_time());
-            //解码一帧数据
+            // 解码一帧数据
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
                 continue;
@@ -716,6 +655,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
             av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d frame_rate: %d\n", pts_time,
                     chose_frames, vis.frame_rate);
+            // 判断帧数，是否取
             if (check == c - 1) {
                 if (type == JPEG)
                     result = copy_frame_data_and_transform_2_jpeg(frame, quality, vis.video_codec_context);
@@ -741,6 +681,6 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
     }
 
     close(frame, orig_pkt);
-    av_log(NULL, AV_LOG_DEBUG, "Demuxing succeeded.\n");
+
     return result;
 }

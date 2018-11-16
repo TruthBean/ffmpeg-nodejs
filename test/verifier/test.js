@@ -7,12 +7,14 @@ dealer.connect('tcp://192.168.1.196:5559');
 
 let rtsp_addr = "rtsp://admin:iec123456@192.168.1.71:554/unicast/c1/s0/live";
 
+const type = FFmpegNode.TYPE();
+
 async function main() {
     let ffmpegNode = await FFmpegNode.init(rtsp_addr, false);
     let image = null;
 
     try {
-        image = await ffmpegNode.readImageStream(1, target_type, 80);
+        image = await ffmpegNode.readImageStream(1, type.RGB, 80);
     } catch (error) {
         ffmpegNode.emit("error", error);
     }

@@ -2,10 +2,15 @@
 
 static Video2ImageStream vis;
 
+/**
+ * 初始化摄像头
+ * 连接摄像头地址，并获取视频流数据
+ **/
 napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     napi_status status;
     napi_value result = NULL;
 
+    // js 参数 转换成 napi_value
     size_t argc = 2;
     napi_value argv[2];
     napi_value *thisArg = NULL;
@@ -16,9 +21,10 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
         napi_throw_error(env, NULL, "Failed to parse arguments");
     }
 
-    size_t length;
-
+    // 获取视频地址，将 napi_value 转换成 c语言 对应的格式
     // input filename
+    size_t length;
+    // 获取string长度
     status = napi_get_value_string_utf8(env, argv[0], NULL, 0, &length);
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Invalid number was passed as argument");
@@ -33,13 +39,14 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Invalid value was passed as argument by input_filename");
     }
-    av_log(NULL, AV_LOG_INFO, "input filename : %s\n", input_filename);
+    av_log(NULL, AV_LOG_DEBUG, "input filename : %s\n", input_filename);
 
     // nobuffer
     bool nobuffer;
     status = napi_get_value_bool(env, argv[1], &nobuffer);
-    av_log(NULL, AV_LOG_INFO, "nobuffer : %d\n", nobuffer);
+    av_log(NULL, AV_LOG_DEBUG, "nobuffer : %d\n", nobuffer);
 
+    // 构建 js promise 对象
     napi_value promise;
     napi_deferred deferred;
     status = napi_create_promise(env, &deferred, &promise);
@@ -47,12 +54,11 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
         napi_throw_error(env, NULL, "create promise error");
     }
 
+    // 获取视频流数据，将其存在全局变量中
     vis = open_inputfile(input_filename, nobuffer);
 
-    av_log(NULL, AV_LOG_DEBUG, "---> 1 ---> ret: %d\n", vis.ret);
     if (vis.ret < 0) {
-        av_log(NULL, AV_LOG_DEBUG, "---> 1 ---> promise reject\n");
-
+        // 处理错误信息
         napi_value message;
         status = napi_create_string_utf8(env, vis.error_message, NAPI_AUTO_LENGTH, &message);
         if (status != napi_ok) {
@@ -75,8 +81,10 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     return promise;
 }
 
+/**
+ * 视频流取图片数据
+ **/
 napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
-    av_log(NULL, AV_LOG_INFO, "begin handle_video_to_raw_image_stream time: %ld\n", get_time());
     napi_status status;
 
     size_t argc = 4;
@@ -90,7 +98,7 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
     }
 
     // int chose_frames
-    int chose_frames = 1;
+    int chose_frames;
     status = napi_get_value_int32(env, argv[0], &chose_frames);
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "chose_frames is invalid number");
@@ -137,6 +145,7 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
 
     napi_value buffer_pointer = NULL;
     int isNil = 1;
+    // 判断有没有图片数据，如网络中断或其他原因，导致无法获取到图片数据
     if (frameData.ret == 0 && frameData.file_size > 0) {
         isNil = 0;
 
@@ -147,16 +156,17 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
         av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
     }
 
+    // 调用 callback
     napi_value result;
     status = napi_call_function(env, &thisArg, callback, 1, &buffer_pointer, &result);
     av_log(NULL, AV_LOG_INFO, "napi_call_function status %d\n", status);
 
+    // 释放 图片数据 的 内存
     av_freep(&frameData.file_data);
     free(frameData.file_data);
     frameData.file_data = NULL;
 
-    av_log(NULL, AV_LOG_INFO, "end handle_video_to_raw_image_stream time: %ld\n", get_time());
-
+    // 返回Promise
     napi_value promise;
     napi_deferred deferred;
     status = napi_create_promise(env, &deferred, &promise);
@@ -167,7 +177,7 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
     av_log(NULL, AV_LOG_DEBUG, "isNil %d\n", isNil);
 
     if (isNil == 1) {
-
+        // 返回错误原因
         char * _err_msg = frameData.error_message;
         if (frameData.ret == 0) {
             _err_msg = "image data is null, network may connect wrong";
@@ -184,7 +194,7 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
             napi_throw_error(env, NULL, "promise reject error");
         }
     } else {
-
+        // return image buffer
         status = napi_resolve_deferred(env, deferred, buffer_pointer);
         if (status != napi_ok) {
             napi_throw_error(env, NULL, "promise resolve error");
@@ -194,6 +204,9 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
     return promise;
 }
 
+/**
+ * 释放视频连接
+ **/
 napi_value handle_destroy_stream(napi_env env, napi_callback_info info) {
     release(vis.video_codec_context, vis.format_context, vis.isRtsp);
     Video2ImageStream _vis = {
@@ -208,6 +221,9 @@ napi_value handle_destroy_stream(napi_env env, napi_callback_info info) {
     return NULL;
 }
 
+/**
+ * rtsp视频录频
+ **/
 void handle_record_video(napi_env env, napi_callback_info info) {
     size_t argc = 3;
     napi_value argv[3];
@@ -267,6 +283,9 @@ void handle_record_video(napi_env env, napi_callback_info info) {
     av_log(NULL, AV_LOG_DEBUG, "record rtsp result : %d\n", result);
 }
 
+/**
+ * napi 构建js的方法
+ **/
 napi_value init(napi_env env, napi_value exports) {
     napi_status status;
     av_log_set_level(AV_LOG_INFO);
@@ -285,4 +304,5 @@ napi_value init(napi_env env, napi_value exports) {
     return exports;
 }
 
+// 初始化 js 模块
 NAPI_MODULE(NODE_GYP_MODULE_NAME, init);

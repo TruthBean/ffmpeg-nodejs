@@ -15,9 +15,9 @@
 #include <libavutil/imgutils.h>
 #include <libavutil/pixfmt.h>
 
-#include <sys/time.h>
-
 #include <jpeglib.h>
+
+#include "./common.c"
 
 typedef struct Video2ImageStream {
     AVFormatContext *format_context;
@@ -53,4 +53,4 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 void release(AVCodecContext *video_codec_context,
              AVFormatContext *format_context, bool isRtsp);
 
-#endif
+#endif // FFMPEG_NODEJS_VIDEO2IMAGES_H
