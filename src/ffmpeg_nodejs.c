@@ -184,10 +184,8 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
             napi_throw_error(env, NULL, "promise reject error");
         }
     } else {
-        napi_value return_value;
-        napi_create_int32(env, isNil, &return_value);
 
-        status = napi_resolve_deferred(env, deferred, return_value);
+        status = napi_resolve_deferred(env, deferred, buffer_pointer);
         if (status != napi_ok) {
             napi_throw_error(env, NULL, "promise resolve error");
         }

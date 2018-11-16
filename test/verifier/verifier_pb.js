@@ -626,7 +626,7 @@ proto.verifier.DetectReq.prototype.hasCameraid = function() {
  */
 proto.verifier.DetectReq.Format = {
   MAT: 0,
-  YUV: 1
+  RGB: 1
 };
 
 

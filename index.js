@@ -55,7 +55,7 @@ class FFmpegNode extends EventEmitter {
      * @param {string} type: rgb, yuv or jpeg
      * @param {number} quality: jpeg quality
      * @param {Function} callback callback function
-     * @return {Promise<number>} image buffer
+     * @return {Promise<Buffer>} image buffer
      */
     readImageStream(frames, type, quality, callback) {
         if (!this.destroy) {
@@ -92,8 +92,9 @@ class FFmpegNode extends EventEmitter {
      * @param {Function} callback callback function
      */
     async onData(quality, type, frames, callback) {
-        let result = 0;
-        while (result === 0 && !this.destroy) {
+        let result = null;
+        while (!this.destroy) {
+            console.info("let's go....");
             try {
                 result = await this.readImageStream(frames, type, quality, callback);
                 console.info(this.destroy);
@@ -104,7 +105,7 @@ class FFmpegNode extends EventEmitter {
                 break;
             }
         }
-        if (result === 1) {
+        if (result === null) {
             this.emit("error", "read video error !");
         }
     }
