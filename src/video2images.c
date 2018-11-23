@@ -278,10 +278,11 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
  * 连接视频地址，获取数据流
  * @param filename: 视频地址
  * @param nobuffer: rtsp 是否设置缓存
+ * @param use_gpu: 是否使用gpu加速
  * 
  * @return @see Video2ImageStream
  **/
-Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
+Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const bool use_gpu) {
 
     av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
 
@@ -341,23 +342,25 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
             av_dict_set(&dictionary, "rtbufsize", "4096", 0);
         }
 
-        if (av_dict_set(&dictionary, "hwaccel_device", "1", 0) < 0) {
-            av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
-        }
+        if (use_gpu) {
+            if (av_dict_set(&dictionary, "hwaccel_device", "1", 0) < 0) {
+                av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
+            }
 
-        // 使用cuda
-        if (av_dict_set(&dictionary, "hwaccel", "cuda", 0) < 0) {
-            av_log(NULL, AV_LOG_ERROR, "cuda acceleration error\n");
-        }
+            // 使用cuda
+            if (av_dict_set(&dictionary, "hwaccel", "cuda", 0) < 0) {
+                av_log(NULL, AV_LOG_ERROR, "cuda acceleration error\n");
+            }
 
-        // 使用 cuvid
-        if (av_dict_set(&dictionary, "hwaccel", "cuvid", 0) < 0) {
-            av_log(NULL, AV_LOG_ERROR, "cuvid acceleration error\n");
-        }
+            // 使用 cuvid
+            if (av_dict_set(&dictionary, "hwaccel", "cuvid", 0) < 0) {
+                av_log(NULL, AV_LOG_ERROR, "cuvid acceleration error\n");
+            }
 
-        // 使用 opencl
-        if (av_dict_set(&dictionary, "hwaccel", "opencl", 0) < 0) {
-            av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
+            // 使用 opencl
+            if (av_dict_set(&dictionary, "hwaccel", "opencl", 0) < 0) {
+                av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
+            }
         }
 
         if (av_dict_set(&dictionary, "allowed_media_types", "video", 0) < 0) {
@@ -384,7 +387,17 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
         return result;
     }
 
-    video_stream_idx = ret;
+    video_stream_idx = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    if (video_stream_idx < 0) {
+        av_log(NULL, AV_LOG_ERROR, "Could not find %s stream in input file '%s'\n",
+               av_get_media_type_string(AVMEDIA_TYPE_VIDEO),
+               filename);
+        release(video_codec_context, format_context, _bool);
+        result.error_message = "av_find_best_stream error";
+        result.ret = -4;
+        return result;
+    }
+
     video_stream = format_context->streams[video_stream_idx];
 
     AVCodec *codec = NULL;
@@ -392,10 +405,11 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
     av_dict_set(&opts, "refcounted_frames", "false", 0);
     enum AVCodecID codec_id = video_stream->codecpar->codec_id;
     // 判断摄像头视频格式是h264还是h265
-    if (codec_id == AV_CODEC_ID_H264) {
+    if (use_gpu && codec_id == AV_CODEC_ID_H264) {
         codec = avcodec_find_decoder_by_name("h264_cuvid");
     } else if (codec_id == AV_CODEC_ID_HEVC) {
-        codec = avcodec_find_decoder_by_name("hevc_nvenc");
+        if (use_gpu)
+            codec = avcodec_find_decoder_by_name("hevc_nvenc");
         av_dict_set(&opts, "flags", "low_delay", 0);
     }
     if (codec == NULL)
@@ -405,17 +419,6 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
         release(video_codec_context, format_context, _bool);
         result.error_message = "avcodec_find_decoder error";
         result.ret = -5;
-        return result;
-    }
-
-    ret = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
-    if (ret < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Could not find %s stream in input file '%s'\n",
-               av_get_media_type_string(AVMEDIA_TYPE_VIDEO),
-               filename);
-        release(video_codec_context, format_context, _bool);
-        result.error_message = "av_find_best_stream error";
-        result.ret = -4;
         return result;
     }
 

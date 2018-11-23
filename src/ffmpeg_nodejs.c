@@ -11,8 +11,8 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     napi_value result = NULL;
 
     // js 参数 转换成 napi_value
-    size_t argc = 2;
-    napi_value argv[2];
+    size_t argc = 3;
+    napi_value argv[3];
     napi_value *thisArg = NULL;
     void *data = NULL;
     status = napi_get_cb_info(env, info, &argc, argv, thisArg, &data);
@@ -46,6 +46,11 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     status = napi_get_value_bool(env, argv[1], &nobuffer);
     av_log(NULL, AV_LOG_DEBUG, "nobuffer : %d\n", nobuffer);
 
+    // useGpu
+    bool use_gpu;
+    status = napi_get_value_bool(env, argv[2], &use_gpu);
+    av_log(NULL, AV_LOG_DEBUG, "useGpu : %d\n", use_gpu);
+
     // 构建 js promise 对象
     napi_value promise;
     napi_deferred deferred;
@@ -55,7 +60,7 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     }
 
     // 获取视频流数据，将其存在全局变量中
-    vis = open_inputfile(input_filename, nobuffer);
+    vis = open_inputfile(input_filename, nobuffer, use_gpu);
 
     if (vis.ret < 0) {
         // 处理错误信息
@@ -225,8 +230,8 @@ napi_value handle_destroy_stream(napi_env env, napi_callback_info info) {
  * rtsp视频录频
  **/
 void handle_record_video(napi_env env, napi_callback_info info) {
-    size_t argc = 3;
-    napi_value argv[3];
+    size_t argc = 4;
+    napi_value argv[4];
     napi_value *thisArg = NULL;
     void *data = NULL;
     
@@ -272,14 +277,22 @@ void handle_record_video(napi_env env, napi_callback_info info) {
     av_log(NULL, AV_LOG_DEBUG, "output filename : %s\n", output_filename);
 
     // record seconds
-    int record_seconds = 0;
+    int record_seconds;
     status = napi_get_value_int32(env, argv[2], &record_seconds);
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Invalid number was passed as argument");
     }
     av_log(NULL, AV_LOG_DEBUG, "record_seconds : %d\n", record_seconds);
 
-    int result = record_rtsp(input_filename, output_filename, record_seconds);
+    // use gpu
+    bool use_gpu;
+    status = napi_get_value_bool(env, argv[3], &use_gpu);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Invalid bool was passed as argument");
+    }
+    av_log(NULL, AV_LOG_DEBUG, "use_gpu : %d\n", use_gpu);
+
+    int result = record_rtsp(input_filename, output_filename, record_seconds, use_gpu);
     av_log(NULL, AV_LOG_DEBUG, "record rtsp result : %d\n", result);
 }
 
@@ -288,7 +301,7 @@ void handle_record_video(napi_env env, napi_callback_info info) {
  **/
 napi_value init(napi_env env, napi_value exports) {
     napi_status status;
-    av_log_set_level(AV_LOG_INFO);
+    av_log_set_level(AV_LOG_DEBUG);
 
     napi_property_descriptor methods[] = {
         DECLARE_NAPI_METHOD("initReadingVideo", handle_init_read_video),

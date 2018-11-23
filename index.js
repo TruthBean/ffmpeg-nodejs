@@ -8,21 +8,25 @@ class FFmpegNode extends EventEmitter {
      * init
      * @param {String} url 
      * @param {boolean} nobuffer
+     * @param {boolean} useGpu
      * @return {Promise<FFmpegNode>}
      */
-    static init(url, nobuffer) {
+    static init(url, nobuffer, useGpu) {
         let self = new FFmpegNode();
 
         if (typeof url !== "string")
-            throw Error("url must be string type");
+            throw new Error("url must be string type");
         self.url = url;
         if (typeof nobuffer !== "boolean")
-            throw Error("nobuffer must be boolean type");
+            throw new Error("nobuffer must be boolean type");
+
+        if (typeof useGpu !== "boolean")
+            throw new Error("useGpu muse be boolean type");
 
         self.destroy = false;
         return new Promise((resolve, reject) => {
             console.info(nobuffer);
-            ffmpeg_nodejs.initReadingVideo(self.url, nobuffer).then((ignored) => {
+            ffmpeg_nodejs.initReadingVideo(self.url, nobuffer, useGpu).then((ignored) => {
                 resolve(self);
             }).catch((err) => {
                 self.destroy = true;
@@ -37,16 +41,19 @@ class FFmpegNode extends EventEmitter {
      * @param {string} url 
      * @param {string} filename 
      * @param {number} recordSeconds 
+     * @param {boolean} useGpu
      */
-    static recordVideo(url, filename, recordSeconds) {
+    static recordVideo(url, filename, recordSeconds, useGpu) {
         if (typeof url !== "string") {
-            throw Error("url must be string type");
+            throw new Error("url must be string type");
         }
         if (typeof filename !== "string")
-            throw Error("filename must be string type");
+            throw new Error("filename must be string type");
         if (typeof recordSeconds !== "number")
-            throw Error("recordSeconds must be number");
-        ffmpeg_nodejs.recordVideo(url, filename, recordSeconds);
+            throw new Error("recordSeconds must be number");
+        if (typeof useGpu !== "boolean")
+            throw new Error("useGpu must be boolean");
+        ffmpeg_nodejs.recordVideo(url, filename, recordSeconds, useGpu);
     }
 
     /**

@@ -43,7 +43,7 @@ typedef struct FrameData {
     char *error_message;
 } FrameData;
 
-Video2ImageStream open_inputfile(const char *filename, const bool nobuffer);
+Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const bool use_gpu);
 
 int init_filters(const char *filters_descr, AVCodecContext *dec_ctx, AVRational time_base,
                     AVFilterContext *buffersink_ctx, AVFilterContext *buffersrc_ctx);
