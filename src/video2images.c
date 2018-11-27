@@ -507,9 +507,6 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         // =======================================================================================================
     }
 
-    /* dump input information to stderr */
-    av_dump_format(format_context, 0, filename, 0);
-
     if (!video_stream) {
         av_log(NULL, AV_LOG_ERROR, "Could not find audio or video stream in the input, aborting\n");
         release(video_codec_context, format_context, _bool);
@@ -636,10 +633,9 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
             chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
             int c = vis.frame_rate / chose_frames;
-            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %ld\n", vis.frame_rate, chose_frames ,c);
+            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %d\n", vis.frame_rate, chose_frames ,c);
             long check = pts_time % c;
             av_log(NULL, AV_LOG_DEBUG, "check %ld\n", check);
-
 
             ret = avcodec_receive_frame(vis.video_codec_context, frame);
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %li\n", get_time());

@@ -2,6 +2,19 @@
 
 static Video2ImageStream vis;
 
+struct {
+    napi_ref ref;
+    napi_async_work work;
+} async_work_info = {NULL, NULL};
+
+typedef struct ReadImageBufferParams {
+    int chose_frames;
+    int type;
+    int quality;
+} ReadImageBufferParams;
+
+static ReadImageBufferParams params;
+
 /**
  * 初始化摄像头
  * 连接摄像头地址，并获取视频流数据
@@ -89,11 +102,11 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
 /**
  * 视频流取图片数据
  **/
-napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
+napi_value handle_video_to_image_buffer(napi_env env, napi_callback_info info) {
     napi_status status;
 
-    size_t argc = 4;
-    napi_value argv[4];
+    size_t argc = 3;
+    napi_value argv[3];
     napi_value *thisArg = NULL;
     void *data = NULL;
     status = napi_get_cb_info(env, info, &argc, argv, thisArg, &data);
@@ -116,7 +129,7 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "type is invalid number");
     }
-    av_log(NULL, AV_LOG_INFO, "input type: %d\n", type);
+    av_log(NULL, AV_LOG_DEBUG, "input type: %d\n", type);
 
     // jpeg quality
     int quality = 80;
@@ -125,17 +138,6 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
         napi_throw_error(env, NULL, "jpeg quality is invalid number");
     }
     av_log(NULL, AV_LOG_DEBUG, "input jpeg quality: %d\n", quality);
-
-    // callback
-    napi_value callback = argv[3];
-    napi_valuetype argv2_type;
-    status = napi_typeof(env, callback, &argv2_type);
-    if (status != napi_ok) {
-        napi_throw_error(env, NULL, "wrong javascript type");
-    }
-    if (argv2_type != napi_function) {
-        napi_throw_error(env, NULL, "param is not a function");
-    }
 
     // 处理图片
     if (vis.ret < 0) {
@@ -160,11 +162,6 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
         av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frameData.file_size);
         av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
     }
-
-    // 调用 callback
-    napi_value result;
-    status = napi_call_function(env, &thisArg, callback, 1, &buffer_pointer, &result);
-    av_log(NULL, AV_LOG_INFO, "napi_call_function status %d\n", status);
 
     // 释放 图片数据 的 内存
     av_freep(&frameData.file_data);
@@ -207,6 +204,152 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
     }
 
     return promise;
+}
+
+static void callback_nothing(napi_env env, void *data) {
+    // DO NOTHING
+}
+
+static void callback_completion(napi_env env, napi_status status, void *data) {
+    av_log(NULL, AV_LOG_DEBUG, "callback_completion\n");
+
+    FrameData frame_data = video2images_stream(vis, params.quality, params.chose_frames, params.type);
+    av_log(NULL, AV_LOG_DEBUG, "quality: %d  chose_frames: %d type: %d \n", params.quality, params.chose_frames, params.type);
+    
+    av_log(NULL, AV_LOG_DEBUG, "reading ...........\n");
+
+    napi_value cb, js_status;
+    napi_get_reference_value(env, async_work_info.ref, &cb);
+    napi_create_uint32(env, (uint32_t) status, &js_status);
+
+    av_log(NULL, AV_LOG_DEBUG, "frame_data.file_size %ld \n", frame_data.file_size);
+    av_log(NULL, AV_LOG_DEBUG, "frame_data.file_data %p \n", frame_data.file_data);
+
+    napi_value buffer_pointer;
+    // char数组 转换成 javascript buffer
+    void *buffer_data;
+    status = napi_create_buffer_copy(env, frame_data.file_size, (const void*)frame_data.file_data, &buffer_data, &buffer_pointer);
+    av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
+
+    // 返回错误原因
+    napi_value message;
+    if (frame_data.error_message != NULL) {
+        char *_err_msg;
+        // 判断有没有图片数据，如网络中断或其他原因，导致无法获取到图片数据
+        if (frame_data.ret == 0 && frame_data.file_size == 0) {
+            _err_msg = "image data is null, network may connect wrong";
+        }
+
+        status = napi_create_string_utf8(env, _err_msg, NAPI_AUTO_LENGTH, &message);
+        if (status != napi_ok) {
+            napi_throw_error(env, NULL, "error message create error");
+        }
+    }
+
+    napi_value obj;
+    status = napi_create_object(env, &obj);
+    av_log(NULL, AV_LOG_DEBUG, "napi_create_object result %d\n", status);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "callback object create error");
+    }
+
+    napi_value error_name;
+    napi_create_string_utf8(env, "error", NAPI_AUTO_LENGTH, &error_name);
+    napi_value data_name;
+    napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &data_name);
+
+    napi_set_property(env, obj, error_name, message);
+    napi_set_property(env, obj, data_name, buffer_pointer);
+
+    // 调用 callback
+    napi_value result;
+    status = napi_call_function(env, cb, cb, 1, &obj, &result);
+    av_log(NULL, AV_LOG_DEBUG, "napi_call_function status %d\n", status);
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Create buffer error");
+    }
+
+    // 释放 图片数据 的 内存
+    av_freep(&frame_data.file_data);
+    free(frame_data.file_data);
+    frame_data.file_data = NULL;
+
+}
+
+napi_value handle_video_to_image_stream_with_callback(napi_env env, napi_callback_info info) {
+    napi_status status;
+
+    size_t argc = 4;
+    napi_value argv[4];
+    napi_value thisArg;
+    void *data = NULL;
+    status = napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+    }
+
+    // int type
+    int type;
+    status = napi_get_value_int32(env, argv[0], &type);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "type is invalid number");
+    }
+    av_log(NULL, AV_LOG_DEBUG, "input type: %d\n", type);
+
+    // jpeg quality
+    int quality = 80;
+    status = napi_get_value_int32(env, argv[1], &quality);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "jpeg quality is invalid number");
+    }
+    av_log(NULL, AV_LOG_DEBUG, "input jpeg quality: %d\n", quality);
+
+    // int chose_frames
+    int chose_frames;
+    status = napi_get_value_int32(env, argv[2], &chose_frames);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "chose_frames is invalid number");
+    }
+    av_log(NULL, AV_LOG_DEBUG, "input chose_frames: %d\n", chose_frames);
+
+    // callback
+    napi_value callback = argv[3];
+    napi_valuetype argv2_type;
+    status = napi_typeof(env, callback, &argv2_type);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "wrong javascript type");
+    }
+    if (argv2_type != napi_function) {
+        napi_throw_error(env, NULL, "param is not a function");
+    }
+
+    // 处理图片
+    if (vis.ret < 0) {
+        napi_throw_error(env, NULL, "initReadingVideo method should be invoke first");
+    }
+
+    status = napi_create_reference(env, callback, 1, &(async_work_info.ref));
+    av_log(NULL, AV_LOG_DEBUG, "napi_create_reference %d \n", status);
+    napi_value resource_name;
+    status = napi_create_string_utf8(env, "callback", NAPI_AUTO_LENGTH, &resource_name);
+    av_log(NULL, AV_LOG_DEBUG, "napi_create_string_utf8 %d\n", status);
+
+    ReadImageBufferParams _params = {
+        .chose_frames = chose_frames,
+        .quality = quality,
+        .type = type
+    };
+
+    params = _params;
+
+    napi_value async_resource = NULL;
+    status = napi_create_async_work(env, async_resource, resource_name, callback_nothing, callback_completion,
+                           &params, &(async_work_info.work));
+    av_log(NULL, AV_LOG_DEBUG, "napi_create_async_work %d\n", status);
+
+    napi_queue_async_work(env, async_work_info.work);
 }
 
 /**
@@ -301,11 +444,12 @@ void handle_record_video(napi_env env, napi_callback_info info) {
  **/
 napi_value init(napi_env env, napi_value exports) {
     napi_status status;
-    av_log_set_level(AV_LOG_DEBUG);
+    av_log_set_level(AV_LOG_INFO);
 
     napi_property_descriptor methods[] = {
         DECLARE_NAPI_METHOD("initReadingVideo", handle_init_read_video),
-        DECLARE_NAPI_METHOD("video2ImageStream", handle_video_to_image_stream),
+        DECLARE_NAPI_METHOD("video2ImageBuffer", handle_video_to_image_buffer),
+        DECLARE_NAPI_METHOD("video2ImageStream", handle_video_to_image_stream_with_callback),
         DECLARE_NAPI_METHOD("destroyStream", handle_destroy_stream),
         DECLARE_NAPI_METHOD("recordVideo", handle_record_video)
         };

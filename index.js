@@ -25,12 +25,10 @@ class FFmpegNode extends EventEmitter {
 
         self.destroy = false;
         return new Promise((resolve, reject) => {
-            console.info(nobuffer);
             ffmpeg_nodejs.initReadingVideo(self.url, nobuffer, useGpu).then((ignored) => {
                 resolve(self);
             }).catch((err) => {
                 self.destroy = true;
-                // self.emit("error", err);
                 reject(err);
             });
         });
@@ -64,56 +62,58 @@ class FFmpegNode extends EventEmitter {
      * @param {Function} callback callback function
      * @return {Promise<Buffer>} image buffer
      */
-    readImageStream(frames, type, quality, callback) {
+    readImageBuffer(frames, type, quality) {
         if (!this.destroy) {
             if (typeof frames !== "number" || frames <= 0) frames = 1;
-
-            console.info(type);
-
             if (type !== RGB && type !== YUV && type !== JPEG) type = "rgb";
 
             if (typeof quality !== "number") quality = 80;
             else if (quality <= 0) quality = 80;
             else if (quality >= 100) quality = 100;
 
-            if (typeof callback !== "function") {
-                console.warn("callback is not a function");
-                callback = function (buffer) { };
-            } else {
-                console.info(callback);
-            }
+            let typeNo = 0;
+            if (type === YUV) typeNo = 0;
+            else if (type === RGB) typeNo = 1;
+            else if (type === JPEG) typeNo = 2;
+            return ffmpeg_nodejs.video2ImageBuffer(frames, typeNo, quality);
+        }
+    }
+
+    /**
+     * @private
+     * @param {number} quality: jpeg quality
+     * @param {string} type: rgb, yuv or jpeg
+     * @param {number} frames: chose frames per second, default 1
+     */
+    async readImageStream(quality, type, frames) {
+        if (!this.destroy) {
+            if (typeof frames !== "number" || frames <= 0) frames = 1;
+            if (type !== RGB && type !== YUV && type !== JPEG) type = "rgb";
+
+            if (typeof quality !== "number") quality = 80;
+            else if (quality <= 0) quality = 80;
+            else if (quality >= 100) quality = 100;
 
             let typeNo = 0;
             if (type === YUV) typeNo = 0;
             else if (type === RGB) typeNo = 1;
             else if (type === JPEG) typeNo = 2;
-            return ffmpeg_nodejs.video2ImageStream(frames, typeNo, quality, callback);
-        }
-    }
-
-    /**
-     * 
-     * @param {number} quality: jpeg quality
-     * @param {string} type: rgb, yuv or jpeg
-     * @param {number} frames: chose frames per second, default 1
-     * @param {Function} callback callback function
-     */
-    async onData(quality, type, frames, callback) {
-        let result = null;
-        while (!this.destroy) {
-            console.info("let's go....");
-            try {
-                result = await this.readImageStream(frames, type, quality, callback);
-                console.info(this.destroy);
-                console.info("----------------> ", result);
-                if (this.destroy) break;
-            } catch (err) {
-                this.emit("error", err);
-                break;
-            }
-        }
-        if (result === null) {
-            this.emit("error", "read video error !");
+            let that = this;
+            this.read = setInterval(() => {
+                let begin = new Date().getTime();
+                ffmpeg_nodejs.video2ImageStream(typeNo, quality, frames, (obj) => {
+                    if (obj !== undefined && obj !== null) {
+                        if (obj.error !== undefined && obj.error !== null) {
+                            that.emit("error", obj.error);
+                        }
+                        if (obj.data !== undefined && obj.data !== null) {
+                            that.emit("data", obj.data);
+                        }
+                    }
+                    let end = new Date().getTime();
+                    console.info("video2ImageStream spend time: " + (end - begin));
+                });
+            }, (1000 / frames));
         }
     }
 
@@ -121,9 +121,7 @@ class FFmpegNode extends EventEmitter {
      * close this url video stream
      */
     close() {
-        console.info(this.destroy);
         if (!this.destroy) {
-            console.info("destroy...");
             this.destroy = true;
             return ffmpeg_nodejs.destroyStream();
         }
@@ -131,9 +129,9 @@ class FFmpegNode extends EventEmitter {
 
     static TYPE() {
         return {
-            JPEG: "jpeg",
-            YUV: "yuv",
-            RGB: "rgb"
+            JPEG: JPEG,
+            YUV: YUV,
+            RGB: RGB
         }
     };
 }

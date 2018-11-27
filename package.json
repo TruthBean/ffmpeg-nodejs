@@ -4,11 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "preinstall": "npm i node-addon-api --save && npm i node-gyp -D && npm run configure && npm run build",
-    "configure": "node ./node_modules/node-gyp/bin/node-gyp.js configure",
-    "clean": "node ./node_modules/node-gyp/bin/node-gyp.js clean",
-    "build": "node ./node_modules/node-gyp/bin/node-gyp.js build",
-    "rebuild": "node ./node_modules/node-gyp/bin/node-gyp.js rebuild"
+    "preinstall": "npm i node-addon-api && npm i cmake-js && npm run compile",
+    "configure": "node ./node_modules/cmake-js/bin/cmake-js configure",
+    "clean": "node ./node_modules/cmake-js/bin/cmake-js clean",
+    "build": "node ./node_modules/cmake-js/bin/cmake-js build",
+    "rebuild": "node ./node_modules/cmake-js/bin/cmake-js rebuild",
+    "compile": "node ./node_modules/cmake-js/bin/cmake-js compile"
   },
   "author": "truthbean",
   "license": "MIT",
@@ -16,6 +17,6 @@
     "node-addon-api": "^1.6.1"
   },
   "devDependencies": {
-    "node-gyp": "^3.8.0"
+    "cmake-js": "^4.0.1"
   }
 }
