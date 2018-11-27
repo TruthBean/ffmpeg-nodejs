@@ -278,10 +278,11 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
  * 连接视频地址，获取数据流
  * @param filename: 视频地址
  * @param nobuffer: rtsp 是否设置缓存
+ * @param use_gpu: 是否使用gpu加速
  * 
  * @return @see Video2ImageStream
  **/
-Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
+Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const bool use_gpu) {
 
     av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
 
@@ -341,23 +342,25 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
             av_dict_set(&dictionary, "rtbufsize", "4096", 0);
         }
 
-        if (av_dict_set(&dictionary, "hwaccel_device", "1", 0) < 0) {
-            av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
-        }
+        if (use_gpu) {
+            if (av_dict_set(&dictionary, "hwaccel_device", "1", 0) < 0) {
+                av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
+            }
 
-        // 使用cuda
-        if (av_dict_set(&dictionary, "hwaccel", "cuda", 0) < 0) {
-            av_log(NULL, AV_LOG_ERROR, "cuda acceleration error\n");
-        }
+            // 使用cuda
+            if (av_dict_set(&dictionary, "hwaccel", "cuda", 0) < 0) {
+                av_log(NULL, AV_LOG_ERROR, "cuda acceleration error\n");
+            }
 
-        // 使用 cuvid
-        if (av_dict_set(&dictionary, "hwaccel", "cuvid", 0) < 0) {
-            av_log(NULL, AV_LOG_ERROR, "cuvid acceleration error\n");
-        }
+            // 使用 cuvid
+            if (av_dict_set(&dictionary, "hwaccel", "cuvid", 0) < 0) {
+                av_log(NULL, AV_LOG_ERROR, "cuvid acceleration error\n");
+            }
 
-        // 使用 opencl
-        if (av_dict_set(&dictionary, "hwaccel", "opencl", 0) < 0) {
-            av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
+            // 使用 opencl
+            if (av_dict_set(&dictionary, "hwaccel", "opencl", 0) < 0) {
+                av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
+            }
         }
 
         if (av_dict_set(&dictionary, "allowed_media_types", "video", 0) < 0) {
@@ -384,7 +387,17 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
         return result;
     }
 
-    video_stream_idx = ret;
+    video_stream_idx = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    if (video_stream_idx < 0) {
+        av_log(NULL, AV_LOG_ERROR, "Could not find %s stream in input file '%s'\n",
+               av_get_media_type_string(AVMEDIA_TYPE_VIDEO),
+               filename);
+        release(video_codec_context, format_context, _bool);
+        result.error_message = "av_find_best_stream error";
+        result.ret = -4;
+        return result;
+    }
+
     video_stream = format_context->streams[video_stream_idx];
 
     AVCodec *codec = NULL;
@@ -392,10 +405,11 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
     av_dict_set(&opts, "refcounted_frames", "false", 0);
     enum AVCodecID codec_id = video_stream->codecpar->codec_id;
     // 判断摄像头视频格式是h264还是h265
-    if (codec_id == AV_CODEC_ID_H264) {
+    if (use_gpu && codec_id == AV_CODEC_ID_H264) {
         codec = avcodec_find_decoder_by_name("h264_cuvid");
     } else if (codec_id == AV_CODEC_ID_HEVC) {
-        codec = avcodec_find_decoder_by_name("hevc_nvenc");
+        if (use_gpu)
+            codec = avcodec_find_decoder_by_name("hevc_nvenc");
         av_dict_set(&opts, "flags", "low_delay", 0);
     }
     if (codec == NULL)
@@ -405,17 +419,6 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer) {
         release(video_codec_context, format_context, _bool);
         result.error_message = "avcodec_find_decoder error";
         result.ret = -5;
-        return result;
-    }
-
-    ret = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
-    if (ret < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Could not find %s stream in input file '%s'\n",
-               av_get_media_type_string(AVMEDIA_TYPE_VIDEO),
-               filename);
-        release(video_codec_context, format_context, _bool);
-        result.error_message = "av_find_best_stream error";
-        result.ret = -4;
         return result;
     }
 
@@ -684,3 +687,113 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
     return result;
 }
+
+LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, sem_t *semaphore) {
+    av_log(NULL, AV_LOG_INFO, "start video_to_frame\n");
+    LinkedQueueNodeData result = {
+        .pts = 0,
+        .frame = NULL,
+        .ret = 0
+        };
+
+    int ret;
+    AVFrame *frame = av_frame_alloc();
+    if (!frame) {
+        av_log(NULL, AV_LOG_ERROR, "Could not allocate image frame\n");
+        result.ret = -1;
+        result.error_message = "Could not allocate image frame";
+        return result;
+    }
+
+    AVPacket *orig_pkt = av_packet_alloc();
+    if (!orig_pkt) {
+        av_log(NULL, AV_LOG_ERROR, "Couldn't alloc packet\n");
+        result.ret = -2;
+        result.error_message = "Couldn't alloc packet";
+        close(frame, orig_pkt);
+        return result;
+    }
+
+    /* read frames from the file */
+    av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_time());
+
+    while (av_read_frame(vis.format_context, orig_pkt) >= 0) {
+        av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_time());
+        if (orig_pkt->stream_index == vis.video_stream_idx) {
+            if (orig_pkt->flags & AV_PKT_FLAG_KEY) {
+                av_log(NULL, AV_LOG_DEBUG, "key frame\n");
+                if (orig_pkt->pts < 0) {
+                    pts = 0;
+                }
+            }
+            if (vis.video_stream == NULL) {
+                av_log(NULL, AV_LOG_ERROR, "error: video stream is null\n");
+                result.ret = -3;
+                result.error_message = "video stream is null";
+                close(frame, orig_pkt);
+                return result;
+            }
+
+            long pts_time = 0;
+            // 获取帧数
+            if (orig_pkt->pts >= 0)
+                pts_time = (long)(orig_pkt->pts * av_q2d(vis.video_stream->time_base) * vis.frame_rate);
+            else
+                pts_time = pts++;
+
+            ret = avcodec_send_packet(vis.video_codec_context, orig_pkt);
+            av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_time());
+            if (ret < 0) {
+                av_log(NULL, AV_LOG_ERROR, "Error while sending a packet to the decoder\n");
+                close(frame, orig_pkt);
+                result.ret = -4;
+                result.error_message = "Error while sending a packet to the decoder";
+                return result;
+            }
+
+            ret = avcodec_receive_frame(vis.video_codec_context, frame);
+            av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %li\n", get_time());
+            // 解码一帧数据
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
+                continue;
+            }
+            if (ret < 0) {
+                av_log(NULL, AV_LOG_ERROR, "Decode error\n");
+                close(frame, orig_pkt);
+                result.ret = -4;
+                result.error_message = "Error while receive frame from a packet";
+                return result;
+            }
+
+            chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
+            int c = vis.frame_rate / chose_frames;
+            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %ld\n", vis.frame_rate, chose_frames ,c);
+            long check = pts_time % c;
+            av_log(NULL, AV_LOG_DEBUG, "check %ld\n", check);
+
+            av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d frame_rate: %d\n", pts_time,
+                    chose_frames, vis.frame_rate);
+            // 判断帧数，是否取
+            // if (check == c - 1) {
+                result.frame = frame;
+                result.pts = pts_time;
+                // av_log(NULL, AV_LOG_INFO, "result.pts %d \n", result.pts);
+                if (queue == NULL) {
+                    av_log(NULL, AV_LOG_INFO, "queue is null\n");
+                }
+                // fprintf(stdout, "queue real_size %d\n", queue->real_size);
+                push_linkedQueue(queue, result);
+                if (semaphore != NULL) sem_post(semaphore);
+                // av_log(NULL, AV_LOG_INFO, "frame ....................\n");
+            // }
+
+            av_packet_unref(orig_pkt);
+        }
+    }
+
+    close(frame, orig_pkt);
+
+    return result;
+}
+

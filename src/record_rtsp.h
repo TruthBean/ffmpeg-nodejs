@@ -11,6 +11,6 @@
 
 #include "./common.h"
 
-int record_rtsp(const char *rtsp_url, const char *output_filename, int record_seconds);
+int record_rtsp(const char *rtsp_url, const char *output_filename, const int record_seconds, const bool use_gpu);
 
 #endif //FFMPEG_NODEJS_RECORD_RTSP_H

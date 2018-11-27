@@ -22,7 +22,7 @@ static int release_record_rtsp_action(AVFormatContext *rtsp_format_context, AVFo
  * @param output_filename: 录制视频的存储路径
  * @param record_seconds: 录制视频的时长，单位秒
  **/
-int record_rtsp(const char *rtsp_url, const char *output_filename, int record_seconds) {
+int record_rtsp(const char *rtsp_url, const char *output_filename, const int record_seconds, const bool use_gpu) {
     av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
 
     time_t timenow, timestart;
@@ -31,13 +31,13 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
     AVFormatContext *rtsp_format_context = NULL;
     AVFormatContext *output_format_context = NULL;
 
+    // ============================== rtsp ========================================
+
     // 初始化网络
     int error = avformat_network_init();
     if (error != 0) {
         av_log(NULL, AV_LOG_ERROR, "network init error\n");
     }
-
-    av_log(NULL, AV_LOG_DEBUG, "111111111111111111111111\n");
 
     AVDictionary *dictionary = NULL;
     if (av_dict_set(&dictionary, "rtsp_transport", "tcp", 0) < 0) {
@@ -48,9 +48,26 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
         }
     }
 
-    // ============================== rtsp ========================================
+    if (use_gpu) {
+        if (av_dict_set(&dictionary, "hwaccel_device", "1", 0) < 0) {
+            av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
+        }
 
-    av_log(NULL, AV_LOG_DEBUG, "22222222222222222222222222222\n");
+        // 使用cuda
+        if (av_dict_set(&dictionary, "hwaccel", "cuda", 0) < 0) {
+            av_log(NULL, AV_LOG_ERROR, "cuda acceleration error\n");
+        }
+
+        // 使用 cuvid
+        if (av_dict_set(&dictionary, "hwaccel", "cuvid", 0) < 0) {
+            av_log(NULL, AV_LOG_ERROR, "cuvid acceleration error\n");
+        }
+
+        // 使用 opencl
+        if (av_dict_set(&dictionary, "hwaccel", "opencl", 0) < 0) {
+            av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
+        }
+    }
 
     // open rtsp
     if (avformat_open_input(&rtsp_format_context, rtsp_url, NULL, &dictionary) != 0) {
@@ -64,30 +81,65 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
         return release_record_rtsp_action(rtsp_format_context, output_format_context, -2);
     }
 
-    av_log(NULL, AV_LOG_DEBUG, "3333333333333333333333333333333333333333\n");
-
     // search video stream
-    int rtsp_video_stream_idx = -1;
-    AVCodecParameters *rtsp_codec_parms;
-    AVStream *rtsp_stream;
-    
-    av_log(NULL, AV_LOG_DEBUG, "4444444444444444444444444444444444444444444444\n");
-    for (int ix = 0; ix < rtsp_format_context->nb_streams; ix++) {
-        rtsp_codec_parms = rtsp_format_context->streams[ix]->codecpar;
-        if (rtsp_codec_parms->codec_type == AVMEDIA_TYPE_VIDEO) {
-            rtsp_stream = rtsp_format_context->streams[ix];
-            rtsp_video_stream_idx = ix;
-            break;
-        }
+    int rtsp_video_stream_idx = av_find_best_stream(rtsp_format_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    if (rtsp_format_context < 0) {
+        av_log(NULL, AV_LOG_DEBUG, "cannot find video stream\n");
+        return release_record_rtsp_action(rtsp_format_context, output_format_context, -3);
     }
+    AVStream *rtsp_stream = rtsp_format_context->streams[rtsp_video_stream_idx];
+    AVCodecParameters *rtsp_codec_parms = rtsp_stream->codecpar;
 
     if (rtsp_video_stream_idx < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot find input video stream\n");
         return release_record_rtsp_action(rtsp_format_context, output_format_context, -3);
     }
 
+    AVCodec *codec = NULL;
+    AVDictionary *opts = NULL;
+    av_dict_set(&opts, "refcounted_frames", "false", 0);
+    enum AVCodecID codec_id = rtsp_stream->codecpar->codec_id;
+    // 判断摄像头视频格式是h264还是h265
+    if (use_gpu && codec_id == AV_CODEC_ID_H264) {
+        codec = avcodec_find_decoder_by_name("h264_cuvid");
+    } else if (codec_id == AV_CODEC_ID_HEVC) {
+        if (use_gpu)
+            codec = avcodec_find_decoder_by_name("hevc_nvenc");
+        av_dict_set(&opts, "flags", "low_delay", 0);
+    }
+    if (codec == NULL)
+        codec = avcodec_find_decoder(rtsp_stream->codecpar->codec_id);
+    if (!codec) {
+        av_log(NULL, AV_LOG_ERROR, "Failed to find %s codec\n", av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
+        return release_record_rtsp_action(rtsp_format_context, output_format_context, -4);
+    }
+
     // 每秒多少帧
     int input_frame_rate = rtsp_stream->r_frame_rate.num / rtsp_stream->r_frame_rate.den;
+    av_log(NULL, AV_LOG_INFO, "input video frame rate: %d\n", input_frame_rate);
+
+    AVCodecParserContext *parserContext = av_parser_init(codec->id);
+    if (!parserContext) {
+        av_log(NULL, AV_LOG_ERROR, "parser not found\n");
+        return release_record_rtsp_action(rtsp_format_context, output_format_context, -5);
+    }
+
+    AVCodecContext *rtsp_codec_context = avcodec_alloc_context3(codec);
+    if (!rtsp_codec_context) {
+        av_log(NULL, AV_LOG_ERROR, "Failed to allocate the %s codec context\n",
+               av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
+        return release_record_rtsp_action(rtsp_format_context, output_format_context, -6);
+    }
+
+    if ((avcodec_parameters_to_context(rtsp_codec_context, rtsp_stream->codecpar)) < 0) {
+        av_log(NULL, AV_LOG_ERROR, "Failed to copy %s codec parameters to decoder context\n",
+               av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
+        return release_record_rtsp_action(rtsp_format_context, output_format_context, -7);
+    }
+
+    if (avcodec_open2(rtsp_codec_context, codec, &opts) < 0) {
+        av_log(NULL, AV_LOG_WARNING, "Failed to open %s codec\n", av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
+    }
 
     av_log(NULL, AV_LOG_DEBUG, "start out time: %li\n", get_time());
     
@@ -96,8 +148,10 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, int record_se
     // open output file
     // 设置输出文件格式
     AVOutputFormat *output_format = av_guess_format(NULL, output_filename, NULL);
+
     output_format_context = avformat_alloc_context();
     output_format_context->oformat = output_format;
+
     if (avio_open2(&output_format_context->pb, output_filename, AVIO_FLAG_WRITE, NULL, NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot open or create input output file\n");
         return release_record_rtsp_action(rtsp_format_context, output_format_context, -4);

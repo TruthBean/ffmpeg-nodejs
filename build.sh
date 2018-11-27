@@ -11,7 +11,7 @@ npm i google-protobuf --save
 npm i zeromq --save
 
 # napi
-npm i -D node-gyp
+npm i -D cmake-js
 npm i node-addon-api --save
 
 npm run configure
@@ -26,3 +26,4 @@ npm run build
 # npm run test
 
 # protoc --js_out=import_style=commonjs,library=verifier_libs,binary:. verifier.proto
+

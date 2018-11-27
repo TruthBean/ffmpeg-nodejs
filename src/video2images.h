@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pthread.h>
+#include <semaphore.h>
+
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/buffersink.h>
@@ -17,7 +20,7 @@
 
 #include <jpeglib.h>
 
-#include "./common.c"
+#include "./common.h"
 
 typedef struct Video2ImageStream {
     AVFormatContext *format_context;
@@ -43,12 +46,18 @@ typedef struct FrameData {
     char *error_message;
 } FrameData;
 
-Video2ImageStream open_inputfile(const char *filename, const bool nobuffer);
+Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const bool use_gpu);
 
 int init_filters(const char *filters_descr, AVCodecContext *dec_ctx, AVRational time_base,
                     AVFilterContext *buffersink_ctx, AVFilterContext *buffersrc_ctx);
 
 FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type);
+
+LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, sem_t *semaphore);
+
+void read_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue);
+
+void *producer(void *data);
 
 void release(AVCodecContext *video_codec_context,
              AVFormatContext *format_context, bool isRtsp);
