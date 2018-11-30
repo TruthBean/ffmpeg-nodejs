@@ -15,7 +15,7 @@ dir = "/media/oceanai/DevOps/oceanai-workspace/ffmpeg-node-cmake";
 dir = "/mnt/h/oceanai-workspace/ffmpeg-node-cmake";
 
 const type = FFmpegNode.TYPE();
-let target_type = type.RGB;
+const target_type = type.RGB;
 
 let suffix = ".yuv";
 switch (target_type) {
@@ -27,12 +27,14 @@ switch (target_type) {
         break;
     case type.JPEG:
         suffix = ".jpg";
+        break;
 }
 
 function zmqAction(image) {
+    let begin = new Date().getTime();
     let detectReq = new verifier.DetectReq();
     detectReq.setImage(image);
-    detectReq.setInterface(14);
+    detectReq.setInterface(5);
     detectReq.setApikey("");
     detectReq.setRows(2048);
     detectReq.setCols(3072);
@@ -40,6 +42,7 @@ function zmqAction(image) {
     detectReq.setMinfacesize(80);
     detectReq.setMaxfacesize(300);
     detectReq.setField("normal");
+    detectReq.setClassify("gender,age,hair");
 
     let req = detectReq.serializeBinary();
 
@@ -59,6 +62,8 @@ function zmqAction(image) {
     console.info("0000000");
 
     dealer.on('message', (msg) => {
+        let end = new Date().getTime();
+        console.info("time .................. " + (end - begin));
         console.info("<<<<<<<<<<<<<<<<<<<<", msg);
         let bytes = Buffer.alloc(msg.length + 1);
         msg.copy(bytes);
@@ -77,12 +82,19 @@ function zmqAction(image) {
 
             let detectArray = res.getDetectList();
             detectArray.forEach((value, index, array) => {
-                console.info(value.getQuality());
+                console.info("getDetectList ------------>>>>>>>>>>>>>>");
+                console.info("quality: " + value.getQuality());
+                console.info("age: " + value.getAge());
+                console.info("female: " + value.getFemale());
+                console.info("glasses: " + value.getGlasses());
+                console.info("hair: " + value.getHair());
             });
 
             let trackArray = res.getTrackList();
             trackArray.forEach((value, index, array) => {
+                console.info("getTrackList ------------>>>>>>>>>>>>>>");
                 console.info(value.getScore());
+                console.info(value.getGlasses());
             });
         } catch (error) {
             console.info(error);
@@ -110,32 +122,37 @@ async function noCb() {
     await fs.writeFileSync(name, image);
 
     zmqAction(image);
+
 }
 
 noCb().then();
 
 function cb() {
-    FFmpegNode.init(rtsp_addr, true, false).then((obj) => {
+    let ffmpegNode = FFmpegNode.init(rtsp_addr, true, false);
+
+    ffmpegNode.then((obj) => {
         let i = 0;
-        obj.readImageStream(80, target_type, 1);
+        obj.readImageStream(100, target_type, 1);
         obj.on("data", (image) => {
+            console.info("target type: " + target_type);
             i++;
             let now = new Date()
-            let name = dir + "/tmp/images/buffer-" + now.getHours() + "-" + now.getMinutes() + "-" + now.getSeconds() + "-" + i + suffix;
+            let name = dir + "/tmp/images/stream-" + now.getHours() + "-" + now.getMinutes() + "-" + now.getSeconds() + "-" + i + suffix;
             console.info(name);
-            fs.writeFileSync(name, image);
+            // fs.writeFileSync(name, image);
             console.info("------------------------------------");
 
             process.nextTick(zmqAction, image);
+            // zmqAction(image);
 
-            if (i > 1) {
-                obj.close();
-            }
+            // if (i > 1) {
+            //     obj.close();
+            // }
         });
 
         obj.on("error", (error) => {
             console.error(error);
-        })
+        });
 
     }).catch(error => {
         console.error(error);

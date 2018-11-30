@@ -17,7 +17,7 @@
   "dependencies": {
     "google-protobuf": "^3.6.1",
     "nan": "^2.11.1",
-    "node-addon-api": "^1.6.1",
+    "node-addon-api": "^1.6.2",
     "streaming-worker": "^1.0.1",
     "through": "^2.3.8",
     "zeromq": "^5.1.0"

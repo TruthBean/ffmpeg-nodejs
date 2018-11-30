@@ -101,6 +101,7 @@ static LinkedQueueNodeData copy_nodeData(LinkedQueueNodeData data) {
     AVFrame *dist_frame = av_frame_alloc();
     if (av_frame_copy(dist_frame, data.frame) >= 0) av_frame_copy_props(dist_frame, data.frame);
     av_frame_unref(data.frame);
+    result.frame = dist_frame;
     return result;
 }
 

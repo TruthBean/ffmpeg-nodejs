@@ -87,7 +87,7 @@ class FFmpegNode extends EventEmitter {
      * @param {string} type: rgb, yuv or jpeg
      * @param {number} frames: chose frames per second, default 1
      */
-    async readImageStream(quality, type, frames) {
+    readImageStream(quality, type, frames) {
         if (!this.destroy) {
             if (typeof frames !== "number" || frames <= 0) frames = 1;
             if (type !== RGB && type !== YUV && type !== JPEG) type = "rgb";

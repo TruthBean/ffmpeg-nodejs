@@ -180,9 +180,6 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
 
     // start reading packets from stream and write them to file
 
-    av_dump_format(rtsp_format_context, 0, rtsp_format_context->filename, 0);
-    av_dump_format(output_format_context, 0, output_format_context->filename, 1);
-
     timestart = timenow = get_time();
 
     AVPacket pkt;

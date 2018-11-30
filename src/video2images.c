@@ -274,6 +274,21 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
     return result;
 }
 
+static int time_out = 0;
+static bool _init = true;
+//核心是超时返回1，正常等待返回0
+static int interrupt_cb(void *ctx) {
+    time_out += 1;
+    av_log(NULL, AV_LOG_DEBUG, "interrupt_cb ......................... timeout %d \n", time_out);
+    if (!_init || time_out > 21000) {
+        time_out=0;
+        //这个就是超时的返回
+        return 1;
+    }
+    // _init = false;
+    return 0;
+}
+
 /**
  * 连接视频地址，获取数据流
  * @param filename: 视频地址
@@ -368,7 +383,9 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         }
     }
 
-    format_context = NULL;
+    format_context = avformat_alloc_context();
+    format_context->interrupt_callback.callback = interrupt_cb;
+    format_context->interrupt_callback.opaque = format_context;
     av_log(NULL, AV_LOG_DEBUG, "input file: %s\n", filename);
     // format_context必须初始化，否则报错
     if ((ret = avformat_open_input(&format_context, filename, NULL, &dictionary)) != 0) {
@@ -403,6 +420,8 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     AVCodec *codec = NULL;
     AVDictionary *opts = NULL;
     av_dict_set(&opts, "refcounted_frames", "false", 0);
+    av_dict_set(&opts, "timeout", "1", 0);
+    av_dict_set(&opts, "listen_timeout", "1", 0);
     enum AVCodecID codec_id = video_stream->codecpar->codec_id;
     // 判断摄像头视频格式是h264还是h265
     if (use_gpu && codec_id == AV_CODEC_ID_H264) {
@@ -507,9 +526,6 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         // =======================================================================================================
     }
 
-    /* dump input information to stderr */
-    av_dump_format(format_context, 0, filename, 0);
-
     if (!video_stream) {
         av_log(NULL, AV_LOG_ERROR, "Could not find audio or video stream in the input, aborting\n");
         release(video_codec_context, format_context, _bool);
@@ -600,7 +616,12 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
     /* read frames from the file */
     av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_time());
 
-    while (av_read_frame(vis.format_context, orig_pkt) >= 0) {
+    int _ret = 0;
+    while (true) {
+        av_log(NULL, AV_LOG_INFO, "-------------2432434232432 %d \n", _ret);
+        _ret = av_read_frame(vis.format_context, orig_pkt);
+        av_log(NULL, AV_LOG_INFO, "--------------------------------- %d \n", _ret);
+        if (_ret < 0) break;
         av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_time());
         if (orig_pkt->stream_index == vis.video_stream_idx) {
             if (orig_pkt->flags & AV_PKT_FLAG_KEY) {
@@ -636,7 +657,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
 
             chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
             int c = vis.frame_rate / chose_frames;
-            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %ld\n", vis.frame_rate, chose_frames ,c);
+            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %d\n", vis.frame_rate, chose_frames ,c);
             long check = pts_time % c;
             av_log(NULL, AV_LOG_DEBUG, "check %ld\n", check);
 
@@ -768,7 +789,7 @@ LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, Link
 
             chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
             int c = vis.frame_rate / chose_frames;
-            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %ld\n", vis.frame_rate, chose_frames ,c);
+            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %d\n", vis.frame_rate, chose_frames ,c);
             long check = pts_time % c;
             av_log(NULL, AV_LOG_DEBUG, "check %ld\n", check);
 
