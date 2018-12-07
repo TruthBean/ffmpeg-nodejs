@@ -34,15 +34,15 @@ else()
     mark_as_advanced(LIB_TURBO_JPEG_INCLUDE_DIR LIB_TURBO_JPEG_LIBRARIES)
     message(STATUS "LIB_TURBO_JPEG_INCLUDE_DIR: " "${LIB_TURBO_JPEG_INCLUDE_DIR}")
     message(STATUS "LIB_TURBO_JPEG_LIBRARIES: " "${LIB_TURBO_JPEG_LIBRARIES}")
-    # if (LIB_TURBO_JPEG_INCLUDE_DIR)
-    #     include_directories(${LIB_TURBO_JPEG_INCLUDE_DIR})
-    #     if(LIB_TURBO_JPEG_LIBRARIES)
-    #         target_link_libraries(${PROJECT_NAME} ${LIB_TURBO_JPEG_LIBRARIES})
-    #     else(LIB_TURBO_JPEG_LIBRARIES)
-    #         target_link_libraries(${PROJECT_NAME} "-ljpeg")
-    #         target_link_libraries(${PROJECT_NAME} "-lturbojpeg")
-    #     endif(LIB_TURBO_JPEG_LIBRARIES)
-    # else()
+    if (LIB_TURBO_JPEG_INCLUDE_DIR)
+        include_directories(${LIB_TURBO_JPEG_INCLUDE_DIR})
+        if(LIB_TURBO_JPEG_LIBRARIES)
+            target_link_libraries(${PROJECT_NAME} ${LIB_TURBO_JPEG_LIBRARIES})
+        else(LIB_TURBO_JPEG_LIBRARIES)
+            target_link_libraries(${PROJECT_NAME} "-ljpeg")
+            target_link_libraries(${PROJECT_NAME} "-lturbojpeg")
+        endif(LIB_TURBO_JPEG_LIBRARIES)
+    else()
         message(STATUS "ExternalProject_Add libjpeg...................")
 
         ExternalProject_Add(
@@ -64,7 +64,7 @@ else()
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${PROJECT_SOURCE_DIR}/deps/build/libjpeg/lib"
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    # endif()
+    endif()
 endif()
 
 #######################################################################################################
@@ -73,15 +73,15 @@ endif()
 if(WINDOWS)
     # TODO
 else()
-    # find_package(FFmpeg REQUIRED)
-    # if(FFMPEG_FOUND)
-    #     message(STATUS "Found FFMPEG/LibAV libraries")
-    #     message(STATUS "FFMPEG_LIBRARY: " "${FFMPEG_LIBRARY}")
-    #     message(STATUS "FFMPEG_INCLUDE_DIR: " "${FFMPEG_INCLUDE_DIR}")
-    #     message(STATUS "FFMPEG_LIBRARIES: " "${FFMPEG_LIBRARIES}")
-    #     include_directories(${FFMPEG_INCLUDE_DIR})
-    #     target_link_libraries(${PROJECT_NAME} ${FFMPEG_LIBRARIES})
-    # else()
+    find_package(FFmpeg REQUIRED)
+    if(FFMPEG_FOUND)
+        message(STATUS "Found FFMPEG/LibAV libraries")
+        message(STATUS "FFMPEG_LIBRARY: " "${FFMPEG_LIBRARY}")
+        message(STATUS "FFMPEG_INCLUDE_DIR: " "${FFMPEG_INCLUDE_DIR}")
+        message(STATUS "FFMPEG_LIBRARIES: " "${FFMPEG_LIBRARIES}")
+        include_directories(${FFMPEG_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} ${FFMPEG_LIBRARIES})
+    else()
         message(STATUS "ExternalProject_Add ffmpeg...................")
 
         ExternalProject_Add(
@@ -111,7 +111,7 @@ else()
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${PROJECT_SOURCE_DIR}/deps/build/ffmpeg/lib"
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    # endif()
+    endif()
 
 endif()
 
