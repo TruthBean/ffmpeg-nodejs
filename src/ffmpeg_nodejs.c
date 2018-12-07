@@ -244,6 +244,11 @@ static void callback_completion(napi_env env, napi_status status, void *data) {
         if (status != napi_ok) {
             napi_throw_error(env, NULL, "error message create error");
         }
+    } else {
+        status = napi_get_undefined(env, &message);
+        if (status != napi_ok) {
+            napi_throw_error(env, NULL, "error message create error");
+        }
     }
 
     napi_value obj;
@@ -258,9 +263,10 @@ static void callback_completion(napi_env env, napi_status status, void *data) {
     napi_value data_name;
     napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &data_name);
 
-    napi_set_property(env, obj, error_name, message);
-    napi_set_property(env, obj, data_name, buffer_pointer);
-
+    status = napi_set_property(env, obj, error_name, message);
+    av_log(NULL, AV_LOG_DEBUG, "napi_set_property error result %d\n", status);
+    status = napi_set_property(env, obj, data_name, buffer_pointer);
+    av_log(NULL, AV_LOG_DEBUG, "napi_set_property data result %d\n", status);
     // 调用 callback
     napi_value result;
     status = napi_call_function(env, cb, cb, 1, &obj, &result);

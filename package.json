@@ -1,6 +1,6 @@
 {
   "name": "ffmpeg-nodejs",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
   "author": "truthbean",
   "license": "MIT",
   "dependencies": {
-    "node-addon-api": "^1.6.1"
+    "node-addon-api": "^1.6.2"
   },
   "devDependencies": {
     "cmake-js": "^4.0.1"
