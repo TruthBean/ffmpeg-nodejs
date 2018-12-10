@@ -100,7 +100,6 @@ class FFmpegNode extends EventEmitter {
             else if (type === JPEG) typeNo = 2;
             let that = this;
             this.read = setInterval(() => {
-                let begin = new Date().getTime();
                 ffmpeg_nodejs.video2ImageStream(typeNo, quality, frames, (obj) => {
                     if (obj !== undefined && obj !== null) {
                         if (obj.error !== undefined && obj.error !== null) {
@@ -110,10 +109,35 @@ class FFmpegNode extends EventEmitter {
                             that.emit("data", obj.data);
                         }
                     }
-                    let end = new Date().getTime();
-                    console.info("video2ImageStream spend time: " + (end - begin));
                 });
             }, (1000 / frames));
+        }
+    }
+
+    readImageStreamThreadly(quality, type, frames) {
+        if (!this.destroy) {
+            if (typeof frames !== "number" || frames <= 0) frames = 1;
+            if (type !== RGB && type !== YUV && type !== JPEG) type = "rgb";
+
+            if (typeof quality !== "number") quality = 80;
+            else if (quality <= 0) quality = 80;
+            else if (quality >= 100) quality = 100;
+
+            let typeNo = 0;
+            if (type === YUV) typeNo = 0;
+            else if (type === RGB) typeNo = 1;
+            else if (type === JPEG) typeNo = 2;
+            let that = this;
+            ffmpeg_nodejs.video2ImageStreamThreadly(typeNo, quality, frames, (obj) => {
+                if (obj !== undefined && obj !== null) {
+                    if (obj.error !== undefined && obj.error !== null) {
+                        that.emit("error", obj.error);
+                    }
+                    if (obj.data !== undefined && obj.data !== null) {
+                        that.emit("data", obj.data);
+                    }
+                }
+            });
         }
     }
 
@@ -123,6 +147,8 @@ class FFmpegNode extends EventEmitter {
     close() {
         if (!this.destroy) {
             this.destroy = true;
+            if (this.read)
+                clearInterval(this.read);
             return ffmpeg_nodejs.destroyStream();
         }
     }

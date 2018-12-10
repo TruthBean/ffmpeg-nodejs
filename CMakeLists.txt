@@ -19,6 +19,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_ROOT}/Modules ${PROJECT_SOURCE_DIR}/cmake/module)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_JS_INC}")
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})
 
 # thread
@@ -116,8 +117,3 @@ else()
 endif()
 
 #######################################################################################################
-
-
-# libjpeg
-target_link_libraries(${PROJECT_NAME} "-ljpeg")
-target_link_libraries(${PROJECT_NAME} "-lturbojpeg")

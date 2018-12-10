@@ -8,5 +8,13 @@
 #include <sys/time.h>
 
 #include <libavutil/log.h>
+#include <libavutil/frame.h>
+
+typedef struct OriginFrameData {
+    AVFrame *frame;
+    long pts;
+    int ret;
+    char *error_message;
+} OriginFrameData;
 
 time_t get_time();

@@ -116,7 +116,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
 
     // 每秒多少帧
     int input_frame_rate = rtsp_stream->r_frame_rate.num / rtsp_stream->r_frame_rate.den;
-    av_log(NULL, AV_LOG_INFO, "input video frame rate: %d\n", input_frame_rate);
+    av_log(NULL, AV_LOG_DEBUG, "input video frame rate: %d\n", input_frame_rate);
 
     AVCodecParserContext *parserContext = av_parser_init(codec->id);
     if (!parserContext) {
@@ -199,7 +199,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
                 continue;
             }
             i++;
-            // fprintf(stdout, "frame %d\n", i++);
+
             got_key_frame = 1;
 
             // copy packet
@@ -217,7 +217,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
             // 若所大部分包都没有pts时序，那就要看情况自己补上时序（比如较前一帧时序+1）再写入。
             // or success
             if (ret < 0 && ret != -22) {
-                fprintf(stderr, "Error muxing packet.error code %d\n", ret);
+                av_log(NULL, AV_LOG_ERROR, "Error muxing packet.error code %d\n", ret);
                 break;
             }
         }

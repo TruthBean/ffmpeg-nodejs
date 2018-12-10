@@ -17,7 +17,7 @@
 
 #include <jpeglib.h>
 
-#include "./common.c"
+#include "./common.h"
 
 typedef struct Video2ImageStream {
     AVFormatContext *format_context;
@@ -45,10 +45,9 @@ typedef struct FrameData {
 
 Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const bool use_gpu);
 
-int init_filters(const char *filters_descr, AVCodecContext *dec_ctx, AVRational time_base,
-                    AVFilterContext *buffersink_ctx, AVFilterContext *buffersrc_ctx);
-
 FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type);
+
+OriginFrameData video_to_frame(Video2ImageStream vis, int chose_frames, napi_threadsafe_function func);
 
 void release(AVCodecContext *video_codec_context,
              AVFormatContext *format_context, bool isRtsp);
