@@ -9,27 +9,30 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = Function('return this')();
 
+goog.exportSymbol('proto.verifier.AgeReq', null, global);
 goog.exportSymbol('proto.verifier.AgeRes', null, global);
 goog.exportSymbol('proto.verifier.AliveReq', null, global);
 goog.exportSymbol('proto.verifier.AliveReq.LiveMeta', null, global);
 goog.exportSymbol('proto.verifier.AliveRes', null, global);
-goog.exportSymbol('proto.verifier.CheckReq', null, global);
-goog.exportSymbol('proto.verifier.CommonReq', null, global);
-goog.exportSymbol('proto.verifier.CommonRes', null, global);
 goog.exportSymbol('proto.verifier.CompareReq', null, global);
 goog.exportSymbol('proto.verifier.CompareRes', null, global);
 goog.exportSymbol('proto.verifier.DeleteReq', null, global);
+goog.exportSymbol('proto.verifier.DeleteRes', null, global);
 goog.exportSymbol('proto.verifier.DetectReq', null, global);
-goog.exportSymbol('proto.verifier.DetectReq.Format', null, global);
 goog.exportSymbol('proto.verifier.DetectRes', null, global);
 goog.exportSymbol('proto.verifier.DetectRes.DetectInfo', null, global);
 goog.exportSymbol('proto.verifier.DetectRes.TrackInfo', null, global);
+goog.exportSymbol('proto.verifier.Feature', null, global);
 goog.exportSymbol('proto.verifier.FeatureReq', null, global);
 goog.exportSymbol('proto.verifier.FeatureRes', null, global);
-goog.exportSymbol('proto.verifier.FeatureRes.Feature', null, global);
+goog.exportSymbol('proto.verifier.FeatureRes.FeatureInfo', null, global);
+goog.exportSymbol('proto.verifier.Format', null, global);
+goog.exportSymbol('proto.verifier.GenderReq', null, global);
 goog.exportSymbol('proto.verifier.GenderRes', null, global);
 goog.exportSymbol('proto.verifier.GenderRes.Gender', null, global);
+goog.exportSymbol('proto.verifier.HairReq', null, global);
 goog.exportSymbol('proto.verifier.HairRes', null, global);
+goog.exportSymbol('proto.verifier.Image', null, global);
 goog.exportSymbol('proto.verifier.Landmark', null, global);
 goog.exportSymbol('proto.verifier.PedestrianReq', null, global);
 goog.exportSymbol('proto.verifier.PedestrianRes', null, global);
@@ -38,6 +41,8 @@ goog.exportSymbol('proto.verifier.RegisterReq', null, global);
 goog.exportSymbol('proto.verifier.RegisterReq.Person', null, global);
 goog.exportSymbol('proto.verifier.RegisterRes', null, global);
 goog.exportSymbol('proto.verifier.RegisterRes.FailedInfo', null, global);
+goog.exportSymbol('proto.verifier.RepoInfoReq', null, global);
+goog.exportSymbol('proto.verifier.RepoInfoRes', null, global);
 goog.exportSymbol('proto.verifier.SearchReq', null, global);
 goog.exportSymbol('proto.verifier.SearchRes', null, global);
 
@@ -276,19 +281,19 @@ proto.verifier.Landmark.prototype.hasYList = function() {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.verifier.CommonReq = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.CommonReq.repeatedFields_, null);
+proto.verifier.Feature = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.Feature.repeatedFields_, null);
 };
-goog.inherits(proto.verifier.CommonReq, jspb.Message);
+goog.inherits(proto.verifier.Feature, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.verifier.CommonReq.displayName = 'proto.verifier.CommonReq';
+  proto.verifier.Feature.displayName = 'proto.verifier.Feature';
 }
 /**
  * List of repeated fields within this message type.
  * @private {!Array<number>}
  * @const
  */
-proto.verifier.CommonReq.repeatedFields_ = [3];
+proto.verifier.Feature.repeatedFields_ = [1];
 
 
 
@@ -303,8 +308,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.verifier.CommonReq.prototype.toObject = function(opt_includeInstance) {
-  return proto.verifier.CommonReq.toObject(opt_includeInstance, this);
+proto.verifier.Feature.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.Feature.toObject(opt_includeInstance, this);
 };
 
 
@@ -313,14 +318,12 @@ proto.verifier.CommonReq.prototype.toObject = function(opt_includeInstance) {
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.verifier.CommonReq} msg The msg instance to transform.
+ * @param {!proto.verifier.Feature} msg The msg instance to transform.
  * @return {!Object}
  */
-proto.verifier.CommonReq.toObject = function(includeInstance, msg) {
+proto.verifier.Feature.toObject = function(includeInstance, msg) {
   var f, obj = {
-    pb_interface: jspb.Message.getField(msg, 1),
-    apikey: jspb.Message.getField(msg, 2),
-    imageList: msg.getImageList_asB64()
+    xList: jspb.Message.getRepeatedFloatingPointField(msg, 1)
   };
 
   if (includeInstance) {
@@ -334,23 +337,23 @@ proto.verifier.CommonReq.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.verifier.CommonReq}
+ * @return {!proto.verifier.Feature}
  */
-proto.verifier.CommonReq.deserializeBinary = function(bytes) {
+proto.verifier.Feature.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.verifier.CommonReq;
-  return proto.verifier.CommonReq.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.verifier.Feature;
+  return proto.verifier.Feature.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.verifier.CommonReq} msg The message object to deserialize into.
+ * @param {!proto.verifier.Feature} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.verifier.CommonReq}
+ * @return {!proto.verifier.Feature}
  */
-proto.verifier.CommonReq.deserializeBinaryFromReader = function(msg, reader) {
+proto.verifier.Feature.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -358,17 +361,9 @@ proto.verifier.CommonReq.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setInterface(value);
-      break;
-    case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setApikey(value);
-      break;
-    case 3:
-      var value = /** @type {!Uint8Array} */ (reader.readBytes());
-      msg.getImageList().push(value);
-      msg.setImageList(msg.getImageList());
+      var value = /** @type {number} */ (reader.readFloat());
+      msg.getXList().push(value);
+      msg.setXList(msg.getXList());
       break;
     default:
       reader.skipField();
@@ -382,10 +377,10 @@ proto.verifier.CommonReq.deserializeBinaryFromReader = function(msg, reader) {
 /**
  * Class method variant: serializes the given message to binary data
  * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.verifier.CommonReq} message
+ * @param {!proto.verifier.Feature} message
  * @param {!jspb.BinaryWriter} writer
  */
-proto.verifier.CommonReq.serializeBinaryToWriter = function(message, writer) {
+proto.verifier.Feature.serializeBinaryToWriter = function(message, writer) {
   message.serializeBinaryToWriter(writer);
 };
 
@@ -394,7 +389,7 @@ proto.verifier.CommonReq.serializeBinaryToWriter = function(message, writer) {
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.verifier.CommonReq.prototype.serializeBinary = function() {
+proto.verifier.Feature.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
   this.serializeBinaryToWriter(writer);
   return writer.getResultBuffer();
@@ -406,26 +401,12 @@ proto.verifier.CommonReq.prototype.serializeBinary = function() {
  * writing to the given BinaryWriter.
  * @param {!jspb.BinaryWriter} writer
  */
-proto.verifier.CommonReq.prototype.serializeBinaryToWriter = function (writer) {
+proto.verifier.Feature.prototype.serializeBinaryToWriter = function (writer) {
   var f = undefined;
-  f = this.getInterface();
-  if (f != null) {
-    writer.writeInt32(
-      1,
-      f
-    );
-  }
-  f = this.getApikey();
-  if (f != null) {
-    writer.writeString(
-      2,
-      f
-    );
-  }
-  f = this.getImageList_asU8();
+  f = this.getXList();
   if (f.length > 0) {
-    writer.writeRepeatedBytes(
-      3,
+    writer.writeRepeatedFloat(
+      1,
       f
     );
   }
@@ -434,30 +415,32 @@ proto.verifier.CommonReq.prototype.serializeBinaryToWriter = function (writer) {
 
 /**
  * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.verifier.CommonReq} The clone.
+ * @return {!proto.verifier.Feature} The clone.
  */
-proto.verifier.CommonReq.prototype.cloneMessage = function() {
-  return /** @type {!proto.verifier.CommonReq} */ (jspb.Message.cloneMessage(this));
+proto.verifier.Feature.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.Feature} */ (jspb.Message.cloneMessage(this));
 };
 
 
 /**
- * required int32 interface = 1;
- * @return {number}
+ * repeated float x = 1;
+ * If you change this array by adding, removing or replacing elements, or if you
+ * replace the array itself, then you must call the setter to update it.
+ * @return {!Array.<number>}
  */
-proto.verifier.CommonReq.prototype.getInterface = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 1));
+proto.verifier.Feature.prototype.getXList = function() {
+  return /** @type {!Array.<number>} */ (jspb.Message.getRepeatedFloatingPointField(this, 1));
 };
 
 
-/** @param {number|undefined} value  */
-proto.verifier.CommonReq.prototype.setInterface = function(value) {
-  jspb.Message.setField(this, 1, value);
+/** @param {Array.<number>|undefined} value  */
+proto.verifier.Feature.prototype.setXList = function(value) {
+  jspb.Message.setField(this, 1, value || []);
 };
 
 
-proto.verifier.CommonReq.prototype.clearInterface = function() {
-  jspb.Message.setField(this, 1, undefined);
+proto.verifier.Feature.prototype.clearXList = function() {
+  jspb.Message.setField(this, 1, []);
 };
 
 
@@ -465,96 +448,8 @@ proto.verifier.CommonReq.prototype.clearInterface = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.CommonReq.prototype.hasInterface = function() {
+proto.verifier.Feature.prototype.hasXList = function() {
   return jspb.Message.getField(this, 1) != null;
-};
-
-
-/**
- * required string apiKey = 2;
- * @return {string}
- */
-proto.verifier.CommonReq.prototype.getApikey = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 2));
-};
-
-
-/** @param {string|undefined} value  */
-proto.verifier.CommonReq.prototype.setApikey = function(value) {
-  jspb.Message.setField(this, 2, value);
-};
-
-
-proto.verifier.CommonReq.prototype.clearApikey = function() {
-  jspb.Message.setField(this, 2, undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.verifier.CommonReq.prototype.hasApikey = function() {
-  return jspb.Message.getField(this, 2) != null;
-};
-
-
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * @return {!(Array<!Uint8Array>|Array<string>)}
- */
-proto.verifier.CommonReq.prototype.getImageList = function() {
-  return /** @type {!(Array<!Uint8Array>|Array<string>)} */ (jspb.Message.getField(this, 3));
-};
-
-
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<string>}
- */
-proto.verifier.CommonReq.prototype.getImageList_asB64 = function() {
-  return /** @type {!Array.<string>} */ (jspb.Message.bytesListAsB64(
-      this.getImageList()));
-};
-
-
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * Note that Uint8Array is not supported on all browsers.
- * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<!Uint8Array>}
- */
-proto.verifier.CommonReq.prototype.getImageList_asU8 = function() {
-  return /** @type {!Array.<!Uint8Array>} */ (jspb.Message.bytesListAsU8(
-      this.getImageList()));
-};
-
-
-/** @param {(Array<!Uint8Array>|Array<string>)|undefined} value  */
-proto.verifier.CommonReq.prototype.setImageList = function(value) {
-  jspb.Message.setField(this, 3, value || []);
-};
-
-
-proto.verifier.CommonReq.prototype.clearImageList = function() {
-  jspb.Message.setField(this, 3, []);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.verifier.CommonReq.prototype.hasImageList = function() {
-  return jspb.Message.getField(this, 3) != null;
 };
 
 
@@ -569,12 +464,12 @@ proto.verifier.CommonReq.prototype.hasImageList = function() {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.verifier.CommonRes = function(opt_data) {
+proto.verifier.Image = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.verifier.CommonRes, jspb.Message);
+goog.inherits(proto.verifier.Image, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.verifier.CommonRes.displayName = 'proto.verifier.CommonRes';
+  proto.verifier.Image.displayName = 'proto.verifier.Image';
 }
 
 
@@ -589,8 +484,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.verifier.CommonRes.prototype.toObject = function(opt_includeInstance) {
-  return proto.verifier.CommonRes.toObject(opt_includeInstance, this);
+proto.verifier.Image.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.Image.toObject(opt_includeInstance, this);
 };
 
 
@@ -599,14 +494,15 @@ proto.verifier.CommonRes.prototype.toObject = function(opt_includeInstance) {
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.verifier.CommonRes} msg The msg instance to transform.
+ * @param {!proto.verifier.Image} msg The msg instance to transform.
  * @return {!Object}
  */
-proto.verifier.CommonRes.toObject = function(includeInstance, msg) {
+proto.verifier.Image.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestid: jspb.Message.getField(msg, 1),
-    timeused: jspb.Message.getField(msg, 2),
-    errormessage: jspb.Message.getField(msg, 3)
+    image: msg.getImage_asB64(),
+    rows: jspb.Message.getField(msg, 2),
+    cols: jspb.Message.getField(msg, 3),
+    datalen: jspb.Message.getField(msg, 4)
   };
 
   if (includeInstance) {
@@ -620,23 +516,23 @@ proto.verifier.CommonRes.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.verifier.CommonRes}
+ * @return {!proto.verifier.Image}
  */
-proto.verifier.CommonRes.deserializeBinary = function(bytes) {
+proto.verifier.Image.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.verifier.CommonRes;
-  return proto.verifier.CommonRes.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.verifier.Image;
+  return proto.verifier.Image.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.verifier.CommonRes} msg The message object to deserialize into.
+ * @param {!proto.verifier.Image} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.verifier.CommonRes}
+ * @return {!proto.verifier.Image}
  */
-proto.verifier.CommonRes.deserializeBinaryFromReader = function(msg, reader) {
+proto.verifier.Image.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -644,16 +540,20 @@ proto.verifier.CommonRes.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestid(value);
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setImage(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readSint32());
-      msg.setTimeused(value);
+      msg.setRows(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readSint32());
-      msg.setErrormessage(value);
+      msg.setCols(value);
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.setDatalen(value);
       break;
     default:
       reader.skipField();
@@ -667,10 +567,10 @@ proto.verifier.CommonRes.deserializeBinaryFromReader = function(msg, reader) {
 /**
  * Class method variant: serializes the given message to binary data
  * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.verifier.CommonRes} message
+ * @param {!proto.verifier.Image} message
  * @param {!jspb.BinaryWriter} writer
  */
-proto.verifier.CommonRes.serializeBinaryToWriter = function(message, writer) {
+proto.verifier.Image.serializeBinaryToWriter = function(message, writer) {
   message.serializeBinaryToWriter(writer);
 };
 
@@ -679,7 +579,7 @@ proto.verifier.CommonRes.serializeBinaryToWriter = function(message, writer) {
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.verifier.CommonRes.prototype.serializeBinary = function() {
+proto.verifier.Image.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
   this.serializeBinaryToWriter(writer);
   return writer.getResultBuffer();
@@ -691,26 +591,33 @@ proto.verifier.CommonRes.prototype.serializeBinary = function() {
  * writing to the given BinaryWriter.
  * @param {!jspb.BinaryWriter} writer
  */
-proto.verifier.CommonRes.prototype.serializeBinaryToWriter = function (writer) {
+proto.verifier.Image.prototype.serializeBinaryToWriter = function (writer) {
   var f = undefined;
-  f = this.getRequestid();
+  f = this.getImage_asU8();
   if (f != null) {
-    writer.writeString(
+    writer.writeBytes(
       1,
       f
     );
   }
-  f = this.getTimeused();
+  f = this.getRows();
   if (f != null) {
     writer.writeSint32(
       2,
       f
     );
   }
-  f = this.getErrormessage();
+  f = this.getCols();
   if (f != null) {
     writer.writeSint32(
       3,
+      f
+    );
+  }
+  f = this.getDatalen();
+  if (f != null) {
+    writer.writeSint32(
+      4,
       f
     );
   }
@@ -719,29 +626,53 @@ proto.verifier.CommonRes.prototype.serializeBinaryToWriter = function (writer) {
 
 /**
  * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.verifier.CommonRes} The clone.
+ * @return {!proto.verifier.Image} The clone.
  */
-proto.verifier.CommonRes.prototype.cloneMessage = function() {
-  return /** @type {!proto.verifier.CommonRes} */ (jspb.Message.cloneMessage(this));
+proto.verifier.Image.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.Image} */ (jspb.Message.cloneMessage(this));
 };
 
 
 /**
- * required string requestId = 1;
- * @return {string}
+ * required bytes image = 1;
+ * @return {!(string|Uint8Array)}
  */
-proto.verifier.CommonRes.prototype.getRequestid = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 1));
+proto.verifier.Image.prototype.getImage = function() {
+  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getField(this, 1));
 };
 
 
-/** @param {string|undefined} value  */
-proto.verifier.CommonRes.prototype.setRequestid = function(value) {
+/**
+ * required bytes image = 1;
+ * This is a type-conversion wrapper around `getImage()`
+ * @return {string}
+ */
+proto.verifier.Image.prototype.getImage_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getImage()));
+};
+
+
+/**
+ * required bytes image = 1;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getImage()`
+ * @return {!Uint8Array}
+ */
+proto.verifier.Image.prototype.getImage_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getImage()));
+};
+
+
+/** @param {(string|Uint8Array)|undefined} value  */
+proto.verifier.Image.prototype.setImage = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
 
-proto.verifier.CommonRes.prototype.clearRequestid = function() {
+proto.verifier.Image.prototype.clearImage = function() {
   jspb.Message.setField(this, 1, undefined);
 };
 
@@ -750,27 +681,27 @@ proto.verifier.CommonRes.prototype.clearRequestid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.CommonRes.prototype.hasRequestid = function() {
+proto.verifier.Image.prototype.hasImage = function() {
   return jspb.Message.getField(this, 1) != null;
 };
 
 
 /**
- * required sint32 timeUsed = 2;
- * @return {number}
+ * optional sint32 rows = 2;
+ * @return {number?}
  */
-proto.verifier.CommonRes.prototype.getTimeused = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 2));
+proto.verifier.Image.prototype.getRows = function() {
+  return /** @type {number?} */ (jspb.Message.getField(this, 2));
 };
 
 
-/** @param {number|undefined} value  */
-proto.verifier.CommonRes.prototype.setTimeused = function(value) {
+/** @param {number?|undefined} value  */
+proto.verifier.Image.prototype.setRows = function(value) {
   jspb.Message.setField(this, 2, value);
 };
 
 
-proto.verifier.CommonRes.prototype.clearTimeused = function() {
+proto.verifier.Image.prototype.clearRows = function() {
   jspb.Message.setField(this, 2, undefined);
 };
 
@@ -779,27 +710,27 @@ proto.verifier.CommonRes.prototype.clearTimeused = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.CommonRes.prototype.hasTimeused = function() {
+proto.verifier.Image.prototype.hasRows = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * required sint32 errorMessage = 3;
- * @return {number}
+ * optional sint32 cols = 3;
+ * @return {number?}
  */
-proto.verifier.CommonRes.prototype.getErrormessage = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 3));
+proto.verifier.Image.prototype.getCols = function() {
+  return /** @type {number?} */ (jspb.Message.getField(this, 3));
 };
 
 
-/** @param {number|undefined} value  */
-proto.verifier.CommonRes.prototype.setErrormessage = function(value) {
+/** @param {number?|undefined} value  */
+proto.verifier.Image.prototype.setCols = function(value) {
   jspb.Message.setField(this, 3, value);
 };
 
 
-proto.verifier.CommonRes.prototype.clearErrormessage = function() {
+proto.verifier.Image.prototype.clearCols = function() {
   jspb.Message.setField(this, 3, undefined);
 };
 
@@ -808,8 +739,37 @@ proto.verifier.CommonRes.prototype.clearErrormessage = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.CommonRes.prototype.hasErrormessage = function() {
+proto.verifier.Image.prototype.hasCols = function() {
   return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional sint32 DataLen = 4;
+ * @return {number?}
+ */
+proto.verifier.Image.prototype.getDatalen = function() {
+  return /** @type {number?} */ (jspb.Message.getField(this, 4));
+};
+
+
+/** @param {number?|undefined} value  */
+proto.verifier.Image.prototype.setDatalen = function(value) {
+  jspb.Message.setField(this, 4, value);
+};
+
+
+proto.verifier.Image.prototype.clearDatalen = function() {
+  jspb.Message.setField(this, 4, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.Image.prototype.hasDatalen = function() {
+  return jspb.Message.getField(this, 4) != null;
 };
 
 
@@ -836,7 +796,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.verifier.RegisterReq.repeatedFields_ = [3];
+proto.verifier.RegisterReq.repeatedFields_ = [4];
 
 
 
@@ -868,8 +828,10 @@ proto.verifier.RegisterReq.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_interface: jspb.Message.getField(msg, 1),
     apikey: jspb.Message.getField(msg, 2),
+    requestid: jspb.Message.getField(msg, 3),
     peopleList: jspb.Message.toObjectList(msg.getPeopleList(),
-    proto.verifier.RegisterReq.Person.toObject, includeInstance)
+    proto.verifier.RegisterReq.Person.toObject, includeInstance),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5)
   };
 
   if (includeInstance) {
@@ -915,10 +877,18 @@ proto.verifier.RegisterReq.deserializeBinaryFromReader = function(msg, reader) {
       msg.setApikey(value);
       break;
     case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 4:
       var value = new proto.verifier.RegisterReq.Person;
       reader.readMessage(value,proto.verifier.RegisterReq.Person.deserializeBinaryFromReader);
       msg.getPeopleList().push(value);
       msg.setPeopleList(msg.getPeopleList());
+      break;
+    case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
       break;
     default:
       reader.skipField();
@@ -972,12 +942,26 @@ proto.verifier.RegisterReq.prototype.serializeBinaryToWriter = function (writer)
       f
     );
   }
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
   f = this.getPeopleList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      3,
+      4,
       f,
       proto.verifier.RegisterReq.Person.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
     );
   }
 };
@@ -1051,25 +1035,83 @@ proto.verifier.RegisterReq.prototype.hasApikey = function() {
 
 
 /**
- * repeated Person people = 3;
+ * optional string requestId = 3;
+ * @return {string?}
+ */
+proto.verifier.RegisterReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.RegisterReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+proto.verifier.RegisterReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RegisterReq.prototype.hasRequestid = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * repeated Person people = 4;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
  * @return {!Array.<!proto.verifier.RegisterReq.Person>}
  */
 proto.verifier.RegisterReq.prototype.getPeopleList = function() {
   return /** @type{!Array.<!proto.verifier.RegisterReq.Person>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.verifier.RegisterReq.Person, 3));
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.RegisterReq.Person, 4));
 };
 
 
 /** @param {Array.<!proto.verifier.RegisterReq.Person>|undefined} value  */
 proto.verifier.RegisterReq.prototype.setPeopleList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 3, value);
+  jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
 proto.verifier.RegisterReq.prototype.clearPeopleList = function() {
   this.setPeopleList([]);
+};
+
+
+/**
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
+ */
+proto.verifier.RegisterReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.RegisterReq.prototype.setFormat = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.RegisterReq.prototype.clearFormat = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RegisterReq.prototype.hasFormat = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
@@ -1126,8 +1168,9 @@ proto.verifier.RegisterReq.Person.prototype.toObject = function(opt_includeInsta
  */
 proto.verifier.RegisterReq.Person.toObject = function(includeInstance, msg) {
   var f, obj = {
-    imageList: msg.getImageList_asB64(),
-    landmarkList: jspb.Message.toObjectList(msg.getLandmarkList(),
+    imagesList: jspb.Message.toObjectList(msg.getImagesList(),
+    proto.verifier.Image.toObject, includeInstance),
+    landmarksList: jspb.Message.toObjectList(msg.getLandmarksList(),
     proto.verifier.Landmark.toObject, includeInstance),
     faceid: jspb.Message.getField(msg, 3),
     groupid: !msg.hasGroupid() ? "watchlist" : jspb.Message.getField(msg, 4)
@@ -1168,18 +1211,19 @@ proto.verifier.RegisterReq.Person.deserializeBinaryFromReader = function(msg, re
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {!Uint8Array} */ (reader.readBytes());
-      msg.getImageList().push(value);
-      msg.setImageList(msg.getImageList());
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
+      msg.getImagesList().push(value);
+      msg.setImagesList(msg.getImagesList());
       break;
     case 2:
       var value = new proto.verifier.Landmark;
       reader.readMessage(value,proto.verifier.Landmark.deserializeBinaryFromReader);
-      msg.getLandmarkList().push(value);
-      msg.setLandmarkList(msg.getLandmarkList());
+      msg.getLandmarksList().push(value);
+      msg.setLandmarksList(msg.getLandmarksList());
       break;
     case 3:
-      var value = /** @type {string} */ (reader.readString());
+      var value = /** @type {number} */ (reader.readSint32());
       msg.setFaceid(value);
       break;
     case 4:
@@ -1224,14 +1268,15 @@ proto.verifier.RegisterReq.Person.prototype.serializeBinary = function() {
  */
 proto.verifier.RegisterReq.Person.prototype.serializeBinaryToWriter = function (writer) {
   var f = undefined;
-  f = this.getImageList_asU8();
+  f = this.getImagesList();
   if (f.length > 0) {
-    writer.writeRepeatedBytes(
+    writer.writeRepeatedMessage(
       1,
-      f
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
     );
   }
-  f = this.getLandmarkList();
+  f = this.getLandmarksList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       2,
@@ -1241,7 +1286,7 @@ proto.verifier.RegisterReq.Person.prototype.serializeBinaryToWriter = function (
   }
   f = this.getFaceid();
   if (f != null) {
-    writer.writeString(
+    writer.writeSint32(
       3,
       f
     );
@@ -1266,97 +1311,61 @@ proto.verifier.RegisterReq.Person.prototype.cloneMessage = function() {
 
 
 /**
- * repeated bytes image = 1;
+ * repeated Image images = 1;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
- * @return {!(Array<!Uint8Array>|Array<string>)}
+ * @return {!Array.<!proto.verifier.Image>}
  */
-proto.verifier.RegisterReq.Person.prototype.getImageList = function() {
-  return /** @type {!(Array<!Uint8Array>|Array<string>)} */ (jspb.Message.getField(this, 1));
+proto.verifier.RegisterReq.Person.prototype.getImagesList = function() {
+  return /** @type{!Array.<!proto.verifier.Image>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Image, 1));
+};
+
+
+/** @param {Array.<!proto.verifier.Image>|undefined} value  */
+proto.verifier.RegisterReq.Person.prototype.setImagesList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 1, value);
+};
+
+
+proto.verifier.RegisterReq.Person.prototype.clearImagesList = function() {
+  this.setImagesList([]);
 };
 
 
 /**
- * repeated bytes image = 1;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<string>}
- */
-proto.verifier.RegisterReq.Person.prototype.getImageList_asB64 = function() {
-  return /** @type {!Array.<string>} */ (jspb.Message.bytesListAsB64(
-      this.getImageList()));
-};
-
-
-/**
- * repeated bytes image = 1;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * Note that Uint8Array is not supported on all browsers.
- * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<!Uint8Array>}
- */
-proto.verifier.RegisterReq.Person.prototype.getImageList_asU8 = function() {
-  return /** @type {!Array.<!Uint8Array>} */ (jspb.Message.bytesListAsU8(
-      this.getImageList()));
-};
-
-
-/** @param {(Array<!Uint8Array>|Array<string>)|undefined} value  */
-proto.verifier.RegisterReq.Person.prototype.setImageList = function(value) {
-  jspb.Message.setField(this, 1, value || []);
-};
-
-
-proto.verifier.RegisterReq.Person.prototype.clearImageList = function() {
-  jspb.Message.setField(this, 1, []);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.verifier.RegisterReq.Person.prototype.hasImageList = function() {
-  return jspb.Message.getField(this, 1) != null;
-};
-
-
-/**
- * repeated Landmark landmark = 2;
+ * repeated Landmark landmarks = 2;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
  * @return {!Array.<!proto.verifier.Landmark>}
  */
-proto.verifier.RegisterReq.Person.prototype.getLandmarkList = function() {
+proto.verifier.RegisterReq.Person.prototype.getLandmarksList = function() {
   return /** @type{!Array.<!proto.verifier.Landmark>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.verifier.Landmark, 2));
 };
 
 
 /** @param {Array.<!proto.verifier.Landmark>|undefined} value  */
-proto.verifier.RegisterReq.Person.prototype.setLandmarkList = function(value) {
+proto.verifier.RegisterReq.Person.prototype.setLandmarksList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 2, value);
 };
 
 
-proto.verifier.RegisterReq.Person.prototype.clearLandmarkList = function() {
-  this.setLandmarkList([]);
+proto.verifier.RegisterReq.Person.prototype.clearLandmarksList = function() {
+  this.setLandmarksList([]);
 };
 
 
 /**
- * required string faceId = 3;
- * @return {string}
+ * required sint32 faceId = 3;
+ * @return {number}
  */
 proto.verifier.RegisterReq.Person.prototype.getFaceid = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 3));
+  return /** @type {number} */ (jspb.Message.getField(this, 3));
 };
 
 
-/** @param {string|undefined} value  */
+/** @param {number|undefined} value  */
 proto.verifier.RegisterReq.Person.prototype.setFaceid = function(value) {
   jspb.Message.setField(this, 3, value);
 };
@@ -1792,7 +1801,7 @@ proto.verifier.RegisterRes.FailedInfo.deserializeBinaryFromReader = function(msg
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
+      var value = /** @type {number} */ (reader.readSint32());
       msg.setFaceid(value);
       break;
     case 2:
@@ -1800,7 +1809,7 @@ proto.verifier.RegisterRes.FailedInfo.deserializeBinaryFromReader = function(msg
       msg.setGroupid(value);
       break;
     case 3:
-      var value = /** @type {string} */ (reader.readString());
+      var value = /** @type {number} */ (reader.readSint32());
       msg.setMessage(value);
       break;
     default:
@@ -1843,7 +1852,7 @@ proto.verifier.RegisterRes.FailedInfo.prototype.serializeBinaryToWriter = functi
   var f = undefined;
   f = this.getFaceid();
   if (f != null) {
-    writer.writeString(
+    writer.writeSint32(
       1,
       f
     );
@@ -1857,7 +1866,7 @@ proto.verifier.RegisterRes.FailedInfo.prototype.serializeBinaryToWriter = functi
   }
   f = this.getMessage();
   if (f != null) {
-    writer.writeString(
+    writer.writeSint32(
       3,
       f
     );
@@ -1875,15 +1884,15 @@ proto.verifier.RegisterRes.FailedInfo.prototype.cloneMessage = function() {
 
 
 /**
- * required string faceId = 1;
- * @return {string}
+ * required sint32 faceId = 1;
+ * @return {number}
  */
 proto.verifier.RegisterRes.FailedInfo.prototype.getFaceid = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 1));
+  return /** @type {number} */ (jspb.Message.getField(this, 1));
 };
 
 
-/** @param {string|undefined} value  */
+/** @param {number|undefined} value  */
 proto.verifier.RegisterRes.FailedInfo.prototype.setFaceid = function(value) {
   jspb.Message.setField(this, 1, value);
 };
@@ -1933,15 +1942,15 @@ proto.verifier.RegisterRes.FailedInfo.prototype.hasGroupid = function() {
 
 
 /**
- * required string message = 3;
- * @return {string}
+ * required sint32 message = 3;
+ * @return {number}
  */
 proto.verifier.RegisterRes.FailedInfo.prototype.getMessage = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 3));
+  return /** @type {number} */ (jspb.Message.getField(this, 3));
 };
 
 
-/** @param {string|undefined} value  */
+/** @param {number|undefined} value  */
 proto.verifier.RegisterRes.FailedInfo.prototype.setMessage = function(value) {
   jspb.Message.setField(this, 3, value);
 };
@@ -1984,7 +1993,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.verifier.SearchReq.repeatedFields_ = [3,4];
+proto.verifier.SearchReq.repeatedFields_ = [4,6];
 
 
 
@@ -2016,14 +2025,17 @@ proto.verifier.SearchReq.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_interface: jspb.Message.getField(msg, 1),
     apikey: jspb.Message.getField(msg, 2),
-    imageList: msg.getImageList_asB64(),
-    landmarkList: jspb.Message.toObjectList(msg.getLandmarkList(),
+    requestid: jspb.Message.getField(msg, 3),
+    imagesList: jspb.Message.toObjectList(msg.getImagesList(),
+    proto.verifier.Image.toObject, includeInstance),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5),
+    landmarksList: jspb.Message.toObjectList(msg.getLandmarksList(),
     proto.verifier.Landmark.toObject, includeInstance),
-    groupid: !msg.hasGroupid() ? "watchlist" : jspb.Message.getField(msg, 5),
-    topk: jspb.Message.getField(msg, 6),
-    score: !msg.hasScore() ? 0.8 : +jspb.Message.getField(msg, 7),
-    cameraid: jspb.Message.getField(msg, 8),
-    imageid: jspb.Message.getField(msg, 9)
+    groupid: !msg.hasGroupid() ? "watchlist" : jspb.Message.getField(msg, 7),
+    topk: jspb.Message.getField(msg, 8),
+    score: !msg.hasScore() ? 0.8 : +jspb.Message.getField(msg, 9),
+    field: jspb.Message.getField(msg, 10),
+    feature: (f = msg.getFeature()) && proto.verifier.Feature.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -2069,35 +2081,45 @@ proto.verifier.SearchReq.deserializeBinaryFromReader = function(msg, reader) {
       msg.setApikey(value);
       break;
     case 3:
-      var value = /** @type {!Uint8Array} */ (reader.readBytes());
-      msg.getImageList().push(value);
-      msg.setImageList(msg.getImageList());
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
       break;
     case 4:
-      var value = new proto.verifier.Landmark;
-      reader.readMessage(value,proto.verifier.Landmark.deserializeBinaryFromReader);
-      msg.getLandmarkList().push(value);
-      msg.setLandmarkList(msg.getLandmarkList());
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
+      msg.getImagesList().push(value);
+      msg.setImagesList(msg.getImagesList());
       break;
     case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
+      break;
+    case 6:
+      var value = new proto.verifier.Landmark;
+      reader.readMessage(value,proto.verifier.Landmark.deserializeBinaryFromReader);
+      msg.getLandmarksList().push(value);
+      msg.setLandmarksList(msg.getLandmarksList());
+      break;
+    case 7:
       var value = /** @type {string} */ (reader.readString());
       msg.setGroupid(value);
       break;
-    case 6:
+    case 8:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setTopk(value);
       break;
-    case 7:
+    case 9:
       var value = /** @type {number} */ (reader.readFloat());
       msg.setScore(value);
       break;
-    case 8:
+    case 10:
       var value = /** @type {string} */ (reader.readString());
-      msg.setCameraid(value);
+      msg.setField(value);
       break;
-    case 9:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setImageid(value);
+    case 11:
+      var value = new proto.verifier.Feature;
+      reader.readMessage(value,proto.verifier.Feature.deserializeBinaryFromReader);
+      msg.setFeature(value);
       break;
     default:
       reader.skipField();
@@ -2151,17 +2173,32 @@ proto.verifier.SearchReq.prototype.serializeBinaryToWriter = function (writer) {
       f
     );
   }
-  f = this.getImageList_asU8();
-  if (f.length > 0) {
-    writer.writeRepeatedBytes(
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
       3,
       f
     );
   }
-  f = this.getLandmarkList();
+  f = this.getImagesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       4,
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
+    );
+  }
+  f = this.getLandmarksList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      6,
       f,
       proto.verifier.Landmark.serializeBinaryToWriter
     );
@@ -2169,36 +2206,37 @@ proto.verifier.SearchReq.prototype.serializeBinaryToWriter = function (writer) {
   f = this.getGroupid();
   if (f != null) {
     writer.writeString(
-      5,
+      7,
       f
     );
   }
   f = this.getTopk();
   if (f != null) {
     writer.writeInt32(
-      6,
+      8,
       f
     );
   }
   f = this.getScore();
   if (f != null) {
     writer.writeFloat(
-      7,
-      f
-    );
-  }
-  f = this.getCameraid();
-  if (f != null) {
-    writer.writeString(
-      8,
-      f
-    );
-  }
-  f = this.getImageid();
-  if (f != null) {
-    writer.writeString(
       9,
       f
+    );
+  }
+  f = this.getField();
+  if (f != null) {
+    writer.writeString(
+      10,
+      f
+    );
+  }
+  f = this.getFeature();
+  if (f != null) {
+    writer.writeMessage(
+      11,
+      f,
+      proto.verifier.Feature.serializeBinaryToWriter
     );
   }
 };
@@ -2272,52 +2310,22 @@ proto.verifier.SearchReq.prototype.hasApikey = function() {
 
 
 /**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * @return {!(Array<!Uint8Array>|Array<string>)}
+ * optional string requestId = 3;
+ * @return {string?}
  */
-proto.verifier.SearchReq.prototype.getImageList = function() {
-  return /** @type {!(Array<!Uint8Array>|Array<string>)} */ (jspb.Message.getField(this, 3));
+proto.verifier.SearchReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
 };
 
 
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<string>}
- */
-proto.verifier.SearchReq.prototype.getImageList_asB64 = function() {
-  return /** @type {!Array.<string>} */ (jspb.Message.bytesListAsB64(
-      this.getImageList()));
+/** @param {string?|undefined} value  */
+proto.verifier.SearchReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
 };
 
 
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * Note that Uint8Array is not supported on all browsers.
- * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<!Uint8Array>}
- */
-proto.verifier.SearchReq.prototype.getImageList_asU8 = function() {
-  return /** @type {!Array.<!Uint8Array>} */ (jspb.Message.bytesListAsU8(
-      this.getImageList()));
-};
-
-
-/** @param {(Array<!Uint8Array>|Array<string>)|undefined} value  */
-proto.verifier.SearchReq.prototype.setImageList = function(value) {
-  jspb.Message.setField(this, 3, value || []);
-};
-
-
-proto.verifier.SearchReq.prototype.clearImageList = function() {
-  jspb.Message.setField(this, 3, []);
+proto.verifier.SearchReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
 };
 
 
@@ -2325,50 +2333,50 @@ proto.verifier.SearchReq.prototype.clearImageList = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.SearchReq.prototype.hasImageList = function() {
+proto.verifier.SearchReq.prototype.hasRequestid = function() {
   return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * repeated Landmark landmark = 4;
+ * repeated Image images = 4;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<!proto.verifier.Landmark>}
+ * @return {!Array.<!proto.verifier.Image>}
  */
-proto.verifier.SearchReq.prototype.getLandmarkList = function() {
-  return /** @type{!Array.<!proto.verifier.Landmark>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Landmark, 4));
+proto.verifier.SearchReq.prototype.getImagesList = function() {
+  return /** @type{!Array.<!proto.verifier.Image>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Image, 4));
 };
 
 
-/** @param {Array.<!proto.verifier.Landmark>|undefined} value  */
-proto.verifier.SearchReq.prototype.setLandmarkList = function(value) {
+/** @param {Array.<!proto.verifier.Image>|undefined} value  */
+proto.verifier.SearchReq.prototype.setImagesList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
-proto.verifier.SearchReq.prototype.clearLandmarkList = function() {
-  this.setLandmarkList([]);
+proto.verifier.SearchReq.prototype.clearImagesList = function() {
+  this.setImagesList([]);
 };
 
 
 /**
- * required string groupId = 5;
- * @return {string}
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
  */
-proto.verifier.SearchReq.prototype.getGroupid = function() {
-  return /** @type {string} */ (!this.hasGroupid() ? "watchlist" : jspb.Message.getField(this, 5));
+proto.verifier.SearchReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
 };
 
 
-/** @param {string|undefined} value  */
-proto.verifier.SearchReq.prototype.setGroupid = function(value) {
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.SearchReq.prototype.setFormat = function(value) {
   jspb.Message.setField(this, 5, value);
 };
 
 
-proto.verifier.SearchReq.prototype.clearGroupid = function() {
+proto.verifier.SearchReq.prototype.clearFormat = function() {
   jspb.Message.setField(this, 5, undefined);
 };
 
@@ -2377,56 +2385,50 @@ proto.verifier.SearchReq.prototype.clearGroupid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.SearchReq.prototype.hasGroupid = function() {
+proto.verifier.SearchReq.prototype.hasFormat = function() {
   return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * required int32 topk = 6;
- * @return {number}
+ * repeated Landmark landmarks = 6;
+ * If you change this array by adding, removing or replacing elements, or if you
+ * replace the array itself, then you must call the setter to update it.
+ * @return {!Array.<!proto.verifier.Landmark>}
  */
-proto.verifier.SearchReq.prototype.getTopk = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 6));
+proto.verifier.SearchReq.prototype.getLandmarksList = function() {
+  return /** @type{!Array.<!proto.verifier.Landmark>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Landmark, 6));
 };
 
 
-/** @param {number|undefined} value  */
-proto.verifier.SearchReq.prototype.setTopk = function(value) {
-  jspb.Message.setField(this, 6, value);
+/** @param {Array.<!proto.verifier.Landmark>|undefined} value  */
+proto.verifier.SearchReq.prototype.setLandmarksList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 6, value);
 };
 
 
-proto.verifier.SearchReq.prototype.clearTopk = function() {
-  jspb.Message.setField(this, 6, undefined);
+proto.verifier.SearchReq.prototype.clearLandmarksList = function() {
+  this.setLandmarksList([]);
 };
 
 
 /**
- * Returns whether this field is set.
- * @return{!boolean}
+ * required string groupId = 7;
+ * @return {string}
  */
-proto.verifier.SearchReq.prototype.hasTopk = function() {
-  return jspb.Message.getField(this, 6) != null;
+proto.verifier.SearchReq.prototype.getGroupid = function() {
+  return /** @type {string} */ (!this.hasGroupid() ? "watchlist" : jspb.Message.getField(this, 7));
 };
 
 
-/**
- * required float score = 7;
- * @return {number}
- */
-proto.verifier.SearchReq.prototype.getScore = function() {
-  return /** @type {number} */ (!this.hasScore() ? 0.8 : +jspb.Message.getField(this, 7));
-};
-
-
-/** @param {number|undefined} value  */
-proto.verifier.SearchReq.prototype.setScore = function(value) {
+/** @param {string|undefined} value  */
+proto.verifier.SearchReq.prototype.setGroupid = function(value) {
   jspb.Message.setField(this, 7, value);
 };
 
 
-proto.verifier.SearchReq.prototype.clearScore = function() {
+proto.verifier.SearchReq.prototype.clearGroupid = function() {
   jspb.Message.setField(this, 7, undefined);
 };
 
@@ -2435,27 +2437,27 @@ proto.verifier.SearchReq.prototype.clearScore = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.SearchReq.prototype.hasScore = function() {
+proto.verifier.SearchReq.prototype.hasGroupid = function() {
   return jspb.Message.getField(this, 7) != null;
 };
 
 
 /**
- * optional string cameraId = 8;
- * @return {string?}
+ * required int32 topk = 8;
+ * @return {number}
  */
-proto.verifier.SearchReq.prototype.getCameraid = function() {
-  return /** @type {string?} */ (jspb.Message.getField(this, 8));
+proto.verifier.SearchReq.prototype.getTopk = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 8));
 };
 
 
-/** @param {string?|undefined} value  */
-proto.verifier.SearchReq.prototype.setCameraid = function(value) {
+/** @param {number|undefined} value  */
+proto.verifier.SearchReq.prototype.setTopk = function(value) {
   jspb.Message.setField(this, 8, value);
 };
 
 
-proto.verifier.SearchReq.prototype.clearCameraid = function() {
+proto.verifier.SearchReq.prototype.clearTopk = function() {
   jspb.Message.setField(this, 8, undefined);
 };
 
@@ -2464,27 +2466,27 @@ proto.verifier.SearchReq.prototype.clearCameraid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.SearchReq.prototype.hasCameraid = function() {
+proto.verifier.SearchReq.prototype.hasTopk = function() {
   return jspb.Message.getField(this, 8) != null;
 };
 
 
 /**
- * optional string imageId = 9;
- * @return {string?}
+ * required float score = 9;
+ * @return {number}
  */
-proto.verifier.SearchReq.prototype.getImageid = function() {
-  return /** @type {string?} */ (jspb.Message.getField(this, 9));
+proto.verifier.SearchReq.prototype.getScore = function() {
+  return /** @type {number} */ (!this.hasScore() ? 0.8 : +jspb.Message.getField(this, 9));
 };
 
 
-/** @param {string?|undefined} value  */
-proto.verifier.SearchReq.prototype.setImageid = function(value) {
+/** @param {number|undefined} value  */
+proto.verifier.SearchReq.prototype.setScore = function(value) {
   jspb.Message.setField(this, 9, value);
 };
 
 
-proto.verifier.SearchReq.prototype.clearImageid = function() {
+proto.verifier.SearchReq.prototype.clearScore = function() {
   jspb.Message.setField(this, 9, undefined);
 };
 
@@ -2493,8 +2495,58 @@ proto.verifier.SearchReq.prototype.clearImageid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.SearchReq.prototype.hasImageid = function() {
+proto.verifier.SearchReq.prototype.hasScore = function() {
   return jspb.Message.getField(this, 9) != null;
+};
+
+
+/**
+ * optional string field = 10;
+ * @return {string?}
+ */
+proto.verifier.SearchReq.prototype.getField = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 10));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.SearchReq.prototype.setField = function(value) {
+  jspb.Message.setField(this, 10, value);
+};
+
+
+proto.verifier.SearchReq.prototype.clearField = function() {
+  jspb.Message.setField(this, 10, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.SearchReq.prototype.hasField = function() {
+  return jspb.Message.getField(this, 10) != null;
+};
+
+
+/**
+ * optional Feature feature = 11;
+ * @return {proto.verifier.Feature}
+ */
+proto.verifier.SearchReq.prototype.getFeature = function() {
+  return /** @type{proto.verifier.Feature} */ (
+    jspb.Message.getWrapperField(this, proto.verifier.Feature, 11));
+};
+
+
+/** @param {proto.verifier.Feature|undefined} value  */
+proto.verifier.SearchReq.prototype.setFeature = function(value) {
+  jspb.Message.setWrapperField(this, 11, value);
+};
+
+
+proto.verifier.SearchReq.prototype.clearFeature = function() {
+  this.setFeature(undefined);
 };
 
 
@@ -2554,7 +2606,7 @@ proto.verifier.SearchRes.toObject = function(includeInstance, msg) {
     requestid: jspb.Message.getField(msg, 1),
     timeused: jspb.Message.getField(msg, 2),
     errormessage: jspb.Message.getField(msg, 3),
-    faceidList: jspb.Message.getField(msg, 4),
+    faceidsList: jspb.Message.getField(msg, 4),
     scoreList: jspb.Message.getRepeatedFloatingPointField(msg, 5)
   };
 
@@ -2605,9 +2657,9 @@ proto.verifier.SearchRes.deserializeBinaryFromReader = function(msg, reader) {
       msg.setErrormessage(value);
       break;
     case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.getFaceidList().push(value);
-      msg.setFaceidList(msg.getFaceidList());
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.getFaceidsList().push(value);
+      msg.setFaceidsList(msg.getFaceidsList());
       break;
     case 5:
       var value = /** @type {number} */ (reader.readFloat());
@@ -2673,9 +2725,9 @@ proto.verifier.SearchRes.prototype.serializeBinaryToWriter = function (writer) {
       f
     );
   }
-  f = this.getFaceidList();
+  f = this.getFaceidsList();
   if (f.length > 0) {
-    writer.writeRepeatedString(
+    writer.writeRepeatedSint32(
       4,
       f
     );
@@ -2787,23 +2839,23 @@ proto.verifier.SearchRes.prototype.hasErrormessage = function() {
 
 
 /**
- * repeated string faceId = 4;
+ * repeated sint32 faceIds = 4;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<string>}
+ * @return {!Array.<number>}
  */
-proto.verifier.SearchRes.prototype.getFaceidList = function() {
-  return /** @type {!Array.<string>} */ (jspb.Message.getField(this, 4));
+proto.verifier.SearchRes.prototype.getFaceidsList = function() {
+  return /** @type {!Array.<number>} */ (jspb.Message.getField(this, 4));
 };
 
 
-/** @param {Array.<string>|undefined} value  */
-proto.verifier.SearchRes.prototype.setFaceidList = function(value) {
+/** @param {Array.<number>|undefined} value  */
+proto.verifier.SearchRes.prototype.setFaceidsList = function(value) {
   jspb.Message.setField(this, 4, value || []);
 };
 
 
-proto.verifier.SearchRes.prototype.clearFaceidList = function() {
+proto.verifier.SearchRes.prototype.clearFaceidsList = function() {
   jspb.Message.setField(this, 4, []);
 };
 
@@ -2812,7 +2864,7 @@ proto.verifier.SearchRes.prototype.clearFaceidList = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.SearchRes.prototype.hasFaceidList = function() {
+proto.verifier.SearchRes.prototype.hasFaceidsList = function() {
   return jspb.Message.getField(this, 4) != null;
 };
 
@@ -2896,8 +2948,10 @@ proto.verifier.DeleteReq.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_interface: jspb.Message.getField(msg, 1),
     apikey: jspb.Message.getField(msg, 2),
-    faceid: jspb.Message.getField(msg, 3),
-    groupid: !msg.hasGroupid() ? "watchlist" : jspb.Message.getField(msg, 4)
+    requestid: jspb.Message.getField(msg, 3),
+    faceid: jspb.Message.getField(msg, 4),
+    groupid: !msg.hasGroupid() ? "watchlist" : jspb.Message.getField(msg, 5),
+    field: jspb.Message.getField(msg, 6)
   };
 
   if (includeInstance) {
@@ -2944,11 +2998,19 @@ proto.verifier.DeleteReq.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
-      msg.setFaceid(value);
+      msg.setRequestid(value);
       break;
     case 4:
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.setFaceid(value);
+      break;
+    case 5:
       var value = /** @type {string} */ (reader.readString());
       msg.setGroupid(value);
+      break;
+    case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setField(value);
       break;
     default:
       reader.skipField();
@@ -3002,17 +3064,31 @@ proto.verifier.DeleteReq.prototype.serializeBinaryToWriter = function (writer) {
       f
     );
   }
-  f = this.getFaceid();
+  f = this.getRequestid();
   if (f != null) {
     writer.writeString(
       3,
       f
     );
   }
+  f = this.getFaceid();
+  if (f != null) {
+    writer.writeSint32(
+      4,
+      f
+    );
+  }
   f = this.getGroupid();
   if (f != null) {
     writer.writeString(
-      4,
+      5,
+      f
+    );
+  }
+  f = this.getField();
+  if (f != null) {
+    writer.writeString(
+      6,
       f
     );
   }
@@ -3087,21 +3163,21 @@ proto.verifier.DeleteReq.prototype.hasApikey = function() {
 
 
 /**
- * required string faceId = 3;
- * @return {string}
+ * optional string requestId = 3;
+ * @return {string?}
  */
-proto.verifier.DeleteReq.prototype.getFaceid = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 3));
+proto.verifier.DeleteReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
 };
 
 
-/** @param {string|undefined} value  */
-proto.verifier.DeleteReq.prototype.setFaceid = function(value) {
+/** @param {string?|undefined} value  */
+proto.verifier.DeleteReq.prototype.setRequestid = function(value) {
   jspb.Message.setField(this, 3, value);
 };
 
 
-proto.verifier.DeleteReq.prototype.clearFaceid = function() {
+proto.verifier.DeleteReq.prototype.clearRequestid = function() {
   jspb.Message.setField(this, 3, undefined);
 };
 
@@ -3110,27 +3186,27 @@ proto.verifier.DeleteReq.prototype.clearFaceid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DeleteReq.prototype.hasFaceid = function() {
+proto.verifier.DeleteReq.prototype.hasRequestid = function() {
   return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * required string groupId = 4;
- * @return {string}
+ * required sint32 faceId = 4;
+ * @return {number}
  */
-proto.verifier.DeleteReq.prototype.getGroupid = function() {
-  return /** @type {string} */ (!this.hasGroupid() ? "watchlist" : jspb.Message.getField(this, 4));
+proto.verifier.DeleteReq.prototype.getFaceid = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 4));
 };
 
 
-/** @param {string|undefined} value  */
-proto.verifier.DeleteReq.prototype.setGroupid = function(value) {
+/** @param {number|undefined} value  */
+proto.verifier.DeleteReq.prototype.setFaceid = function(value) {
   jspb.Message.setField(this, 4, value);
 };
 
 
-proto.verifier.DeleteReq.prototype.clearGroupid = function() {
+proto.verifier.DeleteReq.prototype.clearFaceid = function() {
   jspb.Message.setField(this, 4, undefined);
 };
 
@@ -3139,8 +3215,66 @@ proto.verifier.DeleteReq.prototype.clearGroupid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DeleteReq.prototype.hasGroupid = function() {
+proto.verifier.DeleteReq.prototype.hasFaceid = function() {
   return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * required string groupId = 5;
+ * @return {string}
+ */
+proto.verifier.DeleteReq.prototype.getGroupid = function() {
+  return /** @type {string} */ (!this.hasGroupid() ? "watchlist" : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {string|undefined} value  */
+proto.verifier.DeleteReq.prototype.setGroupid = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.DeleteReq.prototype.clearGroupid = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.DeleteReq.prototype.hasGroupid = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional string field = 6;
+ * @return {string?}
+ */
+proto.verifier.DeleteReq.prototype.getField = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 6));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.DeleteReq.prototype.setField = function(value) {
+  jspb.Message.setField(this, 6, value);
+};
+
+
+proto.verifier.DeleteReq.prototype.clearField = function() {
+  jspb.Message.setField(this, 6, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.DeleteReq.prototype.hasField = function() {
+  return jspb.Message.getField(this, 6) != null;
 };
 
 
@@ -3155,12 +3289,12 @@ proto.verifier.DeleteReq.prototype.hasGroupid = function() {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.verifier.CheckReq = function(opt_data) {
+proto.verifier.DeleteRes = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.verifier.CheckReq, jspb.Message);
+goog.inherits(proto.verifier.DeleteRes, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.verifier.CheckReq.displayName = 'proto.verifier.CheckReq';
+  proto.verifier.DeleteRes.displayName = 'proto.verifier.DeleteRes';
 }
 
 
@@ -3175,8 +3309,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.verifier.CheckReq.prototype.toObject = function(opt_includeInstance) {
-  return proto.verifier.CheckReq.toObject(opt_includeInstance, this);
+proto.verifier.DeleteRes.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.DeleteRes.toObject(opt_includeInstance, this);
 };
 
 
@@ -3185,15 +3319,14 @@ proto.verifier.CheckReq.prototype.toObject = function(opt_includeInstance) {
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.verifier.CheckReq} msg The msg instance to transform.
+ * @param {!proto.verifier.DeleteRes} msg The msg instance to transform.
  * @return {!Object}
  */
-proto.verifier.CheckReq.toObject = function(includeInstance, msg) {
+proto.verifier.DeleteRes.toObject = function(includeInstance, msg) {
   var f, obj = {
-    pb_interface: jspb.Message.getField(msg, 1),
-    apikey: jspb.Message.getField(msg, 2),
-    faceid: jspb.Message.getField(msg, 3),
-    groupid: !msg.hasGroupid() ? "watchlist" : jspb.Message.getField(msg, 4)
+    requestid: jspb.Message.getField(msg, 1),
+    timeused: jspb.Message.getField(msg, 2),
+    errormessage: jspb.Message.getField(msg, 3)
   };
 
   if (includeInstance) {
@@ -3207,23 +3340,23 @@ proto.verifier.CheckReq.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.verifier.CheckReq}
+ * @return {!proto.verifier.DeleteRes}
  */
-proto.verifier.CheckReq.deserializeBinary = function(bytes) {
+proto.verifier.DeleteRes.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.verifier.CheckReq;
-  return proto.verifier.CheckReq.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.verifier.DeleteRes;
+  return proto.verifier.DeleteRes.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.verifier.CheckReq} msg The message object to deserialize into.
+ * @param {!proto.verifier.DeleteRes} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.verifier.CheckReq}
+ * @return {!proto.verifier.DeleteRes}
  */
-proto.verifier.CheckReq.deserializeBinaryFromReader = function(msg, reader) {
+proto.verifier.DeleteRes.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -3231,20 +3364,16 @@ proto.verifier.CheckReq.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setInterface(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setApikey(value);
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.setTimeused(value);
       break;
     case 3:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setFaceid(value);
-      break;
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setGroupid(value);
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.setErrormessage(value);
       break;
     default:
       reader.skipField();
@@ -3258,10 +3387,10 @@ proto.verifier.CheckReq.deserializeBinaryFromReader = function(msg, reader) {
 /**
  * Class method variant: serializes the given message to binary data
  * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.verifier.CheckReq} message
+ * @param {!proto.verifier.DeleteRes} message
  * @param {!jspb.BinaryWriter} writer
  */
-proto.verifier.CheckReq.serializeBinaryToWriter = function(message, writer) {
+proto.verifier.DeleteRes.serializeBinaryToWriter = function(message, writer) {
   message.serializeBinaryToWriter(writer);
 };
 
@@ -3270,7 +3399,7 @@ proto.verifier.CheckReq.serializeBinaryToWriter = function(message, writer) {
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.verifier.CheckReq.prototype.serializeBinary = function() {
+proto.verifier.DeleteRes.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
   this.serializeBinaryToWriter(writer);
   return writer.getResultBuffer();
@@ -3282,33 +3411,26 @@ proto.verifier.CheckReq.prototype.serializeBinary = function() {
  * writing to the given BinaryWriter.
  * @param {!jspb.BinaryWriter} writer
  */
-proto.verifier.CheckReq.prototype.serializeBinaryToWriter = function (writer) {
+proto.verifier.DeleteRes.prototype.serializeBinaryToWriter = function (writer) {
   var f = undefined;
-  f = this.getInterface();
+  f = this.getRequestid();
   if (f != null) {
-    writer.writeInt32(
+    writer.writeString(
       1,
       f
     );
   }
-  f = this.getApikey();
+  f = this.getTimeused();
   if (f != null) {
-    writer.writeString(
+    writer.writeSint32(
       2,
       f
     );
   }
-  f = this.getFaceid();
+  f = this.getErrormessage();
   if (f != null) {
-    writer.writeString(
+    writer.writeSint32(
       3,
-      f
-    );
-  }
-  f = this.getGroupid();
-  if (f != null) {
-    writer.writeString(
-      4,
       f
     );
   }
@@ -3317,29 +3439,29 @@ proto.verifier.CheckReq.prototype.serializeBinaryToWriter = function (writer) {
 
 /**
  * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.verifier.CheckReq} The clone.
+ * @return {!proto.verifier.DeleteRes} The clone.
  */
-proto.verifier.CheckReq.prototype.cloneMessage = function() {
-  return /** @type {!proto.verifier.CheckReq} */ (jspb.Message.cloneMessage(this));
+proto.verifier.DeleteRes.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.DeleteRes} */ (jspb.Message.cloneMessage(this));
 };
 
 
 /**
- * required int32 interface = 1;
- * @return {number}
+ * required string requestId = 1;
+ * @return {string}
  */
-proto.verifier.CheckReq.prototype.getInterface = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 1));
+proto.verifier.DeleteRes.prototype.getRequestid = function() {
+  return /** @type {string} */ (jspb.Message.getField(this, 1));
 };
 
 
-/** @param {number|undefined} value  */
-proto.verifier.CheckReq.prototype.setInterface = function(value) {
+/** @param {string|undefined} value  */
+proto.verifier.DeleteRes.prototype.setRequestid = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
 
-proto.verifier.CheckReq.prototype.clearInterface = function() {
+proto.verifier.DeleteRes.prototype.clearRequestid = function() {
   jspb.Message.setField(this, 1, undefined);
 };
 
@@ -3348,27 +3470,27 @@ proto.verifier.CheckReq.prototype.clearInterface = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.CheckReq.prototype.hasInterface = function() {
+proto.verifier.DeleteRes.prototype.hasRequestid = function() {
   return jspb.Message.getField(this, 1) != null;
 };
 
 
 /**
- * required string apiKey = 2;
- * @return {string}
+ * required sint32 timeUsed = 2;
+ * @return {number}
  */
-proto.verifier.CheckReq.prototype.getApikey = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 2));
+proto.verifier.DeleteRes.prototype.getTimeused = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 2));
 };
 
 
-/** @param {string|undefined} value  */
-proto.verifier.CheckReq.prototype.setApikey = function(value) {
+/** @param {number|undefined} value  */
+proto.verifier.DeleteRes.prototype.setTimeused = function(value) {
   jspb.Message.setField(this, 2, value);
 };
 
 
-proto.verifier.CheckReq.prototype.clearApikey = function() {
+proto.verifier.DeleteRes.prototype.clearTimeused = function() {
   jspb.Message.setField(this, 2, undefined);
 };
 
@@ -3377,27 +3499,27 @@ proto.verifier.CheckReq.prototype.clearApikey = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.CheckReq.prototype.hasApikey = function() {
+proto.verifier.DeleteRes.prototype.hasTimeused = function() {
   return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * required string faceId = 3;
- * @return {string}
+ * required sint32 errorMessage = 3;
+ * @return {number}
  */
-proto.verifier.CheckReq.prototype.getFaceid = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 3));
+proto.verifier.DeleteRes.prototype.getErrormessage = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 3));
 };
 
 
-/** @param {string|undefined} value  */
-proto.verifier.CheckReq.prototype.setFaceid = function(value) {
+/** @param {number|undefined} value  */
+proto.verifier.DeleteRes.prototype.setErrormessage = function(value) {
   jspb.Message.setField(this, 3, value);
 };
 
 
-proto.verifier.CheckReq.prototype.clearFaceid = function() {
+proto.verifier.DeleteRes.prototype.clearErrormessage = function() {
   jspb.Message.setField(this, 3, undefined);
 };
 
@@ -3406,37 +3528,8 @@ proto.verifier.CheckReq.prototype.clearFaceid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.CheckReq.prototype.hasFaceid = function() {
+proto.verifier.DeleteRes.prototype.hasErrormessage = function() {
   return jspb.Message.getField(this, 3) != null;
-};
-
-
-/**
- * required string groupId = 4;
- * @return {string}
- */
-proto.verifier.CheckReq.prototype.getGroupid = function() {
-  return /** @type {string} */ (!this.hasGroupid() ? "watchlist" : jspb.Message.getField(this, 4));
-};
-
-
-/** @param {string|undefined} value  */
-proto.verifier.CheckReq.prototype.setGroupid = function(value) {
-  jspb.Message.setField(this, 4, value);
-};
-
-
-proto.verifier.CheckReq.prototype.clearGroupid = function() {
-  jspb.Message.setField(this, 4, undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.verifier.CheckReq.prototype.hasGroupid = function() {
-  return jspb.Message.getField(this, 4) != null;
 };
 
 
@@ -3463,7 +3556,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.verifier.CompareReq.repeatedFields_ = [3,4];
+proto.verifier.CompareReq.repeatedFields_ = [4,6];
 
 
 
@@ -3495,8 +3588,11 @@ proto.verifier.CompareReq.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_interface: jspb.Message.getField(msg, 1),
     apikey: jspb.Message.getField(msg, 2),
-    imageList: msg.getImageList_asB64(),
-    landmarkList: jspb.Message.toObjectList(msg.getLandmarkList(),
+    requestid: jspb.Message.getField(msg, 3),
+    imagesList: jspb.Message.toObjectList(msg.getImagesList(),
+    proto.verifier.Image.toObject, includeInstance),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5),
+    landmarksList: jspb.Message.toObjectList(msg.getLandmarksList(),
     proto.verifier.Landmark.toObject, includeInstance)
   };
 
@@ -3543,15 +3639,24 @@ proto.verifier.CompareReq.deserializeBinaryFromReader = function(msg, reader) {
       msg.setApikey(value);
       break;
     case 3:
-      var value = /** @type {!Uint8Array} */ (reader.readBytes());
-      msg.getImageList().push(value);
-      msg.setImageList(msg.getImageList());
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
       break;
     case 4:
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
+      msg.getImagesList().push(value);
+      msg.setImagesList(msg.getImagesList());
+      break;
+    case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
+      break;
+    case 6:
       var value = new proto.verifier.Landmark;
       reader.readMessage(value,proto.verifier.Landmark.deserializeBinaryFromReader);
-      msg.getLandmarkList().push(value);
-      msg.setLandmarkList(msg.getLandmarkList());
+      msg.getLandmarksList().push(value);
+      msg.setLandmarksList(msg.getLandmarksList());
       break;
     default:
       reader.skipField();
@@ -3605,17 +3710,32 @@ proto.verifier.CompareReq.prototype.serializeBinaryToWriter = function (writer) 
       f
     );
   }
-  f = this.getImageList_asU8();
-  if (f.length > 0) {
-    writer.writeRepeatedBytes(
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
       3,
       f
     );
   }
-  f = this.getLandmarkList();
+  f = this.getImagesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       4,
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
+    );
+  }
+  f = this.getLandmarksList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      6,
       f,
       proto.verifier.Landmark.serializeBinaryToWriter
     );
@@ -3691,52 +3811,22 @@ proto.verifier.CompareReq.prototype.hasApikey = function() {
 
 
 /**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * @return {!(Array<!Uint8Array>|Array<string>)}
+ * optional string requestId = 3;
+ * @return {string?}
  */
-proto.verifier.CompareReq.prototype.getImageList = function() {
-  return /** @type {!(Array<!Uint8Array>|Array<string>)} */ (jspb.Message.getField(this, 3));
+proto.verifier.CompareReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
 };
 
 
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<string>}
- */
-proto.verifier.CompareReq.prototype.getImageList_asB64 = function() {
-  return /** @type {!Array.<string>} */ (jspb.Message.bytesListAsB64(
-      this.getImageList()));
+/** @param {string?|undefined} value  */
+proto.verifier.CompareReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
 };
 
 
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * Note that Uint8Array is not supported on all browsers.
- * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<!Uint8Array>}
- */
-proto.verifier.CompareReq.prototype.getImageList_asU8 = function() {
-  return /** @type {!Array.<!Uint8Array>} */ (jspb.Message.bytesListAsU8(
-      this.getImageList()));
-};
-
-
-/** @param {(Array<!Uint8Array>|Array<string>)|undefined} value  */
-proto.verifier.CompareReq.prototype.setImageList = function(value) {
-  jspb.Message.setField(this, 3, value || []);
-};
-
-
-proto.verifier.CompareReq.prototype.clearImageList = function() {
-  jspb.Message.setField(this, 3, []);
+proto.verifier.CompareReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
 };
 
 
@@ -3744,31 +3834,83 @@ proto.verifier.CompareReq.prototype.clearImageList = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.CompareReq.prototype.hasImageList = function() {
+proto.verifier.CompareReq.prototype.hasRequestid = function() {
   return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * repeated Landmark landmark = 4;
+ * repeated Image images = 4;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<!proto.verifier.Landmark>}
+ * @return {!Array.<!proto.verifier.Image>}
  */
-proto.verifier.CompareReq.prototype.getLandmarkList = function() {
-  return /** @type{!Array.<!proto.verifier.Landmark>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Landmark, 4));
+proto.verifier.CompareReq.prototype.getImagesList = function() {
+  return /** @type{!Array.<!proto.verifier.Image>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Image, 4));
 };
 
 
-/** @param {Array.<!proto.verifier.Landmark>|undefined} value  */
-proto.verifier.CompareReq.prototype.setLandmarkList = function(value) {
+/** @param {Array.<!proto.verifier.Image>|undefined} value  */
+proto.verifier.CompareReq.prototype.setImagesList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
-proto.verifier.CompareReq.prototype.clearLandmarkList = function() {
-  this.setLandmarkList([]);
+proto.verifier.CompareReq.prototype.clearImagesList = function() {
+  this.setImagesList([]);
+};
+
+
+/**
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
+ */
+proto.verifier.CompareReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.CompareReq.prototype.setFormat = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.CompareReq.prototype.clearFormat = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.CompareReq.prototype.hasFormat = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * repeated Landmark landmarks = 6;
+ * If you change this array by adding, removing or replacing elements, or if you
+ * replace the array itself, then you must call the setter to update it.
+ * @return {!Array.<!proto.verifier.Landmark>}
+ */
+proto.verifier.CompareReq.prototype.getLandmarksList = function() {
+  return /** @type{!Array.<!proto.verifier.Landmark>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Landmark, 6));
+};
+
+
+/** @param {Array.<!proto.verifier.Landmark>|undefined} value  */
+proto.verifier.CompareReq.prototype.setLandmarksList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 6, value);
+};
+
+
+proto.verifier.CompareReq.prototype.clearLandmarksList = function() {
+  this.setLandmarksList([]);
 };
 
 
@@ -3821,7 +3963,7 @@ proto.verifier.CompareRes.toObject = function(includeInstance, msg) {
     requestid: jspb.Message.getField(msg, 1),
     timeused: jspb.Message.getField(msg, 2),
     errormessage: jspb.Message.getField(msg, 3),
-    score: +jspb.Message.getField(msg, 4)
+    score: jspb.Message.getOptionalFloatingPointField(msg, 4)
   };
 
   if (includeInstance) {
@@ -4040,15 +4182,15 @@ proto.verifier.CompareRes.prototype.hasErrormessage = function() {
 
 
 /**
- * required float score = 4;
- * @return {number}
+ * optional float score = 4;
+ * @return {number?}
  */
 proto.verifier.CompareRes.prototype.getScore = function() {
-  return /** @type {number} */ (+jspb.Message.getField(this, 4));
+  return /** @type {number?} */ (jspb.Message.getOptionalFloatingPointField(this, 4));
 };
 
 
-/** @param {number|undefined} value  */
+/** @param {number?|undefined} value  */
 proto.verifier.CompareRes.prototype.setScore = function(value) {
   jspb.Message.setField(this, 4, value);
 };
@@ -4116,16 +4258,18 @@ proto.verifier.DetectReq.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_interface: jspb.Message.getField(msg, 1),
     apikey: jspb.Message.getField(msg, 2),
+    requestid: jspb.Message.getField(msg, 3),
     image: msg.getImage_asB64(),
-    rows: jspb.Message.getField(msg, 4),
-    cols: jspb.Message.getField(msg, 5),
-    format: !msg.hasFormat() ? 1 : jspb.Message.getField(msg, 6),
-    minfacesize: !msg.hasMinfacesize() ? 80 : jspb.Message.getField(msg, 7),
-    maxfacesize: !msg.hasMaxfacesize() ? 300 : jspb.Message.getField(msg, 8),
-    field: !msg.hasField() ? "normal" : jspb.Message.getField(msg, 9),
-    imageid: jspb.Message.getField(msg, 10),
-    cameraid: jspb.Message.getField(msg, 11),
-    classify: !msg.hasClassify() ? "gender,age,hair" : jspb.Message.getField(msg, 12)
+    rows: jspb.Message.getField(msg, 5),
+    cols: jspb.Message.getField(msg, 6),
+    datalen: jspb.Message.getField(msg, 7),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 8),
+    minfacesize: !msg.hasMinfacesize() ? 80 : jspb.Message.getField(msg, 9),
+    maxfacesize: !msg.hasMaxfacesize() ? 300 : jspb.Message.getField(msg, 10),
+    field: !msg.hasField() ? "normal" : jspb.Message.getField(msg, 11),
+    imageid: jspb.Message.getField(msg, 12),
+    cameraid: jspb.Message.getField(msg, 13),
+    classify: jspb.Message.getField(msg, 14)
   };
 
   if (includeInstance) {
@@ -4171,42 +4315,50 @@ proto.verifier.DetectReq.deserializeBinaryFromReader = function(msg, reader) {
       msg.setApikey(value);
       break;
     case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 4:
       var value = /** @type {!Uint8Array} */ (reader.readBytes());
       msg.setImage(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {number} */ (reader.readSint32());
       msg.setRows(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {number} */ (reader.readSint32());
       msg.setCols(value);
       break;
-    case 6:
-      var value = /** @type {!proto.verifier.DetectReq.Format} */ (reader.readEnum());
+    case 7:
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.setDatalen(value);
+      break;
+    case 8:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
       msg.setFormat(value);
       break;
-    case 7:
+    case 9:
       var value = /** @type {number} */ (reader.readSint32());
       msg.setMinfacesize(value);
       break;
-    case 8:
+    case 10:
       var value = /** @type {number} */ (reader.readSint32());
       msg.setMaxfacesize(value);
       break;
-    case 9:
+    case 11:
       var value = /** @type {string} */ (reader.readString());
       msg.setField(value);
       break;
-    case 10:
+    case 12:
       var value = /** @type {string} */ (reader.readString());
       msg.setImageid(value);
       break;
-    case 11:
+    case 13:
       var value = /** @type {string} */ (reader.readString());
       msg.setCameraid(value);
       break;
-    case 12:
+    case 14:
       var value = /** @type {string} */ (reader.readString());
       msg.setClassify(value);
       break;
@@ -4262,73 +4414,87 @@ proto.verifier.DetectReq.prototype.serializeBinaryToWriter = function (writer) {
       f
     );
   }
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
   f = this.getImage_asU8();
   if (f != null) {
     writer.writeBytes(
-      3,
+      4,
       f
     );
   }
   f = this.getRows();
   if (f != null) {
     writer.writeSint32(
-      4,
+      5,
       f
     );
   }
   f = this.getCols();
   if (f != null) {
     writer.writeSint32(
-      5,
-      f
-    );
-  }
-  f = this.getFormat();
-  if (f != null) {
-    writer.writeEnum(
       6,
       f
     );
   }
-  f = this.getMinfacesize();
+  f = this.getDatalen();
   if (f != null) {
     writer.writeSint32(
       7,
       f
     );
   }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      8,
+      f
+    );
+  }
+  f = this.getMinfacesize();
+  if (f != null) {
+    writer.writeSint32(
+      9,
+      f
+    );
+  }
   f = this.getMaxfacesize();
   if (f != null) {
     writer.writeSint32(
-      8,
+      10,
       f
     );
   }
   f = this.getField();
   if (f != null) {
     writer.writeString(
-      9,
+      11,
       f
     );
   }
   f = this.getImageid();
   if (f != null) {
     writer.writeString(
-      10,
+      12,
       f
     );
   }
   f = this.getCameraid();
   if (f != null) {
     writer.writeString(
-      11,
+      13,
       f
     );
   }
   f = this.getClassify();
   if (f != null) {
     writer.writeString(
-      12,
+      14,
       f
     );
   }
@@ -4403,16 +4569,45 @@ proto.verifier.DetectReq.prototype.hasApikey = function() {
 
 
 /**
- * required bytes image = 3;
- * @return {!(string|Uint8Array)}
+ * optional string requestId = 3;
+ * @return {string?}
  */
-proto.verifier.DetectReq.prototype.getImage = function() {
-  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getField(this, 3));
+proto.verifier.DetectReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.DetectReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+proto.verifier.DetectReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
 };
 
 
 /**
- * required bytes image = 3;
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.DetectReq.prototype.hasRequestid = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * required bytes image = 4;
+ * @return {!(string|Uint8Array)}
+ */
+proto.verifier.DetectReq.prototype.getImage = function() {
+  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getField(this, 4));
+};
+
+
+/**
+ * required bytes image = 4;
  * This is a type-conversion wrapper around `getImage()`
  * @return {string}
  */
@@ -4423,7 +4618,7 @@ proto.verifier.DetectReq.prototype.getImage_asB64 = function() {
 
 
 /**
- * required bytes image = 3;
+ * required bytes image = 4;
  * Note that Uint8Array is not supported on all browsers.
  * @see http://caniuse.com/Uint8Array
  * This is a type-conversion wrapper around `getImage()`
@@ -4437,40 +4632,11 @@ proto.verifier.DetectReq.prototype.getImage_asU8 = function() {
 
 /** @param {(string|Uint8Array)|undefined} value  */
 proto.verifier.DetectReq.prototype.setImage = function(value) {
-  jspb.Message.setField(this, 3, value);
-};
-
-
-proto.verifier.DetectReq.prototype.clearImage = function() {
-  jspb.Message.setField(this, 3, undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.verifier.DetectReq.prototype.hasImage = function() {
-  return jspb.Message.getField(this, 3) != null;
-};
-
-
-/**
- * required sint32 rows = 4;
- * @return {number}
- */
-proto.verifier.DetectReq.prototype.getRows = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 4));
-};
-
-
-/** @param {number|undefined} value  */
-proto.verifier.DetectReq.prototype.setRows = function(value) {
   jspb.Message.setField(this, 4, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearRows = function() {
+proto.verifier.DetectReq.prototype.clearImage = function() {
   jspb.Message.setField(this, 4, undefined);
 };
 
@@ -4479,27 +4645,27 @@ proto.verifier.DetectReq.prototype.clearRows = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasRows = function() {
+proto.verifier.DetectReq.prototype.hasImage = function() {
   return jspb.Message.getField(this, 4) != null;
 };
 
 
 /**
- * required sint32 cols = 5;
- * @return {number}
+ * optional sint32 rows = 5;
+ * @return {number?}
  */
-proto.verifier.DetectReq.prototype.getCols = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 5));
+proto.verifier.DetectReq.prototype.getRows = function() {
+  return /** @type {number?} */ (jspb.Message.getField(this, 5));
 };
 
 
-/** @param {number|undefined} value  */
-proto.verifier.DetectReq.prototype.setCols = function(value) {
+/** @param {number?|undefined} value  */
+proto.verifier.DetectReq.prototype.setRows = function(value) {
   jspb.Message.setField(this, 5, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearCols = function() {
+proto.verifier.DetectReq.prototype.clearRows = function() {
   jspb.Message.setField(this, 5, undefined);
 };
 
@@ -4508,27 +4674,27 @@ proto.verifier.DetectReq.prototype.clearCols = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasCols = function() {
+proto.verifier.DetectReq.prototype.hasRows = function() {
   return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * required Format format = 6;
- * @return {!proto.verifier.DetectReq.Format}
+ * optional sint32 cols = 6;
+ * @return {number?}
  */
-proto.verifier.DetectReq.prototype.getFormat = function() {
-  return /** @type {!proto.verifier.DetectReq.Format} */ (!this.hasFormat() ? 1 : jspb.Message.getField(this, 6));
+proto.verifier.DetectReq.prototype.getCols = function() {
+  return /** @type {number?} */ (jspb.Message.getField(this, 6));
 };
 
 
-/** @param {proto.verifier.DetectReq.Format|undefined} value  */
-proto.verifier.DetectReq.prototype.setFormat = function(value) {
+/** @param {number?|undefined} value  */
+proto.verifier.DetectReq.prototype.setCols = function(value) {
   jspb.Message.setField(this, 6, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearFormat = function() {
+proto.verifier.DetectReq.prototype.clearCols = function() {
   jspb.Message.setField(this, 6, undefined);
 };
 
@@ -4537,27 +4703,27 @@ proto.verifier.DetectReq.prototype.clearFormat = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasFormat = function() {
+proto.verifier.DetectReq.prototype.hasCols = function() {
   return jspb.Message.getField(this, 6) != null;
 };
 
 
 /**
- * optional sint32 minfaceSize = 7;
- * @return {number}
+ * optional sint32 DataLen = 7;
+ * @return {number?}
  */
-proto.verifier.DetectReq.prototype.getMinfacesize = function() {
-  return /** @type {number} */ (!this.hasMinfacesize() ? 80 : jspb.Message.getField(this, 7));
+proto.verifier.DetectReq.prototype.getDatalen = function() {
+  return /** @type {number?} */ (jspb.Message.getField(this, 7));
 };
 
 
 /** @param {number?|undefined} value  */
-proto.verifier.DetectReq.prototype.setMinfacesize = function(value) {
+proto.verifier.DetectReq.prototype.setDatalen = function(value) {
   jspb.Message.setField(this, 7, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearMinfacesize = function() {
+proto.verifier.DetectReq.prototype.clearDatalen = function() {
   jspb.Message.setField(this, 7, undefined);
 };
 
@@ -4566,27 +4732,27 @@ proto.verifier.DetectReq.prototype.clearMinfacesize = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasMinfacesize = function() {
+proto.verifier.DetectReq.prototype.hasDatalen = function() {
   return jspb.Message.getField(this, 7) != null;
 };
 
 
 /**
- * optional sint32 maxfaceSize = 8;
- * @return {number}
+ * required Format format = 8;
+ * @return {!proto.verifier.Format}
  */
-proto.verifier.DetectReq.prototype.getMaxfacesize = function() {
-  return /** @type {number} */ (!this.hasMaxfacesize() ? 300 : jspb.Message.getField(this, 8));
+proto.verifier.DetectReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 8));
 };
 
 
-/** @param {number?|undefined} value  */
-proto.verifier.DetectReq.prototype.setMaxfacesize = function(value) {
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.DetectReq.prototype.setFormat = function(value) {
   jspb.Message.setField(this, 8, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearMaxfacesize = function() {
+proto.verifier.DetectReq.prototype.clearFormat = function() {
   jspb.Message.setField(this, 8, undefined);
 };
 
@@ -4595,27 +4761,27 @@ proto.verifier.DetectReq.prototype.clearMaxfacesize = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasMaxfacesize = function() {
+proto.verifier.DetectReq.prototype.hasFormat = function() {
   return jspb.Message.getField(this, 8) != null;
 };
 
 
 /**
- * optional string field = 9;
- * @return {string}
+ * optional sint32 minfaceSize = 9;
+ * @return {number}
  */
-proto.verifier.DetectReq.prototype.getField = function() {
-  return /** @type {string} */ (!this.hasField() ? "normal" : jspb.Message.getField(this, 9));
+proto.verifier.DetectReq.prototype.getMinfacesize = function() {
+  return /** @type {number} */ (!this.hasMinfacesize() ? 80 : jspb.Message.getField(this, 9));
 };
 
 
-/** @param {string?|undefined} value  */
-proto.verifier.DetectReq.prototype.setField = function(value) {
+/** @param {number?|undefined} value  */
+proto.verifier.DetectReq.prototype.setMinfacesize = function(value) {
   jspb.Message.setField(this, 9, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearField = function() {
+proto.verifier.DetectReq.prototype.clearMinfacesize = function() {
   jspb.Message.setField(this, 9, undefined);
 };
 
@@ -4624,27 +4790,27 @@ proto.verifier.DetectReq.prototype.clearField = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasField = function() {
+proto.verifier.DetectReq.prototype.hasMinfacesize = function() {
   return jspb.Message.getField(this, 9) != null;
 };
 
 
 /**
- * optional string imageId = 10;
- * @return {string?}
+ * optional sint32 maxfaceSize = 10;
+ * @return {number}
  */
-proto.verifier.DetectReq.prototype.getImageid = function() {
-  return /** @type {string?} */ (jspb.Message.getField(this, 10));
+proto.verifier.DetectReq.prototype.getMaxfacesize = function() {
+  return /** @type {number} */ (!this.hasMaxfacesize() ? 300 : jspb.Message.getField(this, 10));
 };
 
 
-/** @param {string?|undefined} value  */
-proto.verifier.DetectReq.prototype.setImageid = function(value) {
+/** @param {number?|undefined} value  */
+proto.verifier.DetectReq.prototype.setMaxfacesize = function(value) {
   jspb.Message.setField(this, 10, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearImageid = function() {
+proto.verifier.DetectReq.prototype.clearMaxfacesize = function() {
   jspb.Message.setField(this, 10, undefined);
 };
 
@@ -4653,27 +4819,27 @@ proto.verifier.DetectReq.prototype.clearImageid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasImageid = function() {
+proto.verifier.DetectReq.prototype.hasMaxfacesize = function() {
   return jspb.Message.getField(this, 10) != null;
 };
 
 
 /**
- * optional string cameraId = 11;
- * @return {string?}
+ * optional string field = 11;
+ * @return {string}
  */
-proto.verifier.DetectReq.prototype.getCameraid = function() {
-  return /** @type {string?} */ (jspb.Message.getField(this, 11));
+proto.verifier.DetectReq.prototype.getField = function() {
+  return /** @type {string} */ (!this.hasField() ? "normal" : jspb.Message.getField(this, 11));
 };
 
 
 /** @param {string?|undefined} value  */
-proto.verifier.DetectReq.prototype.setCameraid = function(value) {
+proto.verifier.DetectReq.prototype.setField = function(value) {
   jspb.Message.setField(this, 11, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearCameraid = function() {
+proto.verifier.DetectReq.prototype.clearField = function() {
   jspb.Message.setField(this, 11, undefined);
 };
 
@@ -4682,27 +4848,27 @@ proto.verifier.DetectReq.prototype.clearCameraid = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasCameraid = function() {
+proto.verifier.DetectReq.prototype.hasField = function() {
   return jspb.Message.getField(this, 11) != null;
 };
 
 
 /**
- * optional string classify = 12;
- * @return {string}
+ * optional string imageId = 12;
+ * @return {string?}
  */
-proto.verifier.DetectReq.prototype.getClassify = function() {
-  return /** @type {string} */ (!this.hasClassify() ? "gender,age,hair" : jspb.Message.getField(this, 12));
+proto.verifier.DetectReq.prototype.getImageid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 12));
 };
 
 
 /** @param {string?|undefined} value  */
-proto.verifier.DetectReq.prototype.setClassify = function(value) {
+proto.verifier.DetectReq.prototype.setImageid = function(value) {
   jspb.Message.setField(this, 12, value);
 };
 
 
-proto.verifier.DetectReq.prototype.clearClassify = function() {
+proto.verifier.DetectReq.prototype.clearImageid = function() {
   jspb.Message.setField(this, 12, undefined);
 };
 
@@ -4711,18 +4877,68 @@ proto.verifier.DetectReq.prototype.clearClassify = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.DetectReq.prototype.hasClassify = function() {
+proto.verifier.DetectReq.prototype.hasImageid = function() {
   return jspb.Message.getField(this, 12) != null;
 };
 
 
 /**
- * @enum {number}
+ * optional string cameraId = 13;
+ * @return {string?}
  */
-proto.verifier.DetectReq.Format = {
-  MAT: 0,
-  YUV: 1
+proto.verifier.DetectReq.prototype.getCameraid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 13));
 };
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.DetectReq.prototype.setCameraid = function(value) {
+  jspb.Message.setField(this, 13, value);
+};
+
+
+proto.verifier.DetectReq.prototype.clearCameraid = function() {
+  jspb.Message.setField(this, 13, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.DetectReq.prototype.hasCameraid = function() {
+  return jspb.Message.getField(this, 13) != null;
+};
+
+
+/**
+ * optional string classify = 14;
+ * @return {string?}
+ */
+proto.verifier.DetectReq.prototype.getClassify = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 14));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.DetectReq.prototype.setClassify = function(value) {
+  jspb.Message.setField(this, 14, value);
+};
+
+
+proto.verifier.DetectReq.prototype.clearClassify = function() {
+  jspb.Message.setField(this, 14, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.DetectReq.prototype.hasClassify = function() {
+  return jspb.Message.getField(this, 14) != null;
+};
+
 
 
 /**
@@ -5043,15 +5259,15 @@ proto.verifier.DetectRes.prototype.hasErrormessage = function() {
 
 
 /**
- * required sint32 detectNums = 4;
- * @return {number}
+ * optional sint32 detectNums = 4;
+ * @return {number?}
  */
 proto.verifier.DetectRes.prototype.getDetectnums = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 4));
+  return /** @type {number?} */ (jspb.Message.getField(this, 4));
 };
 
 
-/** @param {number|undefined} value  */
+/** @param {number?|undefined} value  */
 proto.verifier.DetectRes.prototype.setDetectnums = function(value) {
   jspb.Message.setField(this, 4, value);
 };
@@ -5072,15 +5288,15 @@ proto.verifier.DetectRes.prototype.hasDetectnums = function() {
 
 
 /**
- * required sint32 trackNums = 5;
- * @return {number}
+ * optional sint32 trackNums = 5;
+ * @return {number?}
  */
 proto.verifier.DetectRes.prototype.getTracknums = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 5));
+  return /** @type {number?} */ (jspb.Message.getField(this, 5));
 };
 
 
-/** @param {number|undefined} value  */
+/** @param {number?|undefined} value  */
 proto.verifier.DetectRes.prototype.setTracknums = function(value) {
   jspb.Message.setField(this, 5, value);
 };
@@ -5209,8 +5425,8 @@ proto.verifier.DetectRes.DetectInfo.toObject = function(includeInstance, msg) {
     glasses: jspb.Message.getField(msg, 8),
     xList: jspb.Message.getField(msg, 9),
     yList: jspb.Message.getField(msg, 10),
-    female: +jspb.Message.getField(msg, 11),
-    male: +jspb.Message.getField(msg, 12),
+    female: jspb.Message.getOptionalFloatingPointField(msg, 11),
+    male: jspb.Message.getOptionalFloatingPointField(msg, 12),
     age: jspb.Message.getField(msg, 13),
     hair: jspb.Message.getField(msg, 14)
   };
@@ -5748,15 +5964,15 @@ proto.verifier.DetectRes.DetectInfo.prototype.hasYList = function() {
 
 
 /**
- * required float female = 11;
- * @return {number}
+ * optional float female = 11;
+ * @return {number?}
  */
 proto.verifier.DetectRes.DetectInfo.prototype.getFemale = function() {
-  return /** @type {number} */ (+jspb.Message.getField(this, 11));
+  return /** @type {number?} */ (jspb.Message.getOptionalFloatingPointField(this, 11));
 };
 
 
-/** @param {number|undefined} value  */
+/** @param {number?|undefined} value  */
 proto.verifier.DetectRes.DetectInfo.prototype.setFemale = function(value) {
   jspb.Message.setField(this, 11, value);
 };
@@ -5777,15 +5993,15 @@ proto.verifier.DetectRes.DetectInfo.prototype.hasFemale = function() {
 
 
 /**
- * required float male = 12;
- * @return {number}
+ * optional float male = 12;
+ * @return {number?}
  */
 proto.verifier.DetectRes.DetectInfo.prototype.getMale = function() {
-  return /** @type {number} */ (+jspb.Message.getField(this, 12));
+  return /** @type {number?} */ (jspb.Message.getOptionalFloatingPointField(this, 12));
 };
 
 
-/** @param {number|undefined} value  */
+/** @param {number?|undefined} value  */
 proto.verifier.DetectRes.DetectInfo.prototype.setMale = function(value) {
   jspb.Message.setField(this, 12, value);
 };
@@ -5806,15 +6022,15 @@ proto.verifier.DetectRes.DetectInfo.prototype.hasMale = function() {
 
 
 /**
- * required sint32 age = 13;
- * @return {number}
+ * optional sint32 age = 13;
+ * @return {number?}
  */
 proto.verifier.DetectRes.DetectInfo.prototype.getAge = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 13));
+  return /** @type {number?} */ (jspb.Message.getField(this, 13));
 };
 
 
-/** @param {number|undefined} value  */
+/** @param {number?|undefined} value  */
 proto.verifier.DetectRes.DetectInfo.prototype.setAge = function(value) {
   jspb.Message.setField(this, 13, value);
 };
@@ -5835,15 +6051,15 @@ proto.verifier.DetectRes.DetectInfo.prototype.hasAge = function() {
 
 
 /**
- * required string hair = 14;
- * @return {string}
+ * optional string hair = 14;
+ * @return {string?}
  */
 proto.verifier.DetectRes.DetectInfo.prototype.getHair = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 14));
+  return /** @type {string?} */ (jspb.Message.getField(this, 14));
 };
 
 
-/** @param {string|undefined} value  */
+/** @param {string?|undefined} value  */
 proto.verifier.DetectRes.DetectInfo.prototype.setHair = function(value) {
   jspb.Message.setField(this, 14, value);
 };
@@ -6603,7 +6819,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.verifier.FeatureReq.repeatedFields_ = [3,4];
+proto.verifier.FeatureReq.repeatedFields_ = [4,6];
 
 
 
@@ -6635,8 +6851,11 @@ proto.verifier.FeatureReq.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_interface: jspb.Message.getField(msg, 1),
     apikey: jspb.Message.getField(msg, 2),
-    imageList: msg.getImageList_asB64(),
-    landmarkList: jspb.Message.toObjectList(msg.getLandmarkList(),
+    requestid: jspb.Message.getField(msg, 3),
+    imagesList: jspb.Message.toObjectList(msg.getImagesList(),
+    proto.verifier.Image.toObject, includeInstance),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5),
+    landmarksList: jspb.Message.toObjectList(msg.getLandmarksList(),
     proto.verifier.Landmark.toObject, includeInstance)
   };
 
@@ -6683,15 +6902,24 @@ proto.verifier.FeatureReq.deserializeBinaryFromReader = function(msg, reader) {
       msg.setApikey(value);
       break;
     case 3:
-      var value = /** @type {!Uint8Array} */ (reader.readBytes());
-      msg.getImageList().push(value);
-      msg.setImageList(msg.getImageList());
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
       break;
     case 4:
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
+      msg.getImagesList().push(value);
+      msg.setImagesList(msg.getImagesList());
+      break;
+    case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
+      break;
+    case 6:
       var value = new proto.verifier.Landmark;
       reader.readMessage(value,proto.verifier.Landmark.deserializeBinaryFromReader);
-      msg.getLandmarkList().push(value);
-      msg.setLandmarkList(msg.getLandmarkList());
+      msg.getLandmarksList().push(value);
+      msg.setLandmarksList(msg.getLandmarksList());
       break;
     default:
       reader.skipField();
@@ -6745,17 +6973,32 @@ proto.verifier.FeatureReq.prototype.serializeBinaryToWriter = function (writer) 
       f
     );
   }
-  f = this.getImageList_asU8();
-  if (f.length > 0) {
-    writer.writeRepeatedBytes(
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
       3,
       f
     );
   }
-  f = this.getLandmarkList();
+  f = this.getImagesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       4,
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
+    );
+  }
+  f = this.getLandmarksList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      6,
       f,
       proto.verifier.Landmark.serializeBinaryToWriter
     );
@@ -6831,52 +7074,22 @@ proto.verifier.FeatureReq.prototype.hasApikey = function() {
 
 
 /**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * @return {!(Array<!Uint8Array>|Array<string>)}
+ * optional string requestId = 3;
+ * @return {string?}
  */
-proto.verifier.FeatureReq.prototype.getImageList = function() {
-  return /** @type {!(Array<!Uint8Array>|Array<string>)} */ (jspb.Message.getField(this, 3));
+proto.verifier.FeatureReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
 };
 
 
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<string>}
- */
-proto.verifier.FeatureReq.prototype.getImageList_asB64 = function() {
-  return /** @type {!Array.<string>} */ (jspb.Message.bytesListAsB64(
-      this.getImageList()));
+/** @param {string?|undefined} value  */
+proto.verifier.FeatureReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
 };
 
 
-/**
- * repeated bytes image = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * Note that Uint8Array is not supported on all browsers.
- * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getImageList()`
- * @return {!Array.<!Uint8Array>}
- */
-proto.verifier.FeatureReq.prototype.getImageList_asU8 = function() {
-  return /** @type {!Array.<!Uint8Array>} */ (jspb.Message.bytesListAsU8(
-      this.getImageList()));
-};
-
-
-/** @param {(Array<!Uint8Array>|Array<string>)|undefined} value  */
-proto.verifier.FeatureReq.prototype.setImageList = function(value) {
-  jspb.Message.setField(this, 3, value || []);
-};
-
-
-proto.verifier.FeatureReq.prototype.clearImageList = function() {
-  jspb.Message.setField(this, 3, []);
+proto.verifier.FeatureReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
 };
 
 
@@ -6884,31 +7097,83 @@ proto.verifier.FeatureReq.prototype.clearImageList = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.FeatureReq.prototype.hasImageList = function() {
+proto.verifier.FeatureReq.prototype.hasRequestid = function() {
   return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * repeated Landmark landmark = 4;
+ * repeated Image images = 4;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<!proto.verifier.Landmark>}
+ * @return {!Array.<!proto.verifier.Image>}
  */
-proto.verifier.FeatureReq.prototype.getLandmarkList = function() {
-  return /** @type{!Array.<!proto.verifier.Landmark>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Landmark, 4));
+proto.verifier.FeatureReq.prototype.getImagesList = function() {
+  return /** @type{!Array.<!proto.verifier.Image>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Image, 4));
 };
 
 
-/** @param {Array.<!proto.verifier.Landmark>|undefined} value  */
-proto.verifier.FeatureReq.prototype.setLandmarkList = function(value) {
+/** @param {Array.<!proto.verifier.Image>|undefined} value  */
+proto.verifier.FeatureReq.prototype.setImagesList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
-proto.verifier.FeatureReq.prototype.clearLandmarkList = function() {
-  this.setLandmarkList([]);
+proto.verifier.FeatureReq.prototype.clearImagesList = function() {
+  this.setImagesList([]);
+};
+
+
+/**
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
+ */
+proto.verifier.FeatureReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.FeatureReq.prototype.setFormat = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.FeatureReq.prototype.clearFormat = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.FeatureReq.prototype.hasFormat = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * repeated Landmark landmarks = 6;
+ * If you change this array by adding, removing or replacing elements, or if you
+ * replace the array itself, then you must call the setter to update it.
+ * @return {!Array.<!proto.verifier.Landmark>}
+ */
+proto.verifier.FeatureReq.prototype.getLandmarksList = function() {
+  return /** @type{!Array.<!proto.verifier.Landmark>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Landmark, 6));
+};
+
+
+/** @param {Array.<!proto.verifier.Landmark>|undefined} value  */
+proto.verifier.FeatureReq.prototype.setLandmarksList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 6, value);
+};
+
+
+proto.verifier.FeatureReq.prototype.clearLandmarksList = function() {
+  this.setLandmarksList([]);
 };
 
 
@@ -6970,7 +7235,7 @@ proto.verifier.FeatureRes.toObject = function(includeInstance, msg) {
     errormessage: jspb.Message.getField(msg, 3),
     dimension: jspb.Message.getField(msg, 4),
     featureList: jspb.Message.toObjectList(msg.getFeatureList(),
-    proto.verifier.FeatureRes.Feature.toObject, includeInstance)
+    proto.verifier.FeatureRes.FeatureInfo.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -7024,8 +7289,8 @@ proto.verifier.FeatureRes.deserializeBinaryFromReader = function(msg, reader) {
       msg.setDimension(value);
       break;
     case 5:
-      var value = new proto.verifier.FeatureRes.Feature;
-      reader.readMessage(value,proto.verifier.FeatureRes.Feature.deserializeBinaryFromReader);
+      var value = new proto.verifier.FeatureRes.FeatureInfo;
+      reader.readMessage(value,proto.verifier.FeatureRes.FeatureInfo.deserializeBinaryFromReader);
       msg.getFeatureList().push(value);
       msg.setFeatureList(msg.getFeatureList());
       break;
@@ -7100,7 +7365,7 @@ proto.verifier.FeatureRes.prototype.serializeBinaryToWriter = function (writer) 
     writer.writeRepeatedMessage(
       5,
       f,
-      proto.verifier.FeatureRes.Feature.serializeBinaryToWriter
+      proto.verifier.FeatureRes.FeatureInfo.serializeBinaryToWriter
     );
   }
 };
@@ -7203,15 +7468,15 @@ proto.verifier.FeatureRes.prototype.hasErrormessage = function() {
 
 
 /**
- * required sint32 dimension = 4;
- * @return {number}
+ * optional sint32 dimension = 4;
+ * @return {number?}
  */
 proto.verifier.FeatureRes.prototype.getDimension = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 4));
+  return /** @type {number?} */ (jspb.Message.getField(this, 4));
 };
 
 
-/** @param {number|undefined} value  */
+/** @param {number?|undefined} value  */
 proto.verifier.FeatureRes.prototype.setDimension = function(value) {
   jspb.Message.setField(this, 4, value);
 };
@@ -7232,18 +7497,18 @@ proto.verifier.FeatureRes.prototype.hasDimension = function() {
 
 
 /**
- * repeated Feature feature = 5;
+ * repeated FeatureInfo feature = 5;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<!proto.verifier.FeatureRes.Feature>}
+ * @return {!Array.<!proto.verifier.FeatureRes.FeatureInfo>}
  */
 proto.verifier.FeatureRes.prototype.getFeatureList = function() {
-  return /** @type{!Array.<!proto.verifier.FeatureRes.Feature>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.verifier.FeatureRes.Feature, 5));
+  return /** @type{!Array.<!proto.verifier.FeatureRes.FeatureInfo>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.FeatureRes.FeatureInfo, 5));
 };
 
 
-/** @param {Array.<!proto.verifier.FeatureRes.Feature>|undefined} value  */
+/** @param {Array.<!proto.verifier.FeatureRes.FeatureInfo>|undefined} value  */
 proto.verifier.FeatureRes.prototype.setFeatureList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
@@ -7265,19 +7530,19 @@ proto.verifier.FeatureRes.prototype.clearFeatureList = function() {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.verifier.FeatureRes.Feature = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.FeatureRes.Feature.repeatedFields_, null);
+proto.verifier.FeatureRes.FeatureInfo = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.FeatureRes.FeatureInfo.repeatedFields_, null);
 };
-goog.inherits(proto.verifier.FeatureRes.Feature, jspb.Message);
+goog.inherits(proto.verifier.FeatureRes.FeatureInfo, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.verifier.FeatureRes.Feature.displayName = 'proto.verifier.FeatureRes.Feature';
+  proto.verifier.FeatureRes.FeatureInfo.displayName = 'proto.verifier.FeatureRes.FeatureInfo';
 }
 /**
  * List of repeated fields within this message type.
  * @private {!Array<number>}
  * @const
  */
-proto.verifier.FeatureRes.Feature.repeatedFields_ = [1];
+proto.verifier.FeatureRes.FeatureInfo.repeatedFields_ = [1];
 
 
 
@@ -7292,8 +7557,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.verifier.FeatureRes.Feature.prototype.toObject = function(opt_includeInstance) {
-  return proto.verifier.FeatureRes.Feature.toObject(opt_includeInstance, this);
+proto.verifier.FeatureRes.FeatureInfo.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.FeatureRes.FeatureInfo.toObject(opt_includeInstance, this);
 };
 
 
@@ -7302,10 +7567,10 @@ proto.verifier.FeatureRes.Feature.prototype.toObject = function(opt_includeInsta
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.verifier.FeatureRes.Feature} msg The msg instance to transform.
+ * @param {!proto.verifier.FeatureRes.FeatureInfo} msg The msg instance to transform.
  * @return {!Object}
  */
-proto.verifier.FeatureRes.Feature.toObject = function(includeInstance, msg) {
+proto.verifier.FeatureRes.FeatureInfo.toObject = function(includeInstance, msg) {
   var f, obj = {
     xList: jspb.Message.getRepeatedFloatingPointField(msg, 1)
   };
@@ -7321,23 +7586,23 @@ proto.verifier.FeatureRes.Feature.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.verifier.FeatureRes.Feature}
+ * @return {!proto.verifier.FeatureRes.FeatureInfo}
  */
-proto.verifier.FeatureRes.Feature.deserializeBinary = function(bytes) {
+proto.verifier.FeatureRes.FeatureInfo.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.verifier.FeatureRes.Feature;
-  return proto.verifier.FeatureRes.Feature.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.verifier.FeatureRes.FeatureInfo;
+  return proto.verifier.FeatureRes.FeatureInfo.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.verifier.FeatureRes.Feature} msg The message object to deserialize into.
+ * @param {!proto.verifier.FeatureRes.FeatureInfo} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.verifier.FeatureRes.Feature}
+ * @return {!proto.verifier.FeatureRes.FeatureInfo}
  */
-proto.verifier.FeatureRes.Feature.deserializeBinaryFromReader = function(msg, reader) {
+proto.verifier.FeatureRes.FeatureInfo.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -7361,10 +7626,10 @@ proto.verifier.FeatureRes.Feature.deserializeBinaryFromReader = function(msg, re
 /**
  * Class method variant: serializes the given message to binary data
  * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.verifier.FeatureRes.Feature} message
+ * @param {!proto.verifier.FeatureRes.FeatureInfo} message
  * @param {!jspb.BinaryWriter} writer
  */
-proto.verifier.FeatureRes.Feature.serializeBinaryToWriter = function(message, writer) {
+proto.verifier.FeatureRes.FeatureInfo.serializeBinaryToWriter = function(message, writer) {
   message.serializeBinaryToWriter(writer);
 };
 
@@ -7373,7 +7638,7 @@ proto.verifier.FeatureRes.Feature.serializeBinaryToWriter = function(message, wr
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.verifier.FeatureRes.Feature.prototype.serializeBinary = function() {
+proto.verifier.FeatureRes.FeatureInfo.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
   this.serializeBinaryToWriter(writer);
   return writer.getResultBuffer();
@@ -7385,7 +7650,7 @@ proto.verifier.FeatureRes.Feature.prototype.serializeBinary = function() {
  * writing to the given BinaryWriter.
  * @param {!jspb.BinaryWriter} writer
  */
-proto.verifier.FeatureRes.Feature.prototype.serializeBinaryToWriter = function (writer) {
+proto.verifier.FeatureRes.FeatureInfo.prototype.serializeBinaryToWriter = function (writer) {
   var f = undefined;
   f = this.getXList();
   if (f.length > 0) {
@@ -7399,10 +7664,10 @@ proto.verifier.FeatureRes.Feature.prototype.serializeBinaryToWriter = function (
 
 /**
  * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.verifier.FeatureRes.Feature} The clone.
+ * @return {!proto.verifier.FeatureRes.FeatureInfo} The clone.
  */
-proto.verifier.FeatureRes.Feature.prototype.cloneMessage = function() {
-  return /** @type {!proto.verifier.FeatureRes.Feature} */ (jspb.Message.cloneMessage(this));
+proto.verifier.FeatureRes.FeatureInfo.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.FeatureRes.FeatureInfo} */ (jspb.Message.cloneMessage(this));
 };
 
 
@@ -7412,18 +7677,18 @@ proto.verifier.FeatureRes.Feature.prototype.cloneMessage = function() {
  * replace the array itself, then you must call the setter to update it.
  * @return {!Array.<number>}
  */
-proto.verifier.FeatureRes.Feature.prototype.getXList = function() {
+proto.verifier.FeatureRes.FeatureInfo.prototype.getXList = function() {
   return /** @type {!Array.<number>} */ (jspb.Message.getRepeatedFloatingPointField(this, 1));
 };
 
 
 /** @param {Array.<number>|undefined} value  */
-proto.verifier.FeatureRes.Feature.prototype.setXList = function(value) {
+proto.verifier.FeatureRes.FeatureInfo.prototype.setXList = function(value) {
   jspb.Message.setField(this, 1, value || []);
 };
 
 
-proto.verifier.FeatureRes.Feature.prototype.clearXList = function() {
+proto.verifier.FeatureRes.FeatureInfo.prototype.clearXList = function() {
   jspb.Message.setField(this, 1, []);
 };
 
@@ -7432,8 +7697,350 @@ proto.verifier.FeatureRes.Feature.prototype.clearXList = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.FeatureRes.Feature.prototype.hasXList = function() {
+proto.verifier.FeatureRes.FeatureInfo.prototype.hasXList = function() {
   return jspb.Message.getField(this, 1) != null;
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.verifier.GenderReq = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.GenderReq.repeatedFields_, null);
+};
+goog.inherits(proto.verifier.GenderReq, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.verifier.GenderReq.displayName = 'proto.verifier.GenderReq';
+}
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.verifier.GenderReq.repeatedFields_ = [4];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.verifier.GenderReq.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.GenderReq.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.verifier.GenderReq} msg The msg instance to transform.
+ * @return {!Object}
+ */
+proto.verifier.GenderReq.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    pb_interface: jspb.Message.getField(msg, 1),
+    apikey: jspb.Message.getField(msg, 2),
+    requestid: jspb.Message.getField(msg, 3),
+    imagesList: jspb.Message.toObjectList(msg.getImagesList(),
+    proto.verifier.Image.toObject, includeInstance),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.verifier.GenderReq}
+ */
+proto.verifier.GenderReq.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.verifier.GenderReq;
+  return proto.verifier.GenderReq.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.verifier.GenderReq} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.verifier.GenderReq}
+ */
+proto.verifier.GenderReq.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setInterface(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setApikey(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 4:
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
+      msg.getImagesList().push(value);
+      msg.setImagesList(msg.getImagesList());
+      break;
+    case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Class method variant: serializes the given message to binary data
+ * (in protobuf wire format), writing to the given BinaryWriter.
+ * @param {!proto.verifier.GenderReq} message
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.GenderReq.serializeBinaryToWriter = function(message, writer) {
+  message.serializeBinaryToWriter(writer);
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.verifier.GenderReq.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  this.serializeBinaryToWriter(writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format),
+ * writing to the given BinaryWriter.
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.GenderReq.prototype.serializeBinaryToWriter = function (writer) {
+  var f = undefined;
+  f = this.getInterface();
+  if (f != null) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
+  f = this.getApikey();
+  if (f != null) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = this.getImagesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      4,
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
+    );
+  }
+};
+
+
+/**
+ * Creates a deep clone of this proto. No data is shared with the original.
+ * @return {!proto.verifier.GenderReq} The clone.
+ */
+proto.verifier.GenderReq.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.GenderReq} */ (jspb.Message.cloneMessage(this));
+};
+
+
+/**
+ * required int32 interface = 1;
+ * @return {number}
+ */
+proto.verifier.GenderReq.prototype.getInterface = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 1));
+};
+
+
+/** @param {number|undefined} value  */
+proto.verifier.GenderReq.prototype.setInterface = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+proto.verifier.GenderReq.prototype.clearInterface = function() {
+  jspb.Message.setField(this, 1, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.GenderReq.prototype.hasInterface = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * required string apiKey = 2;
+ * @return {string}
+ */
+proto.verifier.GenderReq.prototype.getApikey = function() {
+  return /** @type {string} */ (jspb.Message.getField(this, 2));
+};
+
+
+/** @param {string|undefined} value  */
+proto.verifier.GenderReq.prototype.setApikey = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+proto.verifier.GenderReq.prototype.clearApikey = function() {
+  jspb.Message.setField(this, 2, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.GenderReq.prototype.hasApikey = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional string requestId = 3;
+ * @return {string?}
+ */
+proto.verifier.GenderReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.GenderReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+proto.verifier.GenderReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.GenderReq.prototype.hasRequestid = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * repeated Image images = 4;
+ * If you change this array by adding, removing or replacing elements, or if you
+ * replace the array itself, then you must call the setter to update it.
+ * @return {!Array.<!proto.verifier.Image>}
+ */
+proto.verifier.GenderReq.prototype.getImagesList = function() {
+  return /** @type{!Array.<!proto.verifier.Image>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Image, 4));
+};
+
+
+/** @param {Array.<!proto.verifier.Image>|undefined} value  */
+proto.verifier.GenderReq.prototype.setImagesList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 4, value);
+};
+
+
+proto.verifier.GenderReq.prototype.clearImagesList = function() {
+  this.setImagesList([]);
+};
+
+
+/**
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
+ */
+proto.verifier.GenderReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.GenderReq.prototype.setFormat = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.GenderReq.prototype.clearFormat = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.GenderReq.prototype.hasFormat = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
@@ -7963,6 +8570,348 @@ proto.verifier.GenderRes.Gender.prototype.hasMale = function() {
  * @extends {jspb.Message}
  * @constructor
  */
+proto.verifier.AgeReq = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.AgeReq.repeatedFields_, null);
+};
+goog.inherits(proto.verifier.AgeReq, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.verifier.AgeReq.displayName = 'proto.verifier.AgeReq';
+}
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.verifier.AgeReq.repeatedFields_ = [4];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.verifier.AgeReq.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.AgeReq.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.verifier.AgeReq} msg The msg instance to transform.
+ * @return {!Object}
+ */
+proto.verifier.AgeReq.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    pb_interface: jspb.Message.getField(msg, 1),
+    apikey: jspb.Message.getField(msg, 2),
+    requestid: jspb.Message.getField(msg, 3),
+    imagesList: jspb.Message.toObjectList(msg.getImagesList(),
+    proto.verifier.Image.toObject, includeInstance),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.verifier.AgeReq}
+ */
+proto.verifier.AgeReq.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.verifier.AgeReq;
+  return proto.verifier.AgeReq.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.verifier.AgeReq} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.verifier.AgeReq}
+ */
+proto.verifier.AgeReq.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setInterface(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setApikey(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 4:
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
+      msg.getImagesList().push(value);
+      msg.setImagesList(msg.getImagesList());
+      break;
+    case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Class method variant: serializes the given message to binary data
+ * (in protobuf wire format), writing to the given BinaryWriter.
+ * @param {!proto.verifier.AgeReq} message
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.AgeReq.serializeBinaryToWriter = function(message, writer) {
+  message.serializeBinaryToWriter(writer);
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.verifier.AgeReq.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  this.serializeBinaryToWriter(writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format),
+ * writing to the given BinaryWriter.
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.AgeReq.prototype.serializeBinaryToWriter = function (writer) {
+  var f = undefined;
+  f = this.getInterface();
+  if (f != null) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
+  f = this.getApikey();
+  if (f != null) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = this.getImagesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      4,
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
+    );
+  }
+};
+
+
+/**
+ * Creates a deep clone of this proto. No data is shared with the original.
+ * @return {!proto.verifier.AgeReq} The clone.
+ */
+proto.verifier.AgeReq.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.AgeReq} */ (jspb.Message.cloneMessage(this));
+};
+
+
+/**
+ * required int32 interface = 1;
+ * @return {number}
+ */
+proto.verifier.AgeReq.prototype.getInterface = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 1));
+};
+
+
+/** @param {number|undefined} value  */
+proto.verifier.AgeReq.prototype.setInterface = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+proto.verifier.AgeReq.prototype.clearInterface = function() {
+  jspb.Message.setField(this, 1, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.AgeReq.prototype.hasInterface = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * required string apiKey = 2;
+ * @return {string}
+ */
+proto.verifier.AgeReq.prototype.getApikey = function() {
+  return /** @type {string} */ (jspb.Message.getField(this, 2));
+};
+
+
+/** @param {string|undefined} value  */
+proto.verifier.AgeReq.prototype.setApikey = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+proto.verifier.AgeReq.prototype.clearApikey = function() {
+  jspb.Message.setField(this, 2, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.AgeReq.prototype.hasApikey = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional string requestId = 3;
+ * @return {string?}
+ */
+proto.verifier.AgeReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.AgeReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+proto.verifier.AgeReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.AgeReq.prototype.hasRequestid = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * repeated Image images = 4;
+ * If you change this array by adding, removing or replacing elements, or if you
+ * replace the array itself, then you must call the setter to update it.
+ * @return {!Array.<!proto.verifier.Image>}
+ */
+proto.verifier.AgeReq.prototype.getImagesList = function() {
+  return /** @type{!Array.<!proto.verifier.Image>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Image, 4));
+};
+
+
+/** @param {Array.<!proto.verifier.Image>|undefined} value  */
+proto.verifier.AgeReq.prototype.setImagesList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 4, value);
+};
+
+
+proto.verifier.AgeReq.prototype.clearImagesList = function() {
+  this.setImagesList([]);
+};
+
+
+/**
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
+ */
+proto.verifier.AgeReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.AgeReq.prototype.setFormat = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.AgeReq.prototype.clearFormat = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.AgeReq.prototype.hasFormat = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
 proto.verifier.AgeRes = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.AgeRes.repeatedFields_, null);
 };
@@ -8281,7 +9230,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.verifier.AliveReq.repeatedFields_ = [3];
+proto.verifier.AliveReq.repeatedFields_ = [4];
 
 
 
@@ -8313,8 +9262,10 @@ proto.verifier.AliveReq.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_interface: jspb.Message.getField(msg, 1),
     apikey: jspb.Message.getField(msg, 2),
+    requestid: jspb.Message.getField(msg, 3),
     liveList: jspb.Message.toObjectList(msg.getLiveList(),
-    proto.verifier.AliveReq.LiveMeta.toObject, includeInstance)
+    proto.verifier.AliveReq.LiveMeta.toObject, includeInstance),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5)
   };
 
   if (includeInstance) {
@@ -8360,10 +9311,18 @@ proto.verifier.AliveReq.deserializeBinaryFromReader = function(msg, reader) {
       msg.setApikey(value);
       break;
     case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 4:
       var value = new proto.verifier.AliveReq.LiveMeta;
       reader.readMessage(value,proto.verifier.AliveReq.LiveMeta.deserializeBinaryFromReader);
       msg.getLiveList().push(value);
       msg.setLiveList(msg.getLiveList());
+      break;
+    case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
       break;
     default:
       reader.skipField();
@@ -8417,12 +9376,26 @@ proto.verifier.AliveReq.prototype.serializeBinaryToWriter = function (writer) {
       f
     );
   }
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
   f = this.getLiveList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      3,
+      4,
       f,
       proto.verifier.AliveReq.LiveMeta.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
     );
   }
 };
@@ -8496,25 +9469,83 @@ proto.verifier.AliveReq.prototype.hasApikey = function() {
 
 
 /**
- * repeated LiveMeta live = 3;
+ * optional string requestId = 3;
+ * @return {string?}
+ */
+proto.verifier.AliveReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.AliveReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+proto.verifier.AliveReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.AliveReq.prototype.hasRequestid = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * repeated LiveMeta live = 4;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
  * @return {!Array.<!proto.verifier.AliveReq.LiveMeta>}
  */
 proto.verifier.AliveReq.prototype.getLiveList = function() {
   return /** @type{!Array.<!proto.verifier.AliveReq.LiveMeta>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.verifier.AliveReq.LiveMeta, 3));
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.AliveReq.LiveMeta, 4));
 };
 
 
 /** @param {Array.<!proto.verifier.AliveReq.LiveMeta>|undefined} value  */
 proto.verifier.AliveReq.prototype.setLiveList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 3, value);
+  jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
 proto.verifier.AliveReq.prototype.clearLiveList = function() {
   this.setLiveList([]);
+};
+
+
+/**
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
+ */
+proto.verifier.AliveReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.AliveReq.prototype.setFormat = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.AliveReq.prototype.clearFormat = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.AliveReq.prototype.hasFormat = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
@@ -8565,8 +9596,8 @@ proto.verifier.AliveReq.LiveMeta.prototype.toObject = function(opt_includeInstan
 proto.verifier.AliveReq.LiveMeta.toObject = function(includeInstance, msg) {
   var f, obj = {
     type: jspb.Message.getField(msg, 1),
-    image1: msg.getImage1_asB64(),
-    image2: msg.getImage2_asB64()
+    image1: (f = msg.getImage1()) && proto.verifier.Image.toObject(includeInstance, f),
+    image2: (f = msg.getImage2()) && proto.verifier.Image.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -8608,11 +9639,13 @@ proto.verifier.AliveReq.LiveMeta.deserializeBinaryFromReader = function(msg, rea
       msg.setType(value);
       break;
     case 2:
-      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
       msg.setImage1(value);
       break;
     case 3:
-      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
       msg.setImage2(value);
       break;
     default:
@@ -8660,18 +9693,20 @@ proto.verifier.AliveReq.LiveMeta.prototype.serializeBinaryToWriter = function (w
       f
     );
   }
-  f = this.getImage1_asU8();
+  f = this.getImage1();
   if (f != null) {
-    writer.writeBytes(
+    writer.writeMessage(
       2,
-      f
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
     );
   }
-  f = this.getImage2_asU8();
+  f = this.getImage2();
   if (f != null) {
-    writer.writeBytes(
+    writer.writeMessage(
       3,
-      f
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
     );
   }
 };
@@ -8716,108 +9751,44 @@ proto.verifier.AliveReq.LiveMeta.prototype.hasType = function() {
 
 
 /**
- * required bytes image1 = 2;
- * @return {!(string|Uint8Array)}
+ * required Image image1 = 2;
+ * @return {!proto.verifier.Image}
  */
 proto.verifier.AliveReq.LiveMeta.prototype.getImage1 = function() {
-  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getField(this, 2));
+  return /** @type{!proto.verifier.Image} */ (
+    jspb.Message.getWrapperField(this, proto.verifier.Image, 2, 1));
 };
 
 
-/**
- * required bytes image1 = 2;
- * This is a type-conversion wrapper around `getImage1()`
- * @return {string}
- */
-proto.verifier.AliveReq.LiveMeta.prototype.getImage1_asB64 = function() {
-  return /** @type {string} */ (jspb.Message.bytesAsB64(
-      this.getImage1()));
-};
-
-
-/**
- * required bytes image1 = 2;
- * Note that Uint8Array is not supported on all browsers.
- * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getImage1()`
- * @return {!Uint8Array}
- */
-proto.verifier.AliveReq.LiveMeta.prototype.getImage1_asU8 = function() {
-  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
-      this.getImage1()));
-};
-
-
-/** @param {(string|Uint8Array)|undefined} value  */
+/** @param {proto.verifier.Image|undefined} value  */
 proto.verifier.AliveReq.LiveMeta.prototype.setImage1 = function(value) {
-  jspb.Message.setField(this, 2, value);
+  jspb.Message.setWrapperField(this, 2, value);
 };
 
 
 proto.verifier.AliveReq.LiveMeta.prototype.clearImage1 = function() {
-  jspb.Message.setField(this, 2, undefined);
+  this.setImage1(undefined);
 };
 
 
 /**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.verifier.AliveReq.LiveMeta.prototype.hasImage1 = function() {
-  return jspb.Message.getField(this, 2) != null;
-};
-
-
-/**
- * required bytes image2 = 3;
- * @return {!(string|Uint8Array)}
+ * required Image image2 = 3;
+ * @return {!proto.verifier.Image}
  */
 proto.verifier.AliveReq.LiveMeta.prototype.getImage2 = function() {
-  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getField(this, 3));
+  return /** @type{!proto.verifier.Image} */ (
+    jspb.Message.getWrapperField(this, proto.verifier.Image, 3, 1));
 };
 
 
-/**
- * required bytes image2 = 3;
- * This is a type-conversion wrapper around `getImage2()`
- * @return {string}
- */
-proto.verifier.AliveReq.LiveMeta.prototype.getImage2_asB64 = function() {
-  return /** @type {string} */ (jspb.Message.bytesAsB64(
-      this.getImage2()));
-};
-
-
-/**
- * required bytes image2 = 3;
- * Note that Uint8Array is not supported on all browsers.
- * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getImage2()`
- * @return {!Uint8Array}
- */
-proto.verifier.AliveReq.LiveMeta.prototype.getImage2_asU8 = function() {
-  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
-      this.getImage2()));
-};
-
-
-/** @param {(string|Uint8Array)|undefined} value  */
+/** @param {proto.verifier.Image|undefined} value  */
 proto.verifier.AliveReq.LiveMeta.prototype.setImage2 = function(value) {
-  jspb.Message.setField(this, 3, value);
+  jspb.Message.setWrapperField(this, 3, value);
 };
 
 
 proto.verifier.AliveReq.LiveMeta.prototype.clearImage2 = function() {
-  jspb.Message.setField(this, 3, undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.verifier.AliveReq.LiveMeta.prototype.hasImage2 = function() {
-  return jspb.Message.getField(this, 3) != null;
+  this.setImage2(undefined);
 };
 
 
@@ -9089,15 +10060,15 @@ proto.verifier.AliveRes.prototype.hasErrormessage = function() {
 
 
 /**
- * required string lives = 4;
- * @return {string}
+ * optional string lives = 4;
+ * @return {string?}
  */
 proto.verifier.AliveRes.prototype.getLives = function() {
-  return /** @type {string} */ (jspb.Message.getField(this, 4));
+  return /** @type {string?} */ (jspb.Message.getField(this, 4));
 };
 
 
-/** @param {string|undefined} value  */
+/** @param {string?|undefined} value  */
 proto.verifier.AliveRes.prototype.setLives = function(value) {
   jspb.Message.setField(this, 4, value);
 };
@@ -9165,7 +10136,9 @@ proto.verifier.PedestrianReq.toObject = function(includeInstance, msg) {
   var f, obj = {
     pb_interface: jspb.Message.getField(msg, 1),
     apikey: jspb.Message.getField(msg, 2),
-    image1: msg.getImage1_asB64()
+    requestid: jspb.Message.getField(msg, 3),
+    image: (f = msg.getImage()) && proto.verifier.Image.toObject(includeInstance, f),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5)
   };
 
   if (includeInstance) {
@@ -9211,8 +10184,17 @@ proto.verifier.PedestrianReq.deserializeBinaryFromReader = function(msg, reader)
       msg.setApikey(value);
       break;
     case 3:
-      var value = /** @type {!Uint8Array} */ (reader.readBytes());
-      msg.setImage1(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 4:
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
+      msg.setImage(value);
+      break;
+    case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
       break;
     default:
       reader.skipField();
@@ -9266,10 +10248,25 @@ proto.verifier.PedestrianReq.prototype.serializeBinaryToWriter = function (write
       f
     );
   }
-  f = this.getImage1_asU8();
+  f = this.getRequestid();
   if (f != null) {
-    writer.writeBytes(
+    writer.writeString(
       3,
+      f
+    );
+  }
+  f = this.getImage();
+  if (f != null) {
+    writer.writeMessage(
+      4,
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
       f
     );
   }
@@ -9344,45 +10341,21 @@ proto.verifier.PedestrianReq.prototype.hasApikey = function() {
 
 
 /**
- * required bytes image1 = 3;
- * @return {!(string|Uint8Array)}
+ * optional string requestId = 3;
+ * @return {string?}
  */
-proto.verifier.PedestrianReq.prototype.getImage1 = function() {
-  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getField(this, 3));
+proto.verifier.PedestrianReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
 };
 
 
-/**
- * required bytes image1 = 3;
- * This is a type-conversion wrapper around `getImage1()`
- * @return {string}
- */
-proto.verifier.PedestrianReq.prototype.getImage1_asB64 = function() {
-  return /** @type {string} */ (jspb.Message.bytesAsB64(
-      this.getImage1()));
-};
-
-
-/**
- * required bytes image1 = 3;
- * Note that Uint8Array is not supported on all browsers.
- * @see http://caniuse.com/Uint8Array
- * This is a type-conversion wrapper around `getImage1()`
- * @return {!Uint8Array}
- */
-proto.verifier.PedestrianReq.prototype.getImage1_asU8 = function() {
-  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
-      this.getImage1()));
-};
-
-
-/** @param {(string|Uint8Array)|undefined} value  */
-proto.verifier.PedestrianReq.prototype.setImage1 = function(value) {
+/** @param {string?|undefined} value  */
+proto.verifier.PedestrianReq.prototype.setRequestid = function(value) {
   jspb.Message.setField(this, 3, value);
 };
 
 
-proto.verifier.PedestrianReq.prototype.clearImage1 = function() {
+proto.verifier.PedestrianReq.prototype.clearRequestid = function() {
   jspb.Message.setField(this, 3, undefined);
 };
 
@@ -9391,8 +10364,58 @@ proto.verifier.PedestrianReq.prototype.clearImage1 = function() {
  * Returns whether this field is set.
  * @return{!boolean}
  */
-proto.verifier.PedestrianReq.prototype.hasImage1 = function() {
+proto.verifier.PedestrianReq.prototype.hasRequestid = function() {
   return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * required Image image = 4;
+ * @return {!proto.verifier.Image}
+ */
+proto.verifier.PedestrianReq.prototype.getImage = function() {
+  return /** @type{!proto.verifier.Image} */ (
+    jspb.Message.getWrapperField(this, proto.verifier.Image, 4, 1));
+};
+
+
+/** @param {proto.verifier.Image|undefined} value  */
+proto.verifier.PedestrianReq.prototype.setImage = function(value) {
+  jspb.Message.setWrapperField(this, 4, value);
+};
+
+
+proto.verifier.PedestrianReq.prototype.clearImage = function() {
+  this.setImage(undefined);
+};
+
+
+/**
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
+ */
+proto.verifier.PedestrianReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.PedestrianReq.prototype.setFormat = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.PedestrianReq.prototype.clearFormat = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.PedestrianReq.prototype.hasFormat = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
@@ -9453,7 +10476,7 @@ proto.verifier.PedestrianRes.toObject = function(includeInstance, msg) {
     timeused: jspb.Message.getField(msg, 2),
     errormessage: jspb.Message.getField(msg, 3),
     personnums: jspb.Message.getField(msg, 4),
-    locationList: jspb.Message.toObjectList(msg.getLocationList(),
+    locationsList: jspb.Message.toObjectList(msg.getLocationsList(),
     proto.verifier.PedestrianRes.Location.toObject, includeInstance)
   };
 
@@ -9510,8 +10533,8 @@ proto.verifier.PedestrianRes.deserializeBinaryFromReader = function(msg, reader)
     case 5:
       var value = new proto.verifier.PedestrianRes.Location;
       reader.readMessage(value,proto.verifier.PedestrianRes.Location.deserializeBinaryFromReader);
-      msg.getLocationList().push(value);
-      msg.setLocationList(msg.getLocationList());
+      msg.getLocationsList().push(value);
+      msg.setLocationsList(msg.getLocationsList());
       break;
     default:
       reader.skipField();
@@ -9579,7 +10602,7 @@ proto.verifier.PedestrianRes.prototype.serializeBinaryToWriter = function (write
       f
     );
   }
-  f = this.getLocationList();
+  f = this.getLocationsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       5,
@@ -9687,15 +10710,15 @@ proto.verifier.PedestrianRes.prototype.hasErrormessage = function() {
 
 
 /**
- * required sint32 personNums = 4;
- * @return {number}
+ * optional sint32 personNums = 4;
+ * @return {number?}
  */
 proto.verifier.PedestrianRes.prototype.getPersonnums = function() {
-  return /** @type {number} */ (jspb.Message.getField(this, 4));
+  return /** @type {number?} */ (jspb.Message.getField(this, 4));
 };
 
 
-/** @param {number|undefined} value  */
+/** @param {number?|undefined} value  */
 proto.verifier.PedestrianRes.prototype.setPersonnums = function(value) {
   jspb.Message.setField(this, 4, value);
 };
@@ -9716,25 +10739,25 @@ proto.verifier.PedestrianRes.prototype.hasPersonnums = function() {
 
 
 /**
- * repeated Location location = 5;
+ * repeated Location locations = 5;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
  * @return {!Array.<!proto.verifier.PedestrianRes.Location>}
  */
-proto.verifier.PedestrianRes.prototype.getLocationList = function() {
+proto.verifier.PedestrianRes.prototype.getLocationsList = function() {
   return /** @type{!Array.<!proto.verifier.PedestrianRes.Location>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.verifier.PedestrianRes.Location, 5));
 };
 
 
 /** @param {Array.<!proto.verifier.PedestrianRes.Location>|undefined} value  */
-proto.verifier.PedestrianRes.prototype.setLocationList = function(value) {
+proto.verifier.PedestrianRes.prototype.setLocationsList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
 
-proto.verifier.PedestrianRes.prototype.clearLocationList = function() {
-  this.setLocationList([]);
+proto.verifier.PedestrianRes.prototype.clearLocationsList = function() {
+  this.setLocationsList([]);
 };
 
 
@@ -10045,6 +11068,348 @@ proto.verifier.PedestrianRes.Location.prototype.hasWidth = function() {
  * @extends {jspb.Message}
  * @constructor
  */
+proto.verifier.HairReq = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.HairReq.repeatedFields_, null);
+};
+goog.inherits(proto.verifier.HairReq, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.verifier.HairReq.displayName = 'proto.verifier.HairReq';
+}
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.verifier.HairReq.repeatedFields_ = [4];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.verifier.HairReq.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.HairReq.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.verifier.HairReq} msg The msg instance to transform.
+ * @return {!Object}
+ */
+proto.verifier.HairReq.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    pb_interface: jspb.Message.getField(msg, 1),
+    apikey: jspb.Message.getField(msg, 2),
+    requestid: jspb.Message.getField(msg, 3),
+    imagesList: jspb.Message.toObjectList(msg.getImagesList(),
+    proto.verifier.Image.toObject, includeInstance),
+    format: !msg.hasFormat() ? 2 : jspb.Message.getField(msg, 5)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.verifier.HairReq}
+ */
+proto.verifier.HairReq.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.verifier.HairReq;
+  return proto.verifier.HairReq.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.verifier.HairReq} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.verifier.HairReq}
+ */
+proto.verifier.HairReq.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setInterface(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setApikey(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 4:
+      var value = new proto.verifier.Image;
+      reader.readMessage(value,proto.verifier.Image.deserializeBinaryFromReader);
+      msg.getImagesList().push(value);
+      msg.setImagesList(msg.getImagesList());
+      break;
+    case 5:
+      var value = /** @type {!proto.verifier.Format} */ (reader.readEnum());
+      msg.setFormat(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Class method variant: serializes the given message to binary data
+ * (in protobuf wire format), writing to the given BinaryWriter.
+ * @param {!proto.verifier.HairReq} message
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.HairReq.serializeBinaryToWriter = function(message, writer) {
+  message.serializeBinaryToWriter(writer);
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.verifier.HairReq.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  this.serializeBinaryToWriter(writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format),
+ * writing to the given BinaryWriter.
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.HairReq.prototype.serializeBinaryToWriter = function (writer) {
+  var f = undefined;
+  f = this.getInterface();
+  if (f != null) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
+  f = this.getApikey();
+  if (f != null) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = this.getImagesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      4,
+      f,
+      proto.verifier.Image.serializeBinaryToWriter
+    );
+  }
+  f = this.getFormat();
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
+    );
+  }
+};
+
+
+/**
+ * Creates a deep clone of this proto. No data is shared with the original.
+ * @return {!proto.verifier.HairReq} The clone.
+ */
+proto.verifier.HairReq.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.HairReq} */ (jspb.Message.cloneMessage(this));
+};
+
+
+/**
+ * required int32 interface = 1;
+ * @return {number}
+ */
+proto.verifier.HairReq.prototype.getInterface = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 1));
+};
+
+
+/** @param {number|undefined} value  */
+proto.verifier.HairReq.prototype.setInterface = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+proto.verifier.HairReq.prototype.clearInterface = function() {
+  jspb.Message.setField(this, 1, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.HairReq.prototype.hasInterface = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * required string apiKey = 2;
+ * @return {string}
+ */
+proto.verifier.HairReq.prototype.getApikey = function() {
+  return /** @type {string} */ (jspb.Message.getField(this, 2));
+};
+
+
+/** @param {string|undefined} value  */
+proto.verifier.HairReq.prototype.setApikey = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+proto.verifier.HairReq.prototype.clearApikey = function() {
+  jspb.Message.setField(this, 2, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.HairReq.prototype.hasApikey = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional string requestId = 3;
+ * @return {string?}
+ */
+proto.verifier.HairReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.HairReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+proto.verifier.HairReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.HairReq.prototype.hasRequestid = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * repeated Image images = 4;
+ * If you change this array by adding, removing or replacing elements, or if you
+ * replace the array itself, then you must call the setter to update it.
+ * @return {!Array.<!proto.verifier.Image>}
+ */
+proto.verifier.HairReq.prototype.getImagesList = function() {
+  return /** @type{!Array.<!proto.verifier.Image>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.verifier.Image, 4));
+};
+
+
+/** @param {Array.<!proto.verifier.Image>|undefined} value  */
+proto.verifier.HairReq.prototype.setImagesList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 4, value);
+};
+
+
+proto.verifier.HairReq.prototype.clearImagesList = function() {
+  this.setImagesList([]);
+};
+
+
+/**
+ * required Format format = 5;
+ * @return {!proto.verifier.Format}
+ */
+proto.verifier.HairReq.prototype.getFormat = function() {
+  return /** @type {!proto.verifier.Format} */ (!this.hasFormat() ? 2 : jspb.Message.getField(this, 5));
+};
+
+
+/** @param {proto.verifier.Format|undefined} value  */
+proto.verifier.HairReq.prototype.setFormat = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.HairReq.prototype.clearFormat = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.HairReq.prototype.hasFormat = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
 proto.verifier.HairRes = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, proto.verifier.HairRes.repeatedFields_, null);
 };
@@ -10339,5 +11704,648 @@ proto.verifier.HairRes.prototype.hasHairList = function() {
   return jspb.Message.getField(this, 4) != null;
 };
 
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.verifier.RepoInfoReq = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.verifier.RepoInfoReq, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.verifier.RepoInfoReq.displayName = 'proto.verifier.RepoInfoReq';
+}
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.verifier.RepoInfoReq.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.RepoInfoReq.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.verifier.RepoInfoReq} msg The msg instance to transform.
+ * @return {!Object}
+ */
+proto.verifier.RepoInfoReq.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    pb_interface: jspb.Message.getField(msg, 1),
+    apikey: jspb.Message.getField(msg, 2),
+    requestid: jspb.Message.getField(msg, 3),
+    groupid: jspb.Message.getField(msg, 4)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.verifier.RepoInfoReq}
+ */
+proto.verifier.RepoInfoReq.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.verifier.RepoInfoReq;
+  return proto.verifier.RepoInfoReq.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.verifier.RepoInfoReq} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.verifier.RepoInfoReq}
+ */
+proto.verifier.RepoInfoReq.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setInterface(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setApikey(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setGroupid(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Class method variant: serializes the given message to binary data
+ * (in protobuf wire format), writing to the given BinaryWriter.
+ * @param {!proto.verifier.RepoInfoReq} message
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.RepoInfoReq.serializeBinaryToWriter = function(message, writer) {
+  message.serializeBinaryToWriter(writer);
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.verifier.RepoInfoReq.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  this.serializeBinaryToWriter(writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format),
+ * writing to the given BinaryWriter.
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.RepoInfoReq.prototype.serializeBinaryToWriter = function (writer) {
+  var f = undefined;
+  f = this.getInterface();
+  if (f != null) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
+  f = this.getApikey();
+  if (f != null) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = this.getGroupid();
+  if (f != null) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+};
+
+
+/**
+ * Creates a deep clone of this proto. No data is shared with the original.
+ * @return {!proto.verifier.RepoInfoReq} The clone.
+ */
+proto.verifier.RepoInfoReq.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.RepoInfoReq} */ (jspb.Message.cloneMessage(this));
+};
+
+
+/**
+ * required int32 interface = 1;
+ * @return {number}
+ */
+proto.verifier.RepoInfoReq.prototype.getInterface = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 1));
+};
+
+
+/** @param {number|undefined} value  */
+proto.verifier.RepoInfoReq.prototype.setInterface = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+proto.verifier.RepoInfoReq.prototype.clearInterface = function() {
+  jspb.Message.setField(this, 1, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoReq.prototype.hasInterface = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * required string apiKey = 2;
+ * @return {string}
+ */
+proto.verifier.RepoInfoReq.prototype.getApikey = function() {
+  return /** @type {string} */ (jspb.Message.getField(this, 2));
+};
+
+
+/** @param {string|undefined} value  */
+proto.verifier.RepoInfoReq.prototype.setApikey = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+proto.verifier.RepoInfoReq.prototype.clearApikey = function() {
+  jspb.Message.setField(this, 2, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoReq.prototype.hasApikey = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional string requestId = 3;
+ * @return {string?}
+ */
+proto.verifier.RepoInfoReq.prototype.getRequestid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 3));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.RepoInfoReq.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+proto.verifier.RepoInfoReq.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoReq.prototype.hasRequestid = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional string groupId = 4;
+ * @return {string?}
+ */
+proto.verifier.RepoInfoReq.prototype.getGroupid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 4));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.RepoInfoReq.prototype.setGroupid = function(value) {
+  jspb.Message.setField(this, 4, value);
+};
+
+
+proto.verifier.RepoInfoReq.prototype.clearGroupid = function() {
+  jspb.Message.setField(this, 4, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoReq.prototype.hasGroupid = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.verifier.RepoInfoRes = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.verifier.RepoInfoRes, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.verifier.RepoInfoRes.displayName = 'proto.verifier.RepoInfoRes';
+}
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.verifier.RepoInfoRes.prototype.toObject = function(opt_includeInstance) {
+  return proto.verifier.RepoInfoRes.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.verifier.RepoInfoRes} msg The msg instance to transform.
+ * @return {!Object}
+ */
+proto.verifier.RepoInfoRes.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    requestid: jspb.Message.getField(msg, 1),
+    timeused: jspb.Message.getField(msg, 2),
+    errormessage: jspb.Message.getField(msg, 3),
+    groupid: jspb.Message.getField(msg, 4),
+    regnums: jspb.Message.getField(msg, 5)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.verifier.RepoInfoRes}
+ */
+proto.verifier.RepoInfoRes.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.verifier.RepoInfoRes;
+  return proto.verifier.RepoInfoRes.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.verifier.RepoInfoRes} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.verifier.RepoInfoRes}
+ */
+proto.verifier.RepoInfoRes.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestid(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.setTimeused(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.setErrormessage(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setGroupid(value);
+      break;
+    case 5:
+      var value = /** @type {number} */ (reader.readSint32());
+      msg.setRegnums(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Class method variant: serializes the given message to binary data
+ * (in protobuf wire format), writing to the given BinaryWriter.
+ * @param {!proto.verifier.RepoInfoRes} message
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.RepoInfoRes.serializeBinaryToWriter = function(message, writer) {
+  message.serializeBinaryToWriter(writer);
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.verifier.RepoInfoRes.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  this.serializeBinaryToWriter(writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format),
+ * writing to the given BinaryWriter.
+ * @param {!jspb.BinaryWriter} writer
+ */
+proto.verifier.RepoInfoRes.prototype.serializeBinaryToWriter = function (writer) {
+  var f = undefined;
+  f = this.getRequestid();
+  if (f != null) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = this.getTimeused();
+  if (f != null) {
+    writer.writeSint32(
+      2,
+      f
+    );
+  }
+  f = this.getErrormessage();
+  if (f != null) {
+    writer.writeSint32(
+      3,
+      f
+    );
+  }
+  f = this.getGroupid();
+  if (f != null) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+  f = this.getRegnums();
+  if (f != null) {
+    writer.writeSint32(
+      5,
+      f
+    );
+  }
+};
+
+
+/**
+ * Creates a deep clone of this proto. No data is shared with the original.
+ * @return {!proto.verifier.RepoInfoRes} The clone.
+ */
+proto.verifier.RepoInfoRes.prototype.cloneMessage = function() {
+  return /** @type {!proto.verifier.RepoInfoRes} */ (jspb.Message.cloneMessage(this));
+};
+
+
+/**
+ * required string requestId = 1;
+ * @return {string}
+ */
+proto.verifier.RepoInfoRes.prototype.getRequestid = function() {
+  return /** @type {string} */ (jspb.Message.getField(this, 1));
+};
+
+
+/** @param {string|undefined} value  */
+proto.verifier.RepoInfoRes.prototype.setRequestid = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+proto.verifier.RepoInfoRes.prototype.clearRequestid = function() {
+  jspb.Message.setField(this, 1, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoRes.prototype.hasRequestid = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * required sint32 timeUsed = 2;
+ * @return {number}
+ */
+proto.verifier.RepoInfoRes.prototype.getTimeused = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 2));
+};
+
+
+/** @param {number|undefined} value  */
+proto.verifier.RepoInfoRes.prototype.setTimeused = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+proto.verifier.RepoInfoRes.prototype.clearTimeused = function() {
+  jspb.Message.setField(this, 2, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoRes.prototype.hasTimeused = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * required sint32 errorMessage = 3;
+ * @return {number}
+ */
+proto.verifier.RepoInfoRes.prototype.getErrormessage = function() {
+  return /** @type {number} */ (jspb.Message.getField(this, 3));
+};
+
+
+/** @param {number|undefined} value  */
+proto.verifier.RepoInfoRes.prototype.setErrormessage = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+proto.verifier.RepoInfoRes.prototype.clearErrormessage = function() {
+  jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoRes.prototype.hasErrormessage = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional string groupId = 4;
+ * @return {string?}
+ */
+proto.verifier.RepoInfoRes.prototype.getGroupid = function() {
+  return /** @type {string?} */ (jspb.Message.getField(this, 4));
+};
+
+
+/** @param {string?|undefined} value  */
+proto.verifier.RepoInfoRes.prototype.setGroupid = function(value) {
+  jspb.Message.setField(this, 4, value);
+};
+
+
+proto.verifier.RepoInfoRes.prototype.clearGroupid = function() {
+  jspb.Message.setField(this, 4, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoRes.prototype.hasGroupid = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional sint32 regNums = 5;
+ * @return {number?}
+ */
+proto.verifier.RepoInfoRes.prototype.getRegnums = function() {
+  return /** @type {number?} */ (jspb.Message.getField(this, 5));
+};
+
+
+/** @param {number?|undefined} value  */
+proto.verifier.RepoInfoRes.prototype.setRegnums = function(value) {
+  jspb.Message.setField(this, 5, value);
+};
+
+
+proto.verifier.RepoInfoRes.prototype.clearRegnums = function() {
+  jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return{!boolean}
+ */
+proto.verifier.RepoInfoRes.prototype.hasRegnums = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * @enum {number}
+ */
+proto.verifier.Format = {
+  MAT: 0,
+  RGB: 1,
+  YUV: 2,
+  JPEG: 3
+};
 
 goog.object.extend(exports, proto.verifier);

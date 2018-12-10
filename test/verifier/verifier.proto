@@ -6,31 +6,38 @@ message Landmark {
     repeated sint32 y = 2 [packed = true];
 }
 
-// 通用请求
-message CommonReq {
-    required int32 interface = 1;
-    required string apiKey = 2;
-    repeated bytes image = 3;
+message Feature {
+    repeated float x = 1;
 }
 
-message CommonRes {
-    required string requestId = 1;
-    required sint32 timeUsed = 2;
-    required sint32 errorMessage = 3;
+message Image {
+    required bytes image = 1;
+    optional sint32 rows = 2;
+    optional sint32 cols = 3;
+    optional sint32 DataLen = 4;
 }
 
-// 注册人员 interface = 10000
+enum Format {
+    MAT = 0;
+    RGB = 1;
+    YUV = 2;
+    JPEG = 3;
+}
+
+// 注册人员
 message RegisterReq {
     required int32 interface = 1;
     required string apiKey = 2;
+    optional string requestId = 3;
 
     message Person {
-        repeated bytes image = 1;
-        repeated Landmark landmark = 2;
-        required string faceId = 3;
+        repeated Image images = 1;
+        repeated Landmark landmarks = 2;
+        required sint32 faceId = 3;
         required string groupId = 4 [default = "watchlist"];
     }
-    repeated Person people = 3;
+    repeated Person people = 4;
+    required Format format = 5 [default = YUV];
 }
 
 message RegisterRes {
@@ -39,24 +46,26 @@ message RegisterRes {
     required sint32 errorMessage = 3;
 
     message FailedInfo {
-        required string faceId = 1;
+        required sint32 faceId = 1;
         required string groupId = 2;
-        required string message = 3;
+        required sint32 message = 3;
     }
     repeated FailedInfo failed = 4;
 }
 
-// 搜索人员 interface = 10001
+// 搜索人员
 message SearchReq {
     required int32 interface = 1;
     required string apiKey = 2;
-    repeated bytes image = 3;
-    repeated Landmark landmark = 4;
-    required string groupId = 5 [default = "watchlist"];
-    required int32 topk = 6;
-    required float score = 7 [default = 0.8];
-    optional string cameraId = 8;
-    optional string imageId = 9;
+    optional string requestId = 3;
+    repeated Image images = 4;
+    required Format format = 5 [default = YUV];
+    repeated Landmark landmarks = 6;
+    required string groupId = 7 [default = "watchlist"];
+    required int32 topk = 8;
+    required float score = 9 [default = 0.8];
+    optional string field = 10;
+    optional Feature feature = 11;
 }
 
 message SearchRes {
@@ -64,73 +73,67 @@ message SearchRes {
     required sint32 timeUsed = 2;
     required sint32 errorMessage = 3;
 
-    repeated string faceId = 4;
+    repeated sint32 faceIds = 4;
     repeated float score = 5;
 }
 
-// 删除人员 interface = 10002
+// 删除人员
 message DeleteReq {
     required int32 interface = 1;
     required string apiKey = 2;
-    required string faceId = 3;
-    required string groupId = 4 [default = "watchlist"];
+    optional string requestId = 3;
+    required sint32 faceId = 4;
+    required string groupId = 5 [default = "watchlist"];
+    optional string field = 6;
 }
 
-// use CommonRes
-
-// 检查注册人员 interface = 10003
-message CheckReq {
-    required int32 interface = 1;
-    required string apiKey = 2;
-    required string faceId = 3;
-    required string groupId = 4 [default = "watchlist"];
+message DeleteRes {
+    required string requestId = 1;
+    required sint32 timeUsed = 2;
+    required sint32 errorMessage = 3;
 }
 
-// use CommonRes
-
-// 比较人脸 interface = 10004
+// 比较人脸
 message CompareReq {
     required int32 interface = 1;
     required string apiKey = 2;
-    repeated bytes image = 3;
-    repeated Landmark landmark = 4;
+    optional string requestId = 3;
+    repeated Image images = 4;
+    required Format format = 5 [default = YUV];
+    repeated Landmark landmarks = 6;
 }
 
 message CompareRes {
     required string requestId = 1;
     required sint32 timeUsed = 2;
     required sint32 errorMessage = 3;
-
-    required float score = 4;
+    optional float score = 4;
 }
 
-// 检测人脸 interface = 10005
+// 检测人脸
 message DetectReq {
     required int32 interface = 1;
     required string apiKey = 2;
-    required bytes image = 3;
-    required sint32 rows = 4;
-    required sint32 cols = 5;
-    enum Format {
-        MAT = 0;
-        YUV = 1;
-    }
-    required Format format = 6 [default = YUV];
-    optional sint32 minfaceSize = 7 [default = 80];
-    optional sint32 maxfaceSize = 8 [default = 300];
-    optional string field = 9 [default = "normal"];
-    optional string imageId = 10;
-    optional string cameraId = 11;
-    optional string classify = 12[default = "gender,age,hair"];
+    optional string requestId = 3;
+    required bytes image = 4;
+    optional sint32 rows = 5;
+    optional sint32 cols = 6;
+    optional sint32 DataLen = 7;
+    required Format format = 8 [default = YUV];
+    optional sint32 minfaceSize = 9 [default = 80];
+    optional sint32 maxfaceSize = 10 [default = 300];
+    optional string field = 11 [default = "normal"];
+    optional string imageId = 12;
+    optional string cameraId = 13;
+    optional string classify = 14;
 }
-
 
 message DetectRes {
     required string requestId = 1;
     required sint32 timeUsed = 2;
     required sint32 errorMessage = 3;
-    required sint32 detectNums = 4;
-    required sint32 trackNums = 5;
+    optional sint32 detectNums = 4;
+    optional sint32 trackNums = 5;
 
     message DetectInfo {
         required sint32 left = 1;
@@ -143,10 +146,10 @@ message DetectRes {
         required sint32 glasses = 8;
         repeated sint32 x = 9 [packed = true];
         repeated sint32 y = 10 [packed = true];
-        required float female = 11;
-        required float male = 12;
-        required sint32 age = 13;
-        required string hair = 14;
+        optional float female = 11;
+        optional float male = 12;
+        optional sint32 age = 13;
+        optional string hair = 14;
     }
 
     message TrackInfo {
@@ -170,29 +173,35 @@ message DetectRes {
     repeated TrackInfo track = 7;
 }
 
-// 提取特征 interface = 10006
+// 提取特征
 message FeatureReq {
     required int32 interface = 1;
     required string apiKey = 2;
-    repeated bytes image = 3;
-    repeated Landmark landmark = 4;
+    optional string requestId = 3;
+    repeated Image images = 4;
+    required Format format = 5 [default = YUV];
+    repeated Landmark landmarks = 6;
 }
 
 message FeatureRes {
     required string requestId = 1;
     required sint32 timeUsed = 2;
     required sint32 errorMessage = 3;
-
-    required sint32 dimension = 4;
-
-    message Feature {
+    optional sint32 dimension = 4;
+    message FeatureInfo {
         repeated float x = 1;
     }
-    repeated Feature feature = 5;
+    repeated FeatureInfo feature = 5;
 }
 
-// 预测性别 interface = 10007
-// use CommonReq
+// 预测性别
+message GenderReq {
+    required int32 interface = 1;
+    required string apiKey = 2;
+    optional string requestId = 3;
+    repeated Image images = 4;
+    required Format format = 5 [default = YUV];
+}
 
 message GenderRes {
     required string requestId = 1;
@@ -206,8 +215,14 @@ message GenderRes {
     repeated Gender gender = 4;
 }
 
-// 预测年龄 interface = 10008
-// use CommonReq
+// 预测年龄
+message AgeReq {
+    required int32 interface = 1;
+    required string apiKey = 2;
+    optional string requestId = 3;
+    repeated Image images = 4;
+    required Format format = 5 [default = YUV];
+}
 
 message AgeRes {
     required string requestId = 1;
@@ -217,17 +232,19 @@ message AgeRes {
     repeated string age = 4;
 }
 
-// 活体检测 interface = 10009
+// 活体检测
 message AliveReq {
     required int32 interface = 1;
     required string apiKey = 2;
+    optional string requestId = 3;
 
     message LiveMeta {
         required string type = 1;
-        required bytes image1 = 2;
-        required bytes image2 = 3;
+        required Image image1 = 2;
+        required Image image2 = 3;
     }
-    repeated LiveMeta live = 3;
+    repeated LiveMeta live = 4;
+    required Format format = 5 [default = YUV];
 }
 
 message AliveRes {
@@ -235,22 +252,23 @@ message AliveRes {
     required sint32 timeUsed = 2;
     required sint32 errorMessage = 3;
 
-    required string lives = 4;
+    optional string lives = 4;
 }
 
-// 行人检测 interface = 10010
+// 行人检测
 message PedestrianReq {
     required int32 interface = 1;
     required string apiKey = 2;
-    required bytes image1 = 3;
+    optional string requestId = 3;
+    required Image image = 4;
+    required Format format = 5 [default = YUV];
 }
 
 message PedestrianRes {
     required string requestId = 1;
     required sint32 timeUsed = 2;
     required sint32 errorMessage = 3;
-
-    required sint32 personNums = 4;
+    optional sint32 personNums = 4;
 
     message Location {
         required sint32 height = 1;
@@ -258,11 +276,17 @@ message PedestrianRes {
         required sint32 top = 3;
         required sint32 width = 4;
     }
-    repeated Location location = 5;
+    repeated Location locations = 5;
 }
 
-// 预测发型 interface = 10011
-// use CommonReq
+// 预测发型
+message HairReq {
+    required int32 interface = 1;
+    required string apiKey = 2;
+    optional string requestId = 3;
+    repeated Image images = 4;
+    required Format format = 5 [default = YUV];
+}
 
 message HairRes {
     required string requestId = 1;
@@ -270,4 +294,20 @@ message HairRes {
     required sint32 errorMessage = 3;
 
     repeated string hair = 4;
+}
+
+// 查询注册库信息
+message RepoInfoReq {
+    required int32 interface = 1;
+    required string apiKey = 2;
+    optional string requestId = 3;
+    optional string groupId = 4;
+}
+
+message RepoInfoRes {
+    required string requestId = 1;
+    required sint32 timeUsed = 2;
+    required sint32 errorMessage = 3;
+    optional string groupId = 4;
+    optional sint32 regNums = 5;
 }

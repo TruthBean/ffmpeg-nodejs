@@ -3,8 +3,6 @@
 
 #include <memory.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <semaphore.h>
 
 #include "./node_api.h"
 #include "./common.c"

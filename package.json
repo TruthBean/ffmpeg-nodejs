@@ -4,12 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "preinstall": "npm i -S google-protobuf node-addon-api nan zeromq through streaming-worker && npm i -D cmake-js && npm run configure && npm run build",
-    "configure": "node ./node_modules/cmake-js/bin/cmake-js configure",
-    "clean": "node ./node_modules/cmake-js/bin/cmake-js clean",
-    "build": "node ./node_modules/cmake-js/bin/cmake-js build",
-    "compile": "node ./node_modules/cmake-js/bin/cmake-js compile",
-    "rebuild": "node ./node_modules/cmake-js/bin/cmake-js rebuild",
+    "__preinstall": "npm i -S google-protobuf node-addon-api nan zeromq through streaming-worker && npm i -D cmake-js && npm run configure && npm run build",
+    "__configure": "node ./node_modules/cmake-js/bin/cmake-js configure",
+    "__clean": "node ./node_modules/cmake-js/bin/cmake-js clean",
+    "__build": "node ./node_modules/cmake-js/bin/cmake-js build",
+    "__compile": "node ./node_modules/cmake-js/bin/cmake-js compile",
+    "__rebuild": "node ./node_modules/cmake-js/bin/cmake-js rebuild",
+    "configure": "node ./node_modules/node-gyp/bin/node-gyp.js configure",
+    "clean": "node ./node_modules/node-gyp/bin/node-gyp.js clean",
+    "build": "node ./node_modules/node-gyp/bin/node-gyp.js build",
+    "rebuild": "node ./node_modules/node-gyp/bin/node-gyp.js rebuild",
     "test": "node ./test/test_video2images.js"
   },
   "author": "truthbean",
@@ -23,6 +27,7 @@
     "zeromq": "^5.1.0"
   },
   "devDependencies": {
-    "cmake-js": "^4.0.1"
+    "cmake-js": "^4.0.1",
+    "node-gyp": "^3.8.0"
   }
 }

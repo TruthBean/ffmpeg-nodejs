@@ -1,4 +1,5 @@
-declare -r tmpImagesDir="/mnt/h/oceanai-workspace/ffmpeg-node-cmake/tmp/images/"
+# declare -r tmpImagesDir="/mnt/h/oceanai-workspace/ffmpeg-node-cmake/tmp/images/"
+declare -r tmpImagesDir="./tmp/images"
 # declare -r tmpImagesDir="/opt/ffmpeg_nodejs/tmp/images/"
 for file_name in ${tmpImagesDir}/*.yuv
 do  

@@ -6,9 +6,7 @@ let rtsp_addr = "rtsp://admin:iec123456@192.168.1.71:554/unicast/c1/s0/live";
 // let rtsp_addr = "rtsp://admin:iec123456@192.168.1.72:554/unicast/c1/s0/live";
 // let rtsp_addr = "rtsp://admin:123456@192.168.1.61:554/h264/ch1/main/av_stream";
 // let rtsp_addr = "rtsp://admin:123456@192.168.1.68:554/h264/ch1/main/av_stream";
-let dir = "/opt/ffmpeg_nodejs";
-dir = "/mnt/h/oceanai-workspace/ffmpeg-node-cmake";
-// dir = "/media/oceanai/DevOps/oceanai-workspace/ffmpeg-node-cmake";
+let dir = __dirname + "/..";
 
 const type = FFmpegNode.TYPE();
 const target_type = type.JPEG;
@@ -50,18 +48,18 @@ function runWithCallback() {
 
     ffmpegNode.then((obj) => {
         console.info(target_type);
-        obj.readImageStream(100, target_type, 1);
+        obj.readImageStreamThreadly(100, target_type, 5);
         obj.on("data", (buffer) => {
             let begin = new Date();
             console.info("------->>>>>>>>>>>", buffer);
     
-            let a = new Promise((resolve, reject) => {
-                resolve("555");
-            });
+            // let a = new Promise((resolve, reject) => {
+            //     resolve("555");
+            // });
         
-            a.then(r => {
-                console.info(r);
-            });
+            // a.then(r => {
+            //     console.info(r);
+            // });
     
             let now = new Date();
             let name = dir + "/tmp/images/buffer-" + now.getHours() + "-" + now.getMinutes() + "-" + now.getSeconds() + "-" + (i++) + suffix;
@@ -70,15 +68,17 @@ function runWithCallback() {
             let end = new Date();
             console.info("-----------", (end - begin));
 
-            if (begin.getTime() - __begin > 60000) {
-                obj.destroy();
-            }
+            // if (begin.getTime() - __begin > 60000) {
+            //     console.info("destory ............................");
+            //     obj.close();
+            // }
             
         });
 
         obj.on("error", (err) => {
             console.info("read image stream error ..... ");
             console.error(err);
+            obj.close();
         });
     }).catch(err => {
         console.info("init error ....");

@@ -2,11 +2,11 @@
 
 static Video2ImageStream vis;
 static LinkedQueue *queue;
-static sem_t *semaphore;
 
 struct {
     napi_ref ref;
     napi_async_work work;
+    napi_threadsafe_function func;
 } async_work_info = { NULL, NULL };
 
 typedef struct ReadImageBufferParams {
@@ -79,14 +79,9 @@ napi_value handle_init_read_video_and_queue(napi_env env, napi_callback_info inf
     // 获取视频流数据，将其存在全局变量中
     vis = open_inputfile(input_filename, nobuffer, use_gpu);
     // 创建队列
-    const size_t size = 4;
+    const size_t size = vis.frame_rate;
     queue = create_linkedQueue(queue, size);
     av_log(NULL, AV_LOG_DEBUG, "....... queue size: %ld\n", queue->size);
-
-    // 创建线程通知条件
-    static sem_t _semaphore;
-    sem_init(&_semaphore, 0, 0);
-    semaphore = &_semaphore;
 
     if (vis.ret < 0) {
         // 处理错误信息
@@ -379,6 +374,104 @@ napi_value handle_video_2_image_stream(napi_env env, napi_callback_info info) {
     napi_queue_async_work(env, async_work_info.work);
 }
 
+// ====================================================================================================================
+
+void *finalize(napi_env env, void *data, void *hint) {
+    fprintf(stdout, "finalize consumer ........ \n");
+    napi_delete_async_work(env, async_work_info.work);
+    napi_delete_reference(env, async_work_info.ref);
+    async_work_info.work = NULL;
+    async_work_info.ref = NULL;
+}
+
+void *consumer_callback_threadsafe(napi_env env, napi_value js_callback, void *context, void *data) {
+    napi_status status;
+    fprintf(stdout, "napi_status %d \n", status);
+    fprintf(stdout, "callback_completion\n");
+    napi_value cb, js_status;
+    status = napi_get_reference_value(env, async_work_info.ref, &cb);
+    fprintf(stdout, "napi_get_reference_value status %d \n", status);
+    
+    status = napi_create_uint32(env, (uint32_t) status, &js_status);
+    fprintf(stdout, "napi_create_uint32 status %d \n", status);
+
+    LinkedQueueNodeData *node_data = (LinkedQueueNodeData*) data;
+    fprintf(stdout, "node1 %d \n", node_data->pts);
+
+    fprintf(stdout, "params.type .......>>>>>>> %d \n", params.type);
+
+    FrameData frame_data;
+    if (params.type == JPEG)
+        frame_data = copy_frame_data_and_transform_2_jpeg(node_data->frame, params.quality, vis.video_codec_context);
+    else
+        frame_data = copy_frame_raw_data(node_data->frame, vis.video_codec_context, params.type);
+    av_log(NULL, AV_LOG_INFO, "file_size: %ld\n", frame_data.file_size);
+
+    // FILE *_tmpfile = fopen("/opt/ffmpeg_nodejs/tmp/dirs/2.jpg", "wb");
+    // fwrite(frame_data.file_data, 1, frame_data.file_size, _tmpfile);
+    // fclose(_tmpfile);
+
+    napi_value buffer_pointer;
+    // char数组 转换成 javascript buffer
+    void *buffer_data;
+    status = napi_create_buffer_copy(env, frame_data.file_size, (const void*)frame_data.file_data, &buffer_data, &buffer_pointer);
+    av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frame_data.file_size);
+    av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
+
+    // 返回错误原因
+    napi_value message;
+    status = napi_get_undefined(env, &message);
+
+    if (frame_data.file_size == 0) {
+        char *_err_msg;
+        // 判断有没有图片数据，如网络中断或其他原因，导致无法获取到图片数据
+        if (frame_data.ret == 0) {
+            _err_msg = "image data is null, network may connect wrong";
+        } else {
+            _err_msg = frame_data.error_message;
+        }
+        av_log(NULL, AV_LOG_DEBUG, "%s \n", _err_msg);
+
+        status = napi_create_string_utf8(env, _err_msg, NAPI_AUTO_LENGTH, &message);
+        if (status != napi_ok) {
+            napi_throw_error(env, NULL, "error message create error");
+        }
+    }
+
+    napi_value obj;
+    status = napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "callback object create error");
+    }
+
+    napi_value error_name;
+    napi_create_string_utf8(env, "error", NAPI_AUTO_LENGTH, &error_name);
+    napi_value data_name;
+    napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &data_name);
+
+    napi_set_property(env, obj, error_name, message);
+    napi_set_property(env, obj, data_name, buffer_pointer);
+
+    // 调用 callback
+    napi_value result;
+    status = napi_call_function(env, cb, cb, 1, &obj, &result);
+    av_log(NULL, AV_LOG_DEBUG, "napi_call_function status %d\n", status);
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "Create buffer error");
+    }
+
+    // 释放 图片数据 的 内存
+    av_freep(&frame_data.file_data);
+    free(frame_data.file_data);
+    frame_data.file_data = NULL;
+}
+
+void *callback_thread(napi_env env, void* data) {
+    napi_acquire_threadsafe_function(async_work_info.func);
+    LinkedQueueNodeData nodeData = video_to_frame(vis, params.chose_frames, queue, async_work_info.func);
+}
+
 napi_value handle_video_2_image_stream_threadly(napi_env env, napi_callback_info info) {
     napi_status status;
 
@@ -448,13 +541,21 @@ napi_value handle_video_2_image_stream_threadly(napi_env env, napi_callback_info
 
     params = _params;
 
+    napi_threadsafe_function result;
+    napi_create_threadsafe_function(env, callback, NULL, resource_name, 10, 1, NULL, finalize, &thisArg, consumer_callback_threadsafe, &result);
+    napi_ref_threadsafe_function(env, result);
+
+    async_work_info.func = result;
+
     napi_value async_resource = NULL;
-    status = napi_create_async_work(env, async_resource, resource_name, callback_nothing, callback_completion,
+    status = napi_create_async_work(env, async_resource, resource_name, callback_thread, callback_nothing,
                            &params, &(async_work_info.work));
     av_log(NULL, AV_LOG_DEBUG, "napi_create_async_work %d\n", status);
 
     napi_queue_async_work(env, async_work_info.work);
 }
+
+// ====================================================================================================================
 
 /**
  * 释放视频连接

@@ -148,8 +148,13 @@ static FrameData copy_frame_raw_data(const AVFrame *frame, const AVCodecContext 
                                                               (const uint8_t **) target_frame->data, target_frame->linesize,
                                                               target_frame->format, target_frame->width, target_frame->height, 1);
 
+    sws_freeContext(sws_context);
+    sws_context = NULL;
+    av_free(outBuff);
+    outBuff = NULL;
     av_frame_unref(target_frame);
     av_frame_free(&target_frame);
+    target_frame = NULL;
 
     return result;
 }
@@ -274,20 +279,20 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
     return result;
 }
 
-static int time_out = 0;
-static bool _init = true;
+// static int time_out = 0;
+// static bool _init = true;
 //核心是超时返回1，正常等待返回0
-static int interrupt_cb(void *ctx) {
-    time_out += 1;
-    av_log(NULL, AV_LOG_DEBUG, "interrupt_cb ......................... timeout %d \n", time_out);
-    if (!_init || time_out > 21000) {
-        time_out=0;
-        //这个就是超时的返回
-        return 1;
-    }
-    // _init = false;
-    return 0;
-}
+// static int interrupt_cb(void *ctx) {
+//     time_out += 1;
+//     av_log(NULL, AV_LOG_DEBUG, "interrupt_cb ......................... timeout %d \n", time_out);
+//     if (!_init || time_out > 100000) {
+//         time_out=0;
+//         //这个就是超时的返回
+//         return 1;
+//     }
+//     // _init = false;
+//     return 0;
+// }
 
 /**
  * 连接视频地址，获取数据流
@@ -384,8 +389,8 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     }
 
     format_context = avformat_alloc_context();
-    format_context->interrupt_callback.callback = interrupt_cb;
-    format_context->interrupt_callback.opaque = format_context;
+    // format_context->interrupt_callback.callback = interrupt_cb;
+    // format_context->interrupt_callback.opaque = format_context;
     av_log(NULL, AV_LOG_DEBUG, "input file: %s\n", filename);
     // format_context必须初始化，否则报错
     if ((ret = avformat_open_input(&format_context, filename, NULL, &dictionary)) != 0) {
@@ -565,7 +570,7 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
         avformat_network_deinit();
 }
 
-static void close(AVFrame *frame, AVPacket *packet) {
+static void __close(AVFrame *frame, AVPacket *packet) {
     if (frame != NULL) {
         av_frame_unref(frame);
         av_frame_free(&frame);
@@ -609,7 +614,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
         av_log(NULL, AV_LOG_ERROR, "Couldn't alloc packet\n");
         result.ret = -2;
         result.error_message = "Couldn't alloc packet";
-        close(frame, orig_pkt);
+        __close(frame, orig_pkt);
         return result;
     }
 
@@ -617,11 +622,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
     av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_time());
 
     int _ret = 0;
-    while (true) {
-        av_log(NULL, AV_LOG_INFO, "-------------2432434232432 %d \n", _ret);
-        _ret = av_read_frame(vis.format_context, orig_pkt);
-        av_log(NULL, AV_LOG_INFO, "--------------------------------- %d \n", _ret);
-        if (_ret < 0) break;
+    while (av_read_frame(vis.format_context, orig_pkt) >= 0) {
         av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_time());
         if (orig_pkt->stream_index == vis.video_stream_idx) {
             if (orig_pkt->flags & AV_PKT_FLAG_KEY) {
@@ -634,7 +635,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
                 av_log(NULL, AV_LOG_ERROR, "error: video stream is null\n");
                 result.ret = -3;
                 result.error_message = "video stream is null";
-                close(frame, orig_pkt);
+                __close(frame, orig_pkt);
                 return result;
             }
 
@@ -649,7 +650,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_time());
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Error while sending a packet to the decoder\n");
-                close(frame, orig_pkt);
+                __close(frame, orig_pkt);
                 result.ret = -4;
                 result.error_message = "Error while sending a packet to the decoder";
                 return result;
@@ -671,7 +672,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
             }
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Decode error\n");
-                close(frame, orig_pkt);
+                __close(frame, orig_pkt);
                 result.ret = -4;
                 result.error_message = "Error while receive frame from a packet";
                 return result;
@@ -688,7 +689,7 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
                 av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", result.file_size);
                 if (result.file_size == 0 || result.file_data == NULL) {
                     av_log(NULL, AV_LOG_DEBUG, "file_data NULL\n");
-                    close(frame, orig_pkt);
+                    __close(frame, orig_pkt);
                     continue;
                 } else {
                     if (result.ret < 0 ) {
@@ -704,12 +705,12 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
         }
     }
 
-    close(frame, orig_pkt);
+    __close(frame, orig_pkt);
 
     return result;
 }
 
-LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, sem_t *semaphore) {
+LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, napi_threadsafe_function func) {
     av_log(NULL, AV_LOG_INFO, "start video_to_frame\n");
     LinkedQueueNodeData result = {
         .pts = 0,
@@ -731,7 +732,7 @@ LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, Link
         av_log(NULL, AV_LOG_ERROR, "Couldn't alloc packet\n");
         result.ret = -2;
         result.error_message = "Couldn't alloc packet";
-        close(frame, orig_pkt);
+        __close(frame, orig_pkt);
         return result;
     }
 
@@ -751,7 +752,7 @@ LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, Link
                 av_log(NULL, AV_LOG_ERROR, "error: video stream is null\n");
                 result.ret = -3;
                 result.error_message = "video stream is null";
-                close(frame, orig_pkt);
+                __close(frame, orig_pkt);
                 return result;
             }
 
@@ -766,7 +767,7 @@ LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, Link
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_time());
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Error while sending a packet to the decoder\n");
-                close(frame, orig_pkt);
+                __close(frame, orig_pkt);
                 result.ret = -4;
                 result.error_message = "Error while sending a packet to the decoder";
                 return result;
@@ -781,7 +782,7 @@ LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, Link
             }
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Decode error\n");
-                close(frame, orig_pkt);
+                __close(frame, orig_pkt);
                 result.ret = -4;
                 result.error_message = "Error while receive frame from a packet";
                 return result;
@@ -796,24 +797,25 @@ LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, Link
             av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d frame_rate: %d\n", pts_time,
                     chose_frames, vis.frame_rate);
             // 判断帧数，是否取
-            // if (check == c - 1) {
+            if (check == c - 1) {
                 result.frame = frame;
                 result.pts = pts_time;
-                // av_log(NULL, AV_LOG_INFO, "result.pts %d \n", result.pts);
+                av_log(NULL, AV_LOG_INFO, "result.pts %d \n", result.pts);
                 if (queue == NULL) {
                     av_log(NULL, AV_LOG_INFO, "queue is null\n");
                 }
-                // fprintf(stdout, "queue real_size %d\n", queue->real_size);
-                push_linkedQueue(queue, result);
-                if (semaphore != NULL) sem_post(semaphore);
-                // av_log(NULL, AV_LOG_INFO, "frame ....................\n");
-            // }
+                fprintf(stdout, "queue real_size %d\n", queue->real_size);
+                // push_linkedQueue(queue, result);
+                napi_call_threadsafe_function(func, &result, napi_tsfn_nonblocking);
+                av_log(NULL, AV_LOG_INFO, "frame ....................\n");
+            }
+            usleep(0);
 
             av_packet_unref(orig_pkt);
         }
     }
 
-    close(frame, orig_pkt);
+    __close(frame, orig_pkt);
 
     return result;
 }

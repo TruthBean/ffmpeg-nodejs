@@ -4,15 +4,16 @@ const verifier = require("./verifier_pb");
 const zmq = require('zeromq');
 
 const dealer = zmq.socket('dealer');
-dealer.connect('tcp://192.168.1.196:5559');
+dealer.connect('tcp://192.168.1.11:5559');
 
 // const zmqReq = zmq.socket('req');
 // zmqReq.connect('tcp://127.0.0.1:23332');
 
 let dir = "/opt/ffmpeg_nodejs";
 let rtsp_addr = "rtsp://admin:iec123456@192.168.1.71:554/unicast/c1/s0/live";
-dir = "/media/oceanai/DevOps/oceanai-workspace/ffmpeg-node-cmake";
-dir = "/mnt/h/oceanai-workspace/ffmpeg-node-cmake";
+dir = __dirname + "/../..";
+// dir = "/mnt/h/oceanai-workspace/ffmpeg-node-cmake";
+// dir = "/opt/ffmpeg-nodejs";
 
 const type = FFmpegNode.TYPE();
 const target_type = type.RGB;
@@ -38,7 +39,7 @@ function zmqAction(image) {
     detectReq.setApikey("");
     detectReq.setRows(2048);
     detectReq.setCols(3072);
-    detectReq.setFormat(verifier.DetectReq.Format.RGB);
+    detectReq.setFormat(verifier.Format.RGB);
     detectReq.setMinfacesize(80);
     detectReq.setMaxfacesize(300);
     detectReq.setField("normal");
@@ -47,7 +48,7 @@ function zmqAction(image) {
     let req = detectReq.serializeBinary();
 
     let buff = Buffer.alloc(req.length, req);
-    dealer.send("pb", zmq.ZMQ_SNDMORE);
+    dealer.send("2005", zmq.ZMQ_SNDMORE);
     dealer.send(buff);
 
     // zmqReq.send(buff);
@@ -125,14 +126,14 @@ async function noCb() {
 
 }
 
-noCb().then();
+// noCb().then();
 
 function cb() {
     let ffmpegNode = FFmpegNode.init(rtsp_addr, true, false);
 
     ffmpegNode.then((obj) => {
         let i = 0;
-        obj.readImageStream(100, target_type, 1);
+        obj.readImageStreamThreadly(100, target_type, 10);
         obj.on("data", (image) => {
             console.info("target type: " + target_type);
             i++;
@@ -159,7 +160,7 @@ function cb() {
     });
 }
 
-// cb();
+cb();
 
 // const rep = zmq.socket('rep');
 // rep.bindSync("tcp://*:23332");

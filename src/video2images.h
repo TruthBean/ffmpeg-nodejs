@@ -17,10 +17,13 @@
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/pixfmt.h>
+#include <unistd.h>
 
 #include <jpeglib.h>
 
 #include "./common.h"
+
+#include "./node_api.h"
 
 typedef struct Video2ImageStream {
     AVFormatContext *format_context;
@@ -53,7 +56,7 @@ int init_filters(const char *filters_descr, AVCodecContext *dec_ctx, AVRational 
 
 FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type);
 
-LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, sem_t *semaphore);
+LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, napi_threadsafe_function func);
 
 void read_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue);
 
