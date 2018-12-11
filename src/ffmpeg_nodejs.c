@@ -15,6 +15,7 @@ typedef struct ReadImageBufferParams {
 } ReadImageBufferParams;
 
 static ReadImageBufferParams params;
+static bool thread = false;
 
 /**
  * 初始化摄像头
@@ -479,11 +480,22 @@ void *callback_thread(napi_env env, void* data) {
 }
 
 void *finalize(napi_env env, void *data, void *hint) {
-    av_log(NULL, AV_LOG_INFO, "finalize consumer ........ \n");
-    napi_delete_async_work(env, async_work_info.work);
-    napi_delete_reference(env, async_work_info.ref);
-    async_work_info.work = NULL;
-    async_work_info.ref = NULL;
+    av_log(NULL, AV_LOG_DEBUG, "finalize consumer ........ \n");
+
+    if (async_work_info.work != NULL && async_work_info.ref != NULL) {
+        napi_status status = napi_unref_threadsafe_function(env, async_work_info.func);
+        async_work_info.func = NULL;
+        av_log(NULL, AV_LOG_DEBUG, "napi_unref_threadsafe_function status : %d \n", status);
+        status = napi_delete_async_work(env, async_work_info.work);
+        av_log(NULL, AV_LOG_DEBUG, "napi_delete_async_work status : %d \n", status);
+
+        status = napi_delete_reference(env, async_work_info.ref);
+        av_log(NULL, AV_LOG_DEBUG, "napi_delete_reference status : %d \n", status);
+        async_work_info.work = NULL;
+        async_work_info.ref = NULL;
+    }
+
+    return;
 }
 
 napi_value handle_video_to_image_stream_threadly(napi_env env, napi_callback_info info) {
@@ -558,6 +570,7 @@ napi_value handle_video_to_image_stream_threadly(napi_env env, napi_callback_inf
     napi_ref_threadsafe_function(env, result);
 
     async_work_info.func = result;
+    thread = true;
 
     napi_value async_resource = NULL;
     status = napi_create_async_work(env, async_resource, resource_name, callback_thread, callback_nothing,
@@ -571,18 +584,19 @@ napi_value handle_video_to_image_stream_threadly(napi_env env, napi_callback_inf
  * 释放视频连接
  **/
 napi_value handle_destroy_stream(napi_env env, napi_callback_info info) {
-    av_log(NULL, AV_LOG_INFO, "release ..... \n");
-    av_log(NULL, AV_LOG_INFO, "%p \n", async_work_info.func);
-    if (&(async_work_info.func) != NULL) {
-        av_log(NULL, AV_LOG_INFO, "release thread \n");
-        napi_status status = napi_release_threadsafe_function(async_work_info.func, napi_tsfn_release);
-        av_log(NULL, AV_LOG_INFO, "napi_release_threadsafe_function status : %d \n", status);
-        status = napi_unref_threadsafe_function(env, async_work_info.func);
-        av_log(NULL, AV_LOG_INFO, "napi_unref_threadsafe_function status : %d \n", status);
+    av_log(NULL, AV_LOG_DEBUG, "release ..... \n");
+    av_log(NULL, AV_LOG_DEBUG, "%p \n", async_work_info.func);
+    napi_status status;
 
-        status = napi_delete_async_work(env, async_work_info.work);
-        av_log(NULL, AV_LOG_INFO, "napi_delete_async_work status : %d \n", status);
+    for (int i = 0; i < 10; i++) {
+        if (async_work_info.func != NULL) {
+            av_log(NULL, AV_LOG_DEBUG, "release thread \n");
+            status = napi_release_threadsafe_function(async_work_info.func, napi_tsfn_abort);
+            av_log(NULL, AV_LOG_DEBUG, "napi_release_threadsafe_function status : %d \n", status);
+            if (status != napi_ok) break;
+        }
     }
+
     release(vis.video_codec_context, vis.format_context, vis.isRtsp);
     Video2ImageStream _vis = {
         .format_context = NULL,

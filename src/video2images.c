@@ -549,11 +549,11 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
  * 释放内存
  */
 void release(AVCodecContext *video_codec_context, AVFormatContext *format_context, bool isRtsp) {
-    av_log(NULL, AV_LOG_INFO, "---> 3 ---> free memory\n");
+    av_log(NULL, AV_LOG_DEBUG, "---> 3 ---> free memory\n");
 
     int ret;
     if (video_codec_context != NULL) {
-        av_log(NULL, AV_LOG_INFO, "avcodec_close ... \n");
+        av_log(NULL, AV_LOG_DEBUG, "avcodec_close ... \n");
         ret = avcodec_close(video_codec_context);
         if (ret < 0) {
             av_log(NULL, AV_LOG_ERROR, "avcodec_close error \n");
@@ -561,18 +561,18 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
     }
 
     if (video_codec_context) {
-        av_log(NULL, AV_LOG_INFO, "avcodec_free_context ... \n");
+        av_log(NULL, AV_LOG_DEBUG, "avcodec_free_context ... \n");
         avcodec_free_context(&video_codec_context);
     }
 
     if (format_context) {
-        av_log(NULL, AV_LOG_INFO, "avformat_close_input ... \n");
+        av_log(NULL, AV_LOG_DEBUG, "avformat_close_input ... \n");
         avformat_close_input(&format_context);
         avformat_free_context(format_context);
     }
 
     if (isRtsp) {
-        av_log(NULL, AV_LOG_INFO, "avformat_network_deinit ... \n");
+        av_log(NULL, AV_LOG_DEBUG, "avformat_network_deinit ... \n");
         ret = avformat_network_deinit();
         if (ret < 0) {
             av_log(NULL, AV_LOG_ERROR, "avformat_network_deinit error \n");
@@ -812,6 +812,7 @@ OriginFrameData video_to_frame(Video2ImageStream vis, int chose_frames, napi_thr
                 result.pts = pts_time;
                 av_log(NULL, AV_LOG_DEBUG, "result.pts %d \n", result.pts);
 
+                if (func == NULL) return result;
                 napi_call_threadsafe_function(func, &result, napi_tsfn_nonblocking);
                 av_log(NULL, AV_LOG_DEBUG, "frame ....................\n");
             }
