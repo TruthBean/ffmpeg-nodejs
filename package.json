@@ -1,20 +1,18 @@
 {
   "name": "ffmpeg-nodejs",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "npm run compile",
-    "configure": "node ./node_modules/cmake-js/bin/cmake-js configure",
-    "clean": "node ./node_modules/cmake-js/bin/cmake-js clean",
-    "build": "node ./node_modules/cmake-js/bin/cmake-js build",
-    "rebuild": "node ./node_modules/cmake-js/bin/cmake-js rebuild",
-    "compile": "node ./node_modules/cmake-js/bin/cmake-js compile"
+    "postinstall": "cmake-js compile",
+    "configure": "cmake-js configure",
+    "clean": "cmake-js clean",
+    "build": "cmake-js build",
+    "rebuild": "cmake-js rebuild",
+    "compile": "cmake-js compile"
   },
   "author": "truthbean",
   "license": "MIT",
   "dependencies": {},
-  "devDependencies": {
-    "cmake-js": "^4.0.1"
-  }
+  "devDependencies": {}
 }
