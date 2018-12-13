@@ -1,9 +1,10 @@
 const EventEmitter = require("events").EventEmitter;
-const ffmpeg_nodejs = require("./build/Release/ffmpeg_node");
+const ffmpeg_nodejs = require("./build/Release/ffmpeg_nodejs");
 
 // const ffmpeg_nodejs = new FFmpegNodejs();
 
 const JPEG = "jpeg", YUV = "yuv", RGB = "rgb";
+const INFO = 3, DEBUG = 2, ERROR = 1;
 class FFmpegNode extends EventEmitter {
 
     /**
@@ -11,9 +12,11 @@ class FFmpegNode extends EventEmitter {
      * @param {String} url 
      * @param {boolean} nobuffer
      * @param {boolean} useGpu
+     * @param {string} level
+     * @param {number} gpuId
      * @return {Promise<FFmpegNode>}
      */
-    static init(url, nobuffer, useGpu) {
+    static init(url, nobuffer, useGpu, level, gpuId) {
         let self = new FFmpegNode();
 
         if (typeof url !== "string")
@@ -25,13 +28,18 @@ class FFmpegNode extends EventEmitter {
         if (typeof useGpu !== "boolean")
             throw new Error("useGpu muse be boolean type");
 
+        if (typeof level !== "number")
+            level = INFO;
+            
+        if (typeof gpuId !== "number")
+            gpuId = 0;
+
         self.destroy = false;
         return new Promise((resolve, reject) => {
-            ffmpeg_nodejs.initReadingVideoAndQueue(self.url, nobuffer, useGpu).then((ignored) => {
+            ffmpeg_nodejs.initReadingVideo(self.url, nobuffer, useGpu, level, gpuId.toString()).then((ignored) => {
                 resolve(self);
             }).catch((err) => {
                 self.destroy = true;
-                // self.emit("error", err);
                 reject(err);
             });
         });
@@ -62,9 +70,10 @@ class FFmpegNode extends EventEmitter {
      * @param {number} quality: jpeg quality
      * @param {string} type: rgb, yuv or jpeg
      * @param {number} frames: chose frames per second, default 1
+     * @param {Function} callback callback function
      * @return {Promise<Buffer>} image buffer
      */
-    video2ImageBuffer(quality, type, frames) {
+    readImageBuffer(quality, type, frames) {
         if (!this.destroy) {
             if (typeof frames !== "number" || frames <= 0) frames = 1;
             if (type !== RGB && type !== YUV && type !== JPEG) type = "rgb";
@@ -155,8 +164,9 @@ class FFmpegNode extends EventEmitter {
     close() {
         if (!this.destroy) {
             this.destroy = true;
-            clearInterval(this.read);
-            return ffmpeg_nodejs.destroyStreamAndQueue();
+            if (this.read)
+                clearInterval(this.read);
+            return ffmpeg_nodejs.destroyStream();
         }
     }
 
@@ -167,6 +177,14 @@ class FFmpegNode extends EventEmitter {
             RGB: RGB
         }
     };
+
+    static LEVEL() {
+        return {
+            INFO: INFO,
+            DEBUG: DEBUG,
+            ERROR: ERROR
+        }
+    }
 }
 
 module.exports = FFmpegNode;

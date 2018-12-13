@@ -9,6 +9,5 @@
 #include "./video2images.c"
 #include "./record_rtsp.c"
 
-
 #endif // FFMPEG_NODEJS_H
 

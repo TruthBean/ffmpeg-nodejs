@@ -9,10 +9,12 @@ let rtsp_addr = "rtsp://admin:iec123456@192.168.1.71:554/unicast/c1/s0/live";
 let dir = __dirname + "/..";
 
 const type = FFmpegNode.TYPE();
-const target_type = type.JPEG;
+const targetType = type.JPEG;
+
+const logLevel = FFmpegNode.LEVEL().INFO;
 
 let suffix = ".yuv";
-switch (target_type) {
+switch (targetType) {
     case type.YUV:
         suffix = ".yuv";
         break;
@@ -27,10 +29,10 @@ switch (target_type) {
 let i = 0;
 
 async function runWithoutCallback() {
-    let ffmpegNode = await FFmpegNode.init(rtsp_addr, false, true);
+    let ffmpegNode = await FFmpegNode.init(rtsp_addr, false, true, logLevel, 1);
     let image = null;
     try {
-        image = await ffmpegNode.video2ImageBuffer(1, target_type, 80);
+        image = await ffmpegNode.video2ImageBuffer(1, targetType, 80);
     } catch (error) {
         ffmpegNode.emit("error", error);
     }
@@ -44,23 +46,23 @@ async function runWithoutCallback() {
 let __begin = new Date().getTime();
 
 function runWithCallback() {
-    let ffmpegNode = FFmpegNode.init(rtsp_addr, true, false);
+    let ffmpegNode = FFmpegNode.init(rtsp_addr, false, true, logLevel, 1);
 
     ffmpegNode.then((obj) => {
-        console.info(target_type);
-        obj.readImageStreamThreadly(100, target_type, 5);
+        console.info(targetType);
+        obj.readImageStreamThreadly(100, targetType, 1);
         obj.on("data", (buffer) => {
             let begin = new Date();
             console.info("------->>>>>>>>>>>", buffer);
-    
+
             // let a = new Promise((resolve, reject) => {
             //     resolve("555");
             // });
-        
+
             // a.then(r => {
             //     console.info(r);
             // });
-    
+
             let now = new Date();
             let name = dir + "/tmp/images/buffer-" + now.getHours() + "-" + now.getMinutes() + "-" + now.getSeconds() + "-" + (i++) + suffix;
             console.info(name);
@@ -72,7 +74,7 @@ function runWithCallback() {
             //     console.info("destory ............................");
             //     obj.close();
             // }
-            
+
         });
 
         obj.on("error", (err) => {

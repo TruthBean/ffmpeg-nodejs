@@ -302,7 +302,7 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
  * 
  * @return @see Video2ImageStream
  **/
-Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const bool use_gpu) {
+Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const bool use_gpu, const char *gpu_id) {
 
     av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
 
@@ -401,6 +401,9 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         return result;
     }
 
+    av_dict_free(&dictionary);
+    format_context->max_delay = 1;
+
     if (avformat_find_stream_info(format_context, NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
         release(video_codec_context, format_context, _bool);
@@ -425,16 +428,18 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     AVCodec *codec = NULL;
     AVDictionary *opts = NULL;
     av_dict_set(&opts, "refcounted_frames", "false", 0);
-    av_dict_set(&opts, "timeout", "1", 0);
-    av_dict_set(&opts, "listen_timeout", "1", 0);
+    av_dict_set(&opts, "timeout", "5000000", 0);
+    av_dict_set(&opts, "listen_timeout", "5000000", 0);
     enum AVCodecID codec_id = video_stream->codecpar->codec_id;
     // 判断摄像头视频格式是h264还是h265
     if (use_gpu && codec_id == AV_CODEC_ID_H264) {
         codec = avcodec_find_decoder_by_name("h264_cuvid");
+        av_dict_set(&opts, "gpu", gpu_id, 0);
     } else if (codec_id == AV_CODEC_ID_HEVC) {
         if (use_gpu)
             codec = avcodec_find_decoder_by_name("hevc_nvenc");
         av_dict_set(&opts, "flags", "low_delay", 0);
+        av_dict_set(&opts, "gpu", gpu_id, 0);
     }
     if (codec == NULL)
         codec = avcodec_find_decoder(video_stream->codecpar->codec_id);
@@ -450,8 +455,8 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     int input_frame_rate = video_stream->r_frame_rate.num / video_stream->r_frame_rate.den;
     av_log(NULL, AV_LOG_INFO, "input video frame rate: %d\n", input_frame_rate);
 
-    AVCodecParserContext *parserContext = av_parser_init(codec->id);
-    if (!parserContext) {
+    AVCodecParserContext *parser_context = av_parser_init(codec->id);
+    if (!parser_context) {
         av_log(NULL, AV_LOG_ERROR, "parser not found\n");
         release(video_codec_context, format_context, _bool);
         result.error_message = "parser not found";
@@ -492,8 +497,8 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
             return result;
         }
 
-        parserContext = av_parser_init(codec->id);
-        if (!parserContext) {
+        parser_context = av_parser_init(codec->id);
+        if (!parser_context) {
             av_log(NULL, AV_LOG_ERROR, "parser not found\n");
             release(video_codec_context, format_context, _bool);
             result.error_message = "parser not found";
@@ -543,6 +548,7 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     result.video_stream_idx = video_stream_idx;
     result.video_stream = video_stream;
     result.video_codec_context = video_codec_context;
+    result.parser_context = parser_context;
     result.ret = 0;
     result.frame_rate = input_frame_rate;
 
@@ -555,19 +561,33 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
 void release(AVCodecContext *video_codec_context, AVFormatContext *format_context, bool isRtsp) {
     av_log(NULL, AV_LOG_DEBUG, "---> 3 ---> free memory\n");
 
-    if (video_codec_context != NULL)
-        avcodec_close(video_codec_context);
+    int ret;
+    if (video_codec_context != NULL) {
+        av_log(NULL, AV_LOG_DEBUG, "avcodec_close ... \n");
+        ret = avcodec_close(video_codec_context);
+        if (ret < 0) {
+            av_log(NULL, AV_LOG_ERROR, "avcodec_close error \n");
+        }
+    }
 
-    if (video_codec_context)
+    if (video_codec_context) {
+        av_log(NULL, AV_LOG_DEBUG, "avcodec_free_context ... \n");
         avcodec_free_context(&video_codec_context);
+    }
 
     if (format_context) {
+        av_log(NULL, AV_LOG_DEBUG, "avformat_close_input ... \n");
         avformat_close_input(&format_context);
         avformat_free_context(format_context);
     }
 
-    if (isRtsp)
-        avformat_network_deinit();
+    if (isRtsp) {
+        av_log(NULL, AV_LOG_DEBUG, "avformat_network_deinit ... \n");
+        ret = avformat_network_deinit();
+        if (ret < 0) {
+            av_log(NULL, AV_LOG_ERROR, "avformat_network_deinit error \n");
+        }
+    }
 }
 
 static void __close(AVFrame *frame, AVPacket *packet) {
@@ -710,9 +730,9 @@ FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_fram
     return result;
 }
 
-LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, napi_threadsafe_function func) {
-    av_log(NULL, AV_LOG_INFO, "start video_to_frame\n");
-    LinkedQueueNodeData result = {
+OriginFrameData video_to_frame(Video2ImageStream vis, int chose_frames, napi_threadsafe_function func) {
+    av_log(NULL, AV_LOG_DEBUG, "start video_to_frame\n");
+    OriginFrameData result = {
         .pts = 0,
         .frame = NULL,
         .ret = 0
@@ -800,12 +820,9 @@ LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, Link
             if (check == c - 1) {
                 result.frame = frame;
                 result.pts = pts_time;
-                av_log(NULL, AV_LOG_INFO, "result.pts %d \n", result.pts);
-                if (queue == NULL) {
-                    av_log(NULL, AV_LOG_INFO, "queue is null\n");
-                }
-                fprintf(stdout, "queue real_size %d\n", queue->real_size);
-                // push_linkedQueue(queue, result);
+                av_log(NULL, AV_LOG_DEBUG, "result.pts %d \n", result.pts);
+
+                if (func == NULL) return result;
                 napi_call_threadsafe_function(func, &result, napi_tsfn_nonblocking);
                 av_log(NULL, AV_LOG_INFO, "frame ....................\n");
             }
@@ -819,4 +836,3 @@ LinkedQueueNodeData video_to_frame(Video2ImageStream vis, int chose_frames, Link
 
     return result;
 }
-
