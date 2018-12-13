@@ -39,7 +39,7 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     // log level
     int log_level;
     status = napi_get_value_int32(env, argv[3], &log_level);
-    av_log(NULL, AV_LOG_INFO, "log level %d", log_level);
+    av_log(NULL, AV_LOG_DEBUG, "log level %d", log_level);
     switch (log_level) {
         case 1:
             av_log_set_level(AV_LOG_ERROR);
@@ -71,17 +71,17 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Invalid value was passed as argument by input_filename");
     }
-    av_log(NULL, AV_LOG_INFO, "input filename : %s\n", input_filename);
+    av_log(NULL, AV_LOG_DEBUG, "input filename : %s\n", input_filename);
 
     // nobuffer
     bool nobuffer;
     status = napi_get_value_bool(env, argv[1], &nobuffer);
-    av_log(NULL, AV_LOG_INFO, "nobuffer : %d\n", nobuffer);
+    av_log(NULL, AV_LOG_DEBUG, "nobuffer : %d\n", nobuffer);
 
     // useGpu
     bool use_gpu;
     status = napi_get_value_bool(env, argv[2], &use_gpu);
-    av_log(NULL, AV_LOG_INFO, "useGpu : %d\n", use_gpu);
+    av_log(NULL, AV_LOG_DEBUG, "useGpu : %d\n", use_gpu);
 
     // gpu_id
     // 获取string长度
@@ -99,7 +99,7 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Invalid value was passed as argument by gpu_id");
     }
-    av_log(NULL, AV_LOG_INFO, "input gpu_id : %s\n", gpu_id);
+    av_log(NULL, AV_LOG_DEBUG, "input gpu_id : %s\n", gpu_id);
 
     // 构建 js promise 对象
     napi_value promise;
@@ -308,7 +308,7 @@ static void callback_completion(napi_env env, napi_status status, void *data) {
     // 调用 callback
     napi_value result;
     time_t begin1 = get_time();
-    av_log(NULL, AV_LOG_INFO, "get buffer time: %ld \n", (begin1 - begin));
+    av_log(NULL, AV_LOG_DEBUG, "get buffer time: %ld \n", (begin1 - begin));
     status = napi_call_function(env, cb, cb, 1, &obj, &result);
     av_log(NULL, AV_LOG_DEBUG, "napi_call_function status %d\n", status);
 
@@ -389,9 +389,6 @@ napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
     };
 
     params = _params;
-
-    time_t begin1 = get_time();
-    
 
     napi_value async_resource = NULL;
     status = napi_create_async_work(env, async_resource, resource_name, callback_nothing, callback_completion,
@@ -516,18 +513,7 @@ void *callback_thread(napi_env env, void* data) {
     OriginFrameData nodeData = video_to_frame(vis, params.chose_frames, async_work_info.func);
     av_log(NULL, AV_LOG_ERROR, "callback_thread return error \n");
     napi_status status = napi_call_threadsafe_function(async_work_info.func, &nodeData, napi_tsfn_nonblocking);
-    av_log(NULL, AV_LOG_INFO, "napi_call_threadsafe_function status %d \n", status);
-
-    // for (int i = 0; i < 10; i++) {
-    //     if (async_work_info.func != NULL) {
-    //         av_log(NULL, AV_LOG_DEBUG, "release thread \n");
-    //         status = napi_release_threadsafe_function(async_work_info.func, napi_tsfn_abort);
-    //         av_log(NULL, AV_LOG_DEBUG, "napi_release_threadsafe_function status : %d \n", status);
-    //         if (status != napi_ok) break;
-    //     }
-    // }
-
-    // release(vis.video_codec_context, vis.format_context, vis.isRtsp);
+    av_log(NULL, AV_LOG_DEBUG, "napi_call_threadsafe_function status %d \n", status);
 }
 
 void *finalize(napi_env env, void *data, void *hint) {
@@ -742,29 +728,23 @@ napi_value ffmpeg_nodejs_class_constructor(napi_env env, napi_callback_info info
  * napi 构建js的方法
  **/
 napi_value init(napi_env env, napi_value exports) {
-    napi_value result;
     napi_status status;
+    av_log_set_level(AV_LOG_INFO);
 
     napi_property_descriptor methods[] = {
         DECLARE_NAPI_METHOD("initReadingVideo", handle_init_read_video),
-        DECLARE_NAPI_METHOD("destroyStream", handle_destroy_stream),
-
-        DECLARE_NAPI_METHOD("video2ImageStreamThreadly", handle_video_to_image_stream_threadly),
-        DECLARE_NAPI_METHOD("video2ImageStream", handle_video_to_image_stream),
-
         DECLARE_NAPI_METHOD("video2ImageBuffer", handle_video_to_image_buffer),
-        DECLARE_NAPI_METHOD("recordVideo", handle_record_video),
+        DECLARE_NAPI_METHOD("video2ImageStream", handle_video_to_image_stream),
+        DECLARE_NAPI_METHOD("video2ImageStreamThreadly", handle_video_to_image_stream_threadly),
+        DECLARE_NAPI_METHOD("destroyStream", handle_destroy_stream),
+        DECLARE_NAPI_METHOD("recordVideo", handle_record_video)
         };
 
-    size_t property_count = sizeof(methods) / sizeof(methods[0]);
-    // status = napi_define_class(env, "FFmpegNodejs", NAPI_AUTO_LENGTH, ffmpeg_nodejs_class_constructor,
-    //                             NULL, property_count, methods, &result);
-    status = napi_define_properties(env, exports, property_count, methods);
-    result = exports;
+    status = napi_define_properties(env, exports, sizeof(methods) / sizeof(methods[0]), methods);
     if (status != napi_ok)
         return NULL;
 
-    return result;
+    return exports;
 }
 
 // 初始化 js 模块

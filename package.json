@@ -8,26 +8,13 @@
     "configure": "node ./node_modules/cmake-js/bin/cmake-js configure",
     "clean": "node ./node_modules/cmake-js/bin/cmake-js clean",
     "build": "node ./node_modules/cmake-js/bin/cmake-js build",
-    "compile": "node ./node_modules/cmake-js/bin/cmake-js compile",
     "rebuild": "node ./node_modules/cmake-js/bin/cmake-js rebuild",
-    "configure__": "node ./node_modules/node-gyp/bin/node-gyp.js configure",
-    "clean__": "node ./node_modules/node-gyp/bin/node-gyp.js clean",
-    "build__": "node ./node_modules/node-gyp/bin/node-gyp.js build",
-    "rebuild__": "node ./node_modules/node-gyp/bin/node-gyp.js rebuild",
-    "test__": "node ./test/test_video2images.js"
+    "compile": "node ./node_modules/cmake-js/bin/cmake-js compile"
   },
   "author": "truthbean",
   "license": "MIT",
-  "dependencies": {
-    "google-protobuf": "^3.6.1",
-    "nan": "^2.11.1",
-    "node-addon-api": "^1.6.2",
-    "streaming-worker": "^1.0.1",
-    "through": "^2.3.8",
-    "zeromq": "^5.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "cmake-js": "^4.0.1",
-    "node-gyp": "^3.8.0"
+    "cmake-js": "^4.0.1"
   }
 }

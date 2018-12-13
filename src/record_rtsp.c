@@ -116,7 +116,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
 
     // 每秒多少帧
     int input_frame_rate = rtsp_stream->r_frame_rate.num / rtsp_stream->r_frame_rate.den;
-    av_log(NULL, AV_LOG_INFO, "input video frame rate: %d\n", input_frame_rate);
+    av_log(NULL, AV_LOG_DEBUG, "input video frame rate: %d\n", input_frame_rate);
 
     AVCodecParserContext *parserContext = av_parser_init(codec->id);
     if (!parserContext) {

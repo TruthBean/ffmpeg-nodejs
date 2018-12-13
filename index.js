@@ -1,8 +1,6 @@
 const EventEmitter = require("events").EventEmitter;
 const ffmpeg_nodejs = require("./build/Release/ffmpeg_nodejs");
 
-// const ffmpeg_nodejs = new FFmpegNodejs();
-
 const JPEG = "jpeg", YUV = "yuv", RGB = "rgb";
 const INFO = 3, DEBUG = 2, ERROR = 1;
 class FFmpegNode extends EventEmitter {
@@ -111,7 +109,6 @@ class FFmpegNode extends EventEmitter {
             else if (type === JPEG) typeNo = 2;
             let that = this;
             this.read = setInterval(() => {
-                let begin = new Date().getTime();
                 ffmpeg_nodejs.video2ImageStream(typeNo, quality, frames, (obj) => {
                     if (obj !== undefined && obj !== null) {
                         if (obj.error !== undefined && obj.error !== null) {
@@ -121,8 +118,6 @@ class FFmpegNode extends EventEmitter {
                             that.emit("data", obj.data);
                         }
                     }
-                    let end = new Date().getTime();
-                    console.info("video2ImageStream spend time: " + (end - begin));
                 });
             }, (1000 / frames));
         }
@@ -142,7 +137,6 @@ class FFmpegNode extends EventEmitter {
             else if (type === RGB) typeNo = 1;
             else if (type === JPEG) typeNo = 2;
             let that = this;
-            let begin = new Date().getTime();
             ffmpeg_nodejs.video2ImageStreamThreadly(typeNo, quality, frames, (obj) => {
                 if (obj !== undefined && obj !== null) {
                     if (obj.error !== undefined && obj.error !== null) {
@@ -152,8 +146,6 @@ class FFmpegNode extends EventEmitter {
                         that.emit("data", obj.data);
                     }
                 }
-                let end = new Date().getTime();
-                console.info("video2ImageStream spend time: " + (end - begin));
             });
         }
     }

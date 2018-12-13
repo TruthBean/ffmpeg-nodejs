@@ -279,21 +279,6 @@ static FrameData copy_frame_data_and_transform_2_jpeg(const AVFrame *frame, int 
     return result;
 }
 
-// static int time_out = 0;
-// static bool _init = true;
-//核心是超时返回1，正常等待返回0
-// static int interrupt_cb(void *ctx) {
-//     time_out += 1;
-//     av_log(NULL, AV_LOG_DEBUG, "interrupt_cb ......................... timeout %d \n", time_out);
-//     if (!_init || time_out > 100000) {
-//         time_out=0;
-//         //这个就是超时的返回
-//         return 1;
-//     }
-//     // _init = false;
-//     return 0;
-// }
-
 /**
  * 连接视频地址，获取数据流
  * @param filename: 视频地址
@@ -389,8 +374,7 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     }
 
     format_context = avformat_alloc_context();
-    // format_context->interrupt_callback.callback = interrupt_cb;
-    // format_context->interrupt_callback.opaque = format_context;
+
     av_log(NULL, AV_LOG_DEBUG, "input file: %s\n", filename);
     // format_context必须初始化，否则报错
     if ((ret = avformat_open_input(&format_context, filename, NULL, &dictionary)) != 0) {
@@ -453,7 +437,7 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
 
     // 每秒多少帧
     int input_frame_rate = video_stream->r_frame_rate.num / video_stream->r_frame_rate.den;
-    av_log(NULL, AV_LOG_INFO, "input video frame rate: %d\n", input_frame_rate);
+    av_log(NULL, AV_LOG_DEBUG, "input video frame rate: %d\n", input_frame_rate);
 
     AVCodecParserContext *parser_context = av_parser_init(codec->id);
     if (!parser_context) {
@@ -824,7 +808,7 @@ OriginFrameData video_to_frame(Video2ImageStream vis, int chose_frames, napi_thr
 
                 if (func == NULL) return result;
                 napi_call_threadsafe_function(func, &result, napi_tsfn_nonblocking);
-                av_log(NULL, AV_LOG_INFO, "frame ....................\n");
+                av_log(NULL, AV_LOG_DEBUG, "frame ....................\n");
             }
             usleep(0);
 
