@@ -557,6 +557,8 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     return result;
 }
 
+static bool isBreak = false;
+
 /**
  * 释放内存
  */
@@ -590,6 +592,8 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
             av_log(NULL, AV_LOG_ERROR, "avformat_network_deinit error \n");
         }
     }
+
+    isBreak = true;
 }
 
 static void __close(AVFrame *frame, AVPacket *packet) {
@@ -761,7 +765,9 @@ OriginFrameData video_to_frame(Video2ImageStream vis, int chose_frames, napi_thr
     /* read frames from the file */
     av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_time());
 
-    while (av_read_frame(vis.format_context, orig_pkt) >= 0) {
+    int hadHasFrames = false;
+    int times = 0;
+    while (!isBreak && av_read_frame(vis.format_context, orig_pkt) >= 0) {
         av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_time());
         if (orig_pkt->stream_index == vis.video_stream_idx) {
             if (orig_pkt->flags & AV_PKT_FLAG_KEY) {
@@ -788,6 +794,10 @@ OriginFrameData video_to_frame(Video2ImageStream vis, int chose_frames, napi_thr
             ret = avcodec_send_packet(vis.video_codec_context, orig_pkt);
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_time());
             if (ret < 0) {
+                if (hadHasFrames && times < vis.frame_rate) {
+                    times += 1;
+                    continue;
+                }
                 av_log(NULL, AV_LOG_ERROR, "Error while sending a packet to the decoder\n");
                 __close(frame, orig_pkt);
                 result.ret = -4;
@@ -809,6 +819,9 @@ OriginFrameData video_to_frame(Video2ImageStream vis, int chose_frames, napi_thr
                 result.error_message = "Error while receive frame from a packet";
                 return result;
             }
+
+            hadHasFrames = true;
+            times = 0;
 
             chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
             int c = vis.frame_rate / chose_frames;
