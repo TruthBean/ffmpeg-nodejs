@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 project(ffmpeg_nodejs)
 
 add_definitions(-std=c11)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c11")
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 
 MESSAGE(STATUS "CMAKE_JS_INC: ${CMAKE_JS_INC}")
 

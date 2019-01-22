@@ -23,7 +23,7 @@ static int release_record_rtsp_action(AVFormatContext *rtsp_format_context, AVFo
  * @param record_seconds: 录制视频的时长，单位秒
  **/
 int record_rtsp(const char *rtsp_url, const char *output_filename, const int record_seconds, const bool use_gpu) {
-    av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_time());
+    av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_now_microseconds());
 
     time_t timenow, timestart;
     int got_key_frame = 0;
@@ -141,7 +141,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
         av_log(NULL, AV_LOG_WARNING, "Failed to open %s codec\n", av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
     }
 
-    av_log(NULL, AV_LOG_DEBUG, "start out time: %li\n", get_time());
+    av_log(NULL, AV_LOG_DEBUG, "start out time: %li\n", get_now_microseconds());
     
     // ======================================== output ========================================
 
@@ -180,12 +180,12 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
 
     // start reading packets from stream and write them to file
 
-    timestart = timenow = get_time();
+    timestart = timenow = get_now_microseconds();
 
     AVPacket pkt;
     av_init_packet(&pkt);
 
-    av_log(NULL, AV_LOG_DEBUG, "end out time: %li\n", get_time());
+    av_log(NULL, AV_LOG_DEBUG, "end out time: %li\n", get_now_microseconds());
 
     int ret = 0;
     int i = 0;
@@ -195,7 +195,7 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
         if (pkt.stream_index == rtsp_video_stream_idx) {
             // Make sure we start on a key frame
             if (timestart == timenow && !(pkt.flags & AV_PKT_FLAG_KEY) && !got_key_frame) {
-                timestart = timenow = get_time();
+                timestart = timenow = get_now_microseconds();
                 continue;
             }
             i++;
@@ -224,13 +224,13 @@ int record_rtsp(const char *rtsp_url, const char *output_filename, const int rec
         av_packet_unref(&pkt);
         av_init_packet(&pkt);
 
-        timenow = get_time();
+        timenow = get_now_microseconds();
     }
 
     // 写文件尾
     av_write_trailer(output_format_context);
 
-    av_log(NULL, AV_LOG_DEBUG, "end time: %li\n", get_time());
+    av_log(NULL, AV_LOG_DEBUG, "end time: %li\n", get_now_microseconds());
 
     return release_record_rtsp_action(rtsp_format_context, output_format_context, EXIT_SUCCESS);
 }
