@@ -702,7 +702,7 @@ napi_value handle_destroy_stream(napi_env env, napi_callback_info info) {
 }
 
 /**
- * rtsp视频录频
+ * video视频录频
  **/
 napi_value handle_record_video(napi_env env, napi_callback_info info) {
     size_t argc = 4;
@@ -767,8 +767,8 @@ napi_value handle_record_video(napi_env env, napi_callback_info info) {
     }
     av_log(NULL, AV_LOG_DEBUG, "use_gpu : %d\n", use_gpu);
 
-    int result = record_rtsp(input_filename, output_filename, record_seconds, use_gpu);
-    av_log(NULL, AV_LOG_DEBUG, "record rtsp result : %d\n", result);
+    int result = record_video(input_filename, output_filename, record_seconds, use_gpu);
+    av_log(NULL, AV_LOG_DEBUG, "record video result : %d\n", result);
 
     return NULL;
 }

@@ -57,7 +57,7 @@ else()
 
         ExternalProject_Add(
                 libjpeg
-                URL https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.1.tar.gz
+                URL https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.2.tar.gz
                 PREFIX ${PROJECT_SOURCE_DIR}/deps
                 BUILD_IN_SOURCE false
                 CONFIGURE_COMMAND cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/deps/build/libjpeg ../libjpeg
@@ -96,7 +96,7 @@ else()
 
         ExternalProject_Add(
                 ffmpeg
-                URL https://ffmpeg.org/releases/ffmpeg-4.1.tar.bz2
+                URL https://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2
                 PREFIX ${PROJECT_SOURCE_DIR}/deps
                 BUILD_IN_SOURCE false
                 CONFIGURE_COMMAND bash ../ffmpeg/configure --prefix=${PROJECT_SOURCE_DIR}/deps/build/ffmpeg --enable-gpl --enable-version3 --enable-nonfree --disable-static --enable-shared --enable-network --disable-avresample --enable-protocols --enable-encoders --enable-decoders --enable-muxers --enable-demuxers --enable-parsers --enable-bsfs --enable-indevs --enable-outdevs --enable-filters

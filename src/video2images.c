@@ -5,7 +5,7 @@ static FrameTimeOut frame_time_out;
 /**
  * 连接视频地址，获取数据流
  * @param filename: 视频地址
- * @param nobuffer: rtsp 是否设置缓存
+ * @param nobuffer: video stream 是否设置缓存
  * @param use_gpu: 是否使用gpu加速
  * 
  * @return @see Video2ImageStream
@@ -38,7 +38,7 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         .ret = -1
         };
 
-    av_log(NULL, AV_LOG_DEBUG, "input url rtsp addr %s \n", filename);
+    av_log(NULL, AV_LOG_DEBUG, "input url video addr %s \n", filename);
     int error = avformat_network_init();
     if (error != 0) {
         av_log(NULL, AV_LOG_ERROR, "network init error\n");

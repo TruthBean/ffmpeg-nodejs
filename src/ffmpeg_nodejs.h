@@ -7,7 +7,7 @@
 #include "./node_api.h"
 #include "./common.c"
 #include "./video2images.c"
-#include "./record_rtsp.c"
+#include "./record_video.c"
 
 #endif // FFMPEG_NODEJS_H
 
