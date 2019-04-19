@@ -586,7 +586,7 @@ void *finalize(napi_env env, void *data, void *hint) {
         async_work_info.ref = NULL;
     }
 
-    return;
+    return NULL;
 }
 
 napi_value handle_video_to_image_stream_threadly(napi_env env, napi_callback_info info) {
