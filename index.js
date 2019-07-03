@@ -3,6 +3,7 @@ const ffmpeg_nodejs = require("./build/Release/ffmpeg_nodejs");
 
 const JPEG = "jpeg", YUV = "yuv", RGB = "rgb";
 const INFO = 3, DEBUG = 2, ERROR = 1;
+const HLS = 0, MPEGTS = 1, FLV = 2, MP4 = 3, RAW = 4;
 class FFmpegNode extends EventEmitter {
 
     /**
@@ -11,7 +12,7 @@ class FFmpegNode extends EventEmitter {
      * @param {boolean} nobuffer
      * @param {boolean} useGpu
      * @param {number} timeout
-     * @param {string} level
+     * @param {number} level
      * @param {number} gpuId
      * @return {Promise<FFmpegNode>}
      */
@@ -33,7 +34,7 @@ class FFmpegNode extends EventEmitter {
 
         if (typeof level !== "number")
             level = INFO;
-            
+
         if (typeof gpuId !== "number")
             gpuId = 0;
 
@@ -54,8 +55,10 @@ class FFmpegNode extends EventEmitter {
      * @param {string} filename 
      * @param {number} recordSeconds 
      * @param {boolean} useGpu
+     * @param {number} level
+     * @param {number} type
      */
-    static recordVideo(url, filename, recordSeconds, useGpu) {
+    static recordVideo(url, filename, recordSeconds, useGpu, level, type) {
         if (typeof url !== "string") {
             throw new Error("url must be string type");
         }
@@ -65,7 +68,13 @@ class FFmpegNode extends EventEmitter {
             throw new Error("recordSeconds must be number");
         if (typeof useGpu !== "boolean")
             throw new Error("useGpu must be boolean");
-        ffmpeg_nodejs.recordVideo(url, filename, recordSeconds, useGpu);
+
+        console.info(level, type, typeof level !== "number", typeof type !== "number");
+        if (typeof level !== "number")
+            level = INFO;
+        if (typeof type !== "number")
+            type = OTHER;
+        ffmpeg_nodejs.recordVideo(url, filename, recordSeconds, useGpu, level, type);
     }
 
     /**
@@ -180,6 +189,16 @@ class FFmpegNode extends EventEmitter {
             INFO: INFO,
             DEBUG: DEBUG,
             ERROR: ERROR
+        }
+    }
+
+    static MuxingStreamType() {
+        return {
+            HLS: HLS,
+            MPEGTS: MPEGTS,
+            FLV: FLV,
+            MP4: MP4,
+            RAW: RAW
         }
     }
 }

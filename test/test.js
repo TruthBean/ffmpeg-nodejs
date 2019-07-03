@@ -2,10 +2,12 @@ const fs = require('fs');
 const FFmpegNode = require('../index');
 
 let video_addr = "http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8";
+video_addr = "rtsp://admin:iec123456@192.168.1.71:554/h264/ch1/main/av_stream";
 let dir = __dirname + "/tmp/";
 
 let level = FFmpegNode.LEVEL();
 let type = FFmpegNode.TYPE();
+let muxingStreamType = FFmpegNode.MuxingStreamType();
 let target_type = type.JPEG;
 
 let suffix = ".yuv";
@@ -23,7 +25,7 @@ switch (target_type) {
 let i = 0;
 
 async function runWithoutCallback() {
-    let ffmpegNode = await FFmpegNode.init(video_addr, 5, false, true, level.DEBUG, 0);
+    let ffmpegNode = await FFmpegNode.init(video_addr, 5, false, true, level.INFO, 0);
     let image = null;
     while (true) {
         try {
@@ -41,7 +43,7 @@ async function runWithoutCallback() {
 }
 
 function runWithCallback() {
-    let ffmpegNode = FFmpegNode.init(video_addr, 5, false, true, level.DEBUG, 0);
+    let ffmpegNode = FFmpegNode.init(video_addr, 5, false, true, level.INFO, 0);
     ffmpegNode.then((obj) => {
         obj.readImageStreamThreadly(100, target_type, 5);
         obj.on("data", (buffer) => {
@@ -71,8 +73,9 @@ function runWithCallback() {
     });
 }
 
-let videoFilePath = dir + "videos/buffers.mp4";
-FFmpegNode.recordVideo(video_addr, videoFilePath, 60, true);
+let videoFilePath = dir + "videos/test.m3u8";
+videoFilePath = "http://192.168.1.198:3106";
+FFmpegNode.recordVideo(video_addr, videoFilePath, -1, false, level.DEBUG, muxingStreamType.FLV);
 
 // runWithCallback();
 

@@ -10,4 +10,3 @@
 #include "./record_video.c"
 
 #endif // FFMPEG_NODEJS_H
-
