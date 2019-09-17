@@ -19,6 +19,9 @@
     "type": "git",
     "url": "git://github.com/TruthBean/ffmpeg-nodejs.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@TruthBean"
+  },
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {},
