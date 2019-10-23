@@ -2,7 +2,9 @@ const fs = require('fs');
 const FFmpegNode = require('../index');
 
 let video_addr = "http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8";
-video_addr = "rtsp://admin:iec123456@192.168.1.71:554/h264/ch1/main/av_stream";
+video_addr = "rtsp://admin:123456@192.168.1.61:554/h264/ch1/main/av_stream";
+// video_addr = "rtp://192.168.1.198:20000"
+// video_addr = "./test.sdp"
 let dir = __dirname + "/tmp/";
 
 let level = FFmpegNode.LEVEL();
@@ -25,30 +27,41 @@ switch (target_type) {
 let i = 0;
 
 async function runWithoutCallback() {
-    let ffmpegNode = await FFmpegNode.init(video_addr, 5, false, true, level.INFO, 0);
+    let ffmpegNode = await FFmpegNode.init(video_addr, 120, false, false, level.DEBUG, 0, true);
     let image = null;
     while (true) {
         try {
-            image = await ffmpegNode.readImageBuffer(100, target_type, 1);
+            image = await ffmpegNode.syncReadImageBuffer(100, target_type, 25);
         } catch (error) {
-            ffmpegNode.emit("error", error);
+            // ffmpegNode.emit("error", error);
+            console.error(error);
         }
-        // if (image === null) break;
+        if (image === null) {
+            ffmpegNode.close();
+            break;
+        }
 
         let now = new Date();
-        let name = dir + "images/buffer-" + now.getHours() + "-" + now.getMinutes() + "-" + now.getSeconds() + "-" + i + suffix;
+        let name = dir + "images/buffer-" + now.getHours() + "-" + now.getMinutes() + "-" + now.getSeconds() + "-" + (i++) + suffix;
         console.info(name);
-        await fs.writeFileSync(name, image);
+        fs.writeFileSync(name, image);
+        console.info("====================================");
+        fs.rmdirSync(name, { recursive: true });
+        // global.gc();
+        if (now.getSeconds() % 5 === 0) {
+            ffmpegNode.close();
+            break;
+        }
     }
 }
 
 function runWithCallback() {
-    let ffmpegNode = FFmpegNode.init(video_addr, 5, false, true, level.INFO, 0);
+    let ffmpegNode = FFmpegNode.init(video_addr, 120, true, false, level.DEBUG, 0, true);
     ffmpegNode.then((obj) => {
-        obj.readImageStreamThreadly(100, target_type, 5);
+        obj.asyncReadImageBufferThreadly(100, target_type, 25);
         obj.on("data", (buffer) => {
             let begin = new Date();
-            // // 模拟延迟300ms
+            // 模拟延迟300ms
             // for (var start = Date.now(); Date.now() - start <= 300;) { }
             let t1 = new Date();
             console.info(t1.getTime() - begin.getTime());
@@ -57,9 +70,11 @@ function runWithCallback() {
             console.info(name);
             fs.writeFileSync(name, buffer);
             console.info("====================================");
-            // if (t1.getSeconds() % 2 === 0) {
-            //     obj.close();
-            // }
+            fs.rmdirSync(name, { recursive: true });
+            if (t1.getSeconds() % 2 === 0) {
+                obj.close();
+                return;
+            }
             console.info(t1.getSeconds(), i++);
         });
         obj.on("error", (error) => {
@@ -73,12 +88,17 @@ function runWithCallback() {
     });
 }
 
-let videoFilePath = dir + "videos/test.m3u8";
-videoFilePath = "http://192.168.1.198:3106";
-FFmpegNode.recordVideo(video_addr, videoFilePath, -1, false, level.DEBUG, muxingStreamType.FLV);
+// let videoFilePath = dir + "videos/test.m3u8";
+// videoFilePath = "http://192.168.1.198:3106";
+// FFmpegNode.recordVideo(video_addr, videoFilePath, -1, false, level.DEBUG, muxingStreamType.FLV);
 
-// runWithCallback();
+runWithCallback();
 
+// FFmpegNode.sayHello(520, (output) => {
+//     console.log(output);
+//     console.log("......");
+// });
+// console.log("......");
 // runWithoutCallback().then().catch(error => {
 //     console.error(error);
 // });

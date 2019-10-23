@@ -1,13 +1,13 @@
 {
   "name": "ffmpeg-nodejs",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "",
   "main": "index.js",
   "keywords": [
     "ffmpeg"
   ],
   "scripts": {
-    "postinstall": "npm run compile",
+    "postinstall": "cmake-js compile",
     "configure": "cmake-js configure",
     "clean": "cmake-js clean",
     "build": "cmake-js build",
@@ -23,6 +23,6 @@
   "dependencies": {},
   "devDependencies": {},
   "engines": {
-    "node": ">=10.x"
+    "node": ">=12.x"
   }
 }

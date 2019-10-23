@@ -304,6 +304,8 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
     sprintf(str, "%d", timeout * 500000);
     av_dict_set(dictionary, "stimeout", str, 0);
 
+    av_dict_set(dictionary, "analyzeduration", "600000", 0);
+
     if (nobuffer)
     {
         av_dict_set(dictionary, "fflags", "nobuffer", 0);
@@ -311,10 +313,10 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
     else
     {
         // 设置缓存大小
-        av_dict_set(dictionary, "buffer_size", "4096", 0);
-        av_dict_set(dictionary, "flush_packets", "1", 0);
+        av_dict_set(dictionary, "buffer_size", "40960", 0);
+        av_dict_set(dictionary, "flush_packets", "", 0);
         av_dict_set(dictionary, "max_delay", "0", 0);
-        av_dict_set(dictionary, "rtbufsize", "4096", 0);
+        av_dict_set(dictionary, "rtbufsize", "40960", 0);
     }
 
     if (use_tcp)

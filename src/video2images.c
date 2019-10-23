@@ -54,6 +54,11 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         av_log(NULL, AV_LOG_ERROR, "set allowed_media_types to video error\n");
     }
 
+    // if (av_dict_set(&dictionary, "protocol_whitelist", "file,rtp,udp", 0) < 0)
+    // {
+    //     av_log(NULL, AV_LOG_ERROR, "set file,rtp,udp to protocol_whitelist error\n");
+    // }
+
     // 初始化 format_context
     format_context = avformat_alloc_context();
     av_log(NULL, AV_LOG_DEBUG, "input file: %s\n", filename);
@@ -234,31 +239,30 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     return result;
 }
 
-static bool isBreak = false;
+static volatile bool isBreak = false;
+
+void setBreak(bool b)
+{
+    isBreak = b;
+}
 
 /**
  * 释放内存
  */
 void release(AVCodecContext *video_codec_context, AVFormatContext *format_context)
 {
+    isBreak = true;
+    // sleep(1);
     frame_time_out.status = END;
     av_log(NULL, AV_LOG_DEBUG, "---> 3 ---> free memory\n");
 
     int ret;
-    if (video_codec_context != NULL)
-    {
-        av_log(NULL, AV_LOG_DEBUG, "avcodec_close ... \n");
-        ret = avcodec_close(video_codec_context);
-        if (ret < 0)
-        {
-            av_log(NULL, AV_LOG_ERROR, "avcodec_close error \n");
-        }
-    }
 
     if (video_codec_context)
     {
         av_log(NULL, AV_LOG_DEBUG, "avcodec_free_context ... \n");
         avcodec_free_context(&video_codec_context);
+        video_codec_context = NULL;
     }
 
     if (format_context)
@@ -266,6 +270,7 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
         av_log(NULL, AV_LOG_DEBUG, "avformat_close_input ... \n");
         avformat_close_input(&format_context);
         avformat_free_context(format_context);
+        format_context = NULL;
     }
 
     av_log(NULL, AV_LOG_DEBUG, "avformat_network_deinit ... \n");
@@ -274,8 +279,6 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
     {
         av_log(NULL, AV_LOG_ERROR, "avformat_network_deinit error \n");
     }
-
-    isBreak = true;
 }
 
 static void __close(AVFrame *frame, AVPacket *packet)
@@ -304,10 +307,11 @@ static int retry = 0;
  * @param vis: 存储在全局变量中的视频流数据变量
  * @param quality: jpeg 图片质量，1~100
  * @param chose_frames: 一秒取多少帧, 超过视频帧率则为视频帧率
+ * @param chose_now: 是否马上取帧，为true时只取一帧或者每帧都取
  * @param type: 图片类型 @see ImageStreamType
  * @return @see FrameData
  **/
-void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type,
+void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type,
                        Video2ImagesCallback callback, FrameData *result)
 {
 
@@ -338,8 +342,20 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, enu
 
     frame_time_out.status = PENDIING;
     frame_time_out.grab_time = get_now_microseconds();
-    while (!isBreak && av_read_frame(vis.format_context, orig_pkt) >= 0)
+    if (isBreak)
     {
+        __close(frame, orig_pkt);
+        return;
+    }
+    
+    while (av_read_frame(vis.format_context, orig_pkt) >= 0)
+    {
+        if (isBreak)
+        {
+            __close(frame, orig_pkt);
+            return;
+        }
+
         frame_time_out.status = GRAB;
         frame_time_out.grab_time = get_now_microseconds();
         av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_now_microseconds());
@@ -373,6 +389,12 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, enu
 
             ret = avcodec_send_packet(vis.video_codec_context, orig_pkt);
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_now_microseconds());
+            if (isBreak)
+            {
+                __close(frame, orig_pkt);
+                return;
+            }
+
             if (ret < 0)
             {
                 av_log(NULL, AV_LOG_DEBUG, "retry: %d, hadHasFrames: %d, times: %d \n", retry, hadHasFrames, times);
@@ -433,7 +455,7 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, enu
 
             av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d frame_rate: %d\n", pts_time, chose_frames, vis.frame_rate);
             // 判断帧数，是否取
-            if (check == c - 1)
+            if (chose_now || check == c - 1)
             {
                 result->frame = frame;
                 result->pts = pts_time;
@@ -447,7 +469,7 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, enu
                 {
                     callback(result);
                     av_log(NULL, AV_LOG_DEBUG, "result->isThreadly %d \n", result->isThreadly);
-                    if (!result->isThreadly)
+                    if (!result->isThreadly || result->abort)
                     {
                         frame_time_out.status = END;
                         frame_time_out.grab_time = get_now_microseconds();

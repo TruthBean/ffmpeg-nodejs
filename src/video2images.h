@@ -40,7 +40,9 @@ typedef void(Video2ImagesCallback)(FrameData *data);
 
 Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id);
 
-void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type, Video2ImagesCallback callback, FrameData *result);
+void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type, Video2ImagesCallback callback, FrameData *result);
+
+void setBreak(bool b);
 
 void release(AVCodecContext *video_codec_context, AVFormatContext *format_context);
 

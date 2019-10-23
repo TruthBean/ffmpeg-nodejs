@@ -43,6 +43,8 @@ typedef struct FrameData
     char *error_message;
 
     bool isThreadly;
+
+    bool abort;
 } FrameData;
 
 time_t get_now_microseconds();
