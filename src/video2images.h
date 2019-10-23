@@ -15,8 +15,6 @@
 #include <libavutil/imgutils.h>
 #include <libavutil/pixfmt.h>
 
-#include <jpeglib.h>
-
 #include "./common.h"
 
 typedef struct Video2ImageStream {
@@ -27,30 +25,21 @@ typedef struct Video2ImageStream {
     AVCodecParserContext *parser_context;
     int ret;
     char *error_message;
-    bool isRtsp;
     int frame_rate;
 } Video2ImageStream;
 
-enum ImageStreamType {
-    YUV = 0,
-    RGB,
-    JPEG
-};
+typedef struct FrameTimeOut {
+    time_t count_time;
+    time_t grab_time;
+    int status;
+} FrameTimeOut;
 
-typedef struct FrameData {
-    unsigned long file_size;
-    unsigned char *file_data;
-    int ret;
-    char *error_message;
-} FrameData;
+typedef void (Video2ImagesCallback)(FrameData *data);
 
-Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const char *gpu_id);
+Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id);
 
-FrameData video2images_stream(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type);
+void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type, Video2ImagesCallback callback, FrameData *result);
 
-OriginFrameData video_to_frame(Video2ImageStream vis, int chose_frames, napi_threadsafe_function func);
-
-void release(AVCodecContext *video_codec_context,
-             AVFormatContext *format_context, bool isRtsp);
+void release(AVCodecContext *video_codec_context, AVFormatContext *format_context);
 
 #endif // FFMPEG_NODEJS_VIDEO2IMAGES_H

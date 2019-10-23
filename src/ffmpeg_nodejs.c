@@ -21,7 +21,7 @@ static bool thread = false;
  * 初始化摄像头
  * 连接摄像头地址，并获取视频流数据
  **/
-napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
+static napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     napi_status status;
     napi_value result = NULL;
 
@@ -115,7 +115,7 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     }
 
     // 获取视频流数据，将其存在全局变量中
-    vis = open_inputfile(input_filename, nobuffer, timeout, use_gpu, gpu_id);
+    vis = open_inputfile(input_filename, nobuffer, timeout, use_gpu, true, gpu_id);
 
     if (vis.ret < 0) {
         // 处理错误信息
@@ -141,10 +141,29 @@ napi_value handle_init_read_video(napi_env env, napi_callback_info info) {
     return promise;
 }
 
+static void handle_frame_data(FrameData *data) {
+    if (data->ret == 0 && data->frame != NULL) {
+        if (data->type == JPEG)
+            copy_frame_data_and_transform_2_jpeg(vis.video_codec_context, data);
+        else
+            copy_frame_raw_data(vis.video_codec_context, data);
+        
+        av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", data->file_size);
+        if (data->file_size == 0 || data->file_data == NULL) {
+            av_log(NULL, AV_LOG_DEBUG, "file_data NULL\n");
+        } else {
+            if (data->ret < 0 ) {
+                data->ret = -40;
+                data->error_message = "image data is null";
+            }
+        }
+    }
+}
+
 /**
  * 视频流取图片数据
  **/
-napi_value handle_video_to_image_buffer(napi_env env, napi_callback_info info) {
+static napi_value handle_video_to_image_buffer(napi_env env, napi_callback_info info) {
     napi_status status;
 
     size_t argc = 3;
@@ -186,12 +205,18 @@ napi_value handle_video_to_image_buffer(napi_env env, napi_callback_info info) {
         napi_throw_error(env, NULL, "initReadingVideo method should be invoke first");
     }
 
-    FrameData frameData = video2images_stream(vis, quality, chose_frames, type);
+    FrameData frameData = {
+        .pts = 0,
+        .frame = NULL,
+        .ret = 0
+        };
+    video2images_grab(vis, quality, chose_frames, type, handle_frame_data, &frameData);
 
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "Create buffer error");
     }
 
+    av_log(NULL, AV_LOG_DEBUG, "begin napi_create_buffer_copy \n");
     napi_value buffer_pointer = NULL;
     int isNil = 1;
     // 判断有没有图片数据，如网络中断或其他原因，导致无法获取到图片数据
@@ -254,10 +279,16 @@ static void callback_nothing(napi_env env, void *data) {
 }
 
 static void callback_completion(napi_env env, napi_status status, void *data) {
-    time_t begin = get_time();
+    time_t begin = get_now_microseconds();
     av_log(NULL, AV_LOG_DEBUG, "callback_completion\n");
 
-    FrameData frame_data = video2images_stream(vis, params.quality, params.chose_frames, params.type);
+    FrameData frameData = {
+        .pts = 0,
+        .frame = NULL,
+        .ret = 0,
+        .isThreadly = false
+        };
+    video2images_grab(vis, params.quality, params.chose_frames, params.type, handle_frame_data, &frameData);
     av_log(NULL, AV_LOG_DEBUG, "quality: %d  chose_frames: %d type: %d \n", params.quality, params.chose_frames, params.type);
 
     av_log(NULL, AV_LOG_DEBUG, "reading ...........\n");
@@ -266,27 +297,32 @@ static void callback_completion(napi_env env, napi_status status, void *data) {
     napi_get_reference_value(env, async_work_info.ref, &cb);
     napi_create_uint32(env, (uint32_t) status, &js_status);
 
-    av_log(NULL, AV_LOG_DEBUG, "frame_data.file_size %ld \n", frame_data.file_size);
-    av_log(NULL, AV_LOG_DEBUG, "frame_data.file_data %p \n", frame_data.file_data);
+    av_log(NULL, AV_LOG_DEBUG, "frameData.file_size %ld \n", frameData.file_size);
+    av_log(NULL, AV_LOG_DEBUG, "frameData.file_data %p \n", frameData.file_data);
 
     napi_value buffer_pointer;
     // char数组 转换成 javascript buffer
     void *buffer_data;
-    status = napi_create_buffer_copy(env, frame_data.file_size, (const void*)frame_data.file_data, &buffer_data, &buffer_pointer);
-    av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frame_data.file_size);
+    status = napi_create_buffer_copy(env, frameData.file_size, (const void*)frameData.file_data, &buffer_data, &buffer_pointer);
+    av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frameData.file_size);
     av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
+
+    // 释放 图片数据 的 内存
+    av_freep(&frameData.file_data);
+    free(frameData.file_data);
+    frameData.file_data = NULL;
 
     // 返回错误原因
     napi_value message;
     status = napi_get_undefined(env, &message);
 
-    if (frame_data.file_size == 0) {
+    if (frameData.file_size == 0) {
         char *_err_msg;
         // 判断有没有图片数据，如网络中断或其他原因，导致无法获取到图片数据
-        if (frame_data.ret == 0) {
+        if (frameData.ret == 0) {
             _err_msg = "image data is null, network may connect wrong";
         } else {
-            _err_msg = frame_data.error_message;
+            _err_msg = frameData.error_message;
         }
         av_log(NULL, AV_LOG_DEBUG, "%s \n", _err_msg);
 
@@ -312,7 +348,7 @@ static void callback_completion(napi_env env, napi_status status, void *data) {
 
     // 调用 callback
     napi_value result;
-    time_t begin1 = get_time();
+    time_t begin1 = get_now_microseconds();
     av_log(NULL, AV_LOG_DEBUG, "get buffer time: %ld \n", (begin1 - begin));
     status = napi_call_function(env, cb, cb, 1, &obj, &result);
     av_log(NULL, AV_LOG_DEBUG, "napi_call_function status %d\n", status);
@@ -321,14 +357,9 @@ static void callback_completion(napi_env env, napi_status status, void *data) {
         napi_throw_error(env, NULL, "Create buffer error");
     }
 
-    // 释放 图片数据 的 内存
-    av_freep(&frame_data.file_data);
-    free(frame_data.file_data);
-    frame_data.file_data = NULL;
-
 }
 
-napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
+static napi_value handle_video_to_image_stream(napi_env env, napi_callback_info info) {
     napi_status status;
 
     size_t argc = 4;
@@ -415,36 +446,35 @@ static void *consumer_callback_threadsafe(napi_env env, napi_value js_callback, 
     av_log(NULL, AV_LOG_DEBUG, "napi_create_uint32 status %d \n", status);
 
     if (data != NULL) {
-        OriginFrameData *node_data = (OriginFrameData*) data;
-        av_log(NULL, AV_LOG_DEBUG, "node1 %ld \n", node_data->pts);
+        FrameData *frame_data = (FrameData*) data;
+        av_log(NULL, AV_LOG_DEBUG, "node1 %ld \n", frame_data->pts);
 
         av_log(NULL, AV_LOG_DEBUG, "params.type .......>>>>>>> %d \n", params.type);
 
-        FrameData frame_data;
         if (params.type == JPEG)
-            frame_data = copy_frame_data_and_transform_2_jpeg(node_data->frame, params.quality, vis.video_codec_context);
+            copy_frame_data_and_transform_2_jpeg(vis.video_codec_context, frame_data);
         else
-            frame_data = copy_frame_raw_data(node_data->frame, vis.video_codec_context, params.type);
-        av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", frame_data.file_size);
+            copy_frame_raw_data(vis.video_codec_context, params.type);
+        av_log(NULL, AV_LOG_DEBUG, "file_size: %ld\n", frame_data->file_size);
 
         napi_value buffer_pointer;
         // char数组 转换成 javascript buffer
         void *buffer_data;
-        status = napi_create_buffer_copy(env, frame_data.file_size, (const void*)frame_data.file_data, &buffer_data, &buffer_pointer);
-        av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frame_data.file_size);
+        status = napi_create_buffer_copy(env, frame_data->file_size, (const void*)frame_data->file_data, &buffer_data, &buffer_pointer);
+        av_log(NULL, AV_LOG_DEBUG, "frameData.file_size : %ld\n", frame_data->file_size);
         av_log(NULL, AV_LOG_DEBUG, "napi_create_buffer_copy result %d\n", status);
 
         // 返回错误原因
         napi_value message;
         status = napi_get_undefined(env, &message);
 
-        if (frame_data.file_size == 0) {
+        if (frame_data->file_size == 0) {
             char *_err_msg;
             // 判断有没有图片数据，如网络中断或其他原因，导致无法获取到图片数据
-            if (frame_data.ret == 0) {
+            if (frame_data->ret == 0) {
                 _err_msg = "image data is null, network may connect wrong";
             } else {
-                _err_msg = frame_data.error_message;
+                _err_msg = frame_data->error_message;
             }
             av_log(NULL, AV_LOG_DEBUG, "%s \n", _err_msg);
 
@@ -478,9 +508,9 @@ static void *consumer_callback_threadsafe(napi_env env, napi_value js_callback, 
         }
 
         // 释放 图片数据 的 内存
-        av_freep(&frame_data.file_data);
-        free(frame_data.file_data);
-        frame_data.file_data = NULL;
+        av_freep(&frame_data->file_data);
+        free(frame_data->file_data);
+        frame_data->file_data = NULL;
     } else {
         napi_value obj;
         status = napi_create_object(env, &obj);
@@ -513,11 +543,30 @@ static void *consumer_callback_threadsafe(napi_env env, napi_value js_callback, 
 
 }
 
-void *callback_thread(napi_env env, void* data) {
+static void handle_frame_data_threadly(FrameData *frameData) {
+    napi_status status = napi_call_threadsafe_function(async_work_info.func, frameData, napi_tsfn_nonblocking);
+    av_log(NULL, AV_LOG_DEBUG, "napi_call_threadsafe_function return %d \n", status);
+}
+
+static void *callback_thread(napi_env env, void* data) {
     napi_acquire_threadsafe_function(async_work_info.func);
-    OriginFrameData nodeData = video_to_frame(vis, params.chose_frames, async_work_info.func);
+    FrameData frameData = {
+        .pts = 0,
+        .frame = NULL,
+        .ret = 0,
+        .isThreadly = true
+        };
+    video2images_grab(vis, params.quality, params.chose_frames, params.type, handle_frame_data_threadly, &frameData);
     av_log(NULL, AV_LOG_ERROR, "callback_thread return error \n");
-    napi_status status = napi_call_threadsafe_function(async_work_info.func, &nodeData, napi_tsfn_nonblocking);
+    if (frameData.frame != NULL) {
+        frameData.frame = NULL;
+    } else if (frameData.file_data != NULL) {
+        av_freep(&frameData.file_data);
+        free(frameData.file_data);
+        frameData.file_data = NULL;
+    }
+    
+    napi_status status = napi_call_threadsafe_function(async_work_info.func, NULL, napi_tsfn_nonblocking);
     av_log(NULL, AV_LOG_DEBUG, "napi_call_threadsafe_function status %d \n", status);
 }
 
@@ -639,7 +688,7 @@ napi_value handle_destroy_stream(napi_env env, napi_callback_info info) {
         }
     }
 
-    release(vis.video_codec_context, vis.format_context, vis.isRtsp);
+    release(vis.video_codec_context, vis.format_context);
     Video2ImageStream _vis = {
         .format_context = NULL,
         .video_stream_idx = -1,
@@ -724,7 +773,7 @@ napi_value handle_record_video(napi_env env, napi_callback_info info) {
     return NULL;
 }
 
-napi_value ffmpeg_nodejs_class_constructor(napi_env env, napi_callback_info info) {
+static napi_value ffmpeg_nodejs_class_constructor(napi_env env, napi_callback_info info) {
     napi_value result;
     return result;
 }
@@ -732,7 +781,7 @@ napi_value ffmpeg_nodejs_class_constructor(napi_env env, napi_callback_info info
 /**
  * napi 构建js的方法
  **/
-napi_value init(napi_env env, napi_value exports) {
+static napi_value init(napi_env env, napi_value exports) {
     napi_status status;
 
     napi_property_descriptor methods[] = {
