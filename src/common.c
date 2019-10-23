@@ -92,7 +92,7 @@ void copy_frame_raw_data(const AVCodecContext *codec_context, FrameData *result)
         av_log(NULL, AV_LOG_ERROR, "Could not allocate target images frame\n");
         result->ret = -20;
         result->error_message = "Could not allocate target images frame";
-        return;
+        return result;
     }
     target_frame->quality = 1;
 
@@ -164,7 +164,7 @@ void copy_frame_raw_data(const AVCodecContext *codec_context, FrameData *result)
     av_frame_unref(target_frame);
     av_frame_free(&target_frame);
     target_frame = NULL;
-    return;
+    return result;
 }
 
 /**

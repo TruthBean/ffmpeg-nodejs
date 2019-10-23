@@ -7,7 +7,6 @@
 
 #include <sys/time.h>
 
-#include <libavutil/imgutils.h>
 #include <libavutil/log.h>
 #include <libavutil/frame.h>
 #include <libavcodec/avcodec.h>
