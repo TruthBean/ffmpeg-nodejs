@@ -10,6 +10,7 @@ class FFmpegNode extends EventEmitter {
      * @param {String} url 
      * @param {boolean} nobuffer
      * @param {boolean} useGpu
+     * @param {number} timeout
      * @param {string} level
      * @param {number} gpuId
      * @return {Promise<FFmpegNode>}

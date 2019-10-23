@@ -1,26 +1,23 @@
 {
   "name": "ffmpeg-nodejs",
-  "version": "0.2.6",
+  "version": "0.2.8",
   "description": "",
   "main": "index.js",
   "keywords": [
     "ffmpeg"
   ],
   "scripts": {
-    "postinstall": "cmake-js compile",
+    "postinstall": "npm run compile",
     "configure": "cmake-js configure",
     "clean": "cmake-js clean",
     "build": "cmake-js build",
-    "rebuild": "cmake-js rebuild",
-    "compile": "cmake-js compile"
+    "compile": "cmake-js compile",
+    "rebuild": "cmake-js rebuild"
   },
   "author": "truthbean",
   "repository": {
     "type": "git",
     "url": "git://github.com/TruthBean/ffmpeg-nodejs.git"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/@TruthBean"
   },
   "license": "MIT",
   "dependencies": {},
