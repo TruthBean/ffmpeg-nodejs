@@ -8,6 +8,12 @@ package-lock.json
 cmake-build-debug/*
 
 tmp/*
+test/*
+build/*
 
 .gitignore
 .npmignore
+
+run-in-docker.ps1
+
+yarn.lock

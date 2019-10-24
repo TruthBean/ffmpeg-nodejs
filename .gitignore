@@ -8,3 +8,7 @@ package-lock.json
 cmake-build-debug/*
 
 tmp/*
+deps/
+
+run-in-docker.ps1
+yarn.lock

@@ -17,7 +17,8 @@
 
 #include "./common.h"
 
-typedef struct Video2ImageStream {
+typedef struct Video2ImageStream
+{
     AVFormatContext *format_context;
     AVStream *video_stream;
     int video_stream_idx;
@@ -28,17 +29,20 @@ typedef struct Video2ImageStream {
     int frame_rate;
 } Video2ImageStream;
 
-typedef struct FrameTimeOut {
+typedef struct FrameTimeOut
+{
     time_t count_time;
     time_t grab_time;
     int status;
 } FrameTimeOut;
 
-typedef void (Video2ImagesCallback)(FrameData *data);
+typedef void(Video2ImagesCallback)(FrameData *data);
 
 Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id);
 
-void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, enum ImageStreamType type, Video2ImagesCallback callback, FrameData *result);
+void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type, Video2ImagesCallback callback, FrameData *result);
+
+void setBreak(bool b);
 
 void release(AVCodecContext *video_codec_context, AVFormatContext *format_context);
 

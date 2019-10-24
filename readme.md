@@ -55,7 +55,7 @@ Examples
 ```JavaScript
 const FFmpegNode = require('ffmpeg-nodejs');
 
-const rtsp_addr = ... ;
+const video_addr = ... ;
 const dir = ... ;
 
 const type = FFmpegNode.TYPE();
@@ -79,11 +79,11 @@ switch (targetType) {
 let i = 0;
 
 function runWithCallback() {
-    let ffmpegNode = FFmpegNode.init(rtsp_addr, 2, false, false, logLevel, 1);
+    let ffmpegNode = FFmpegNode.init(video_addr, 2, false, false, logLevel, 1);
 
     ffmpegNode.then((obj) => {
         console.info(targetType);
-        obj.readImageStream(100, targetType, 1);
+        obj.readImageStreamThreadly(100, targetType, 1);
         obj.on("data", (buffer) => {
             let now = new Date();
             let name = dir + "/tmp/images/buffer-" + now.getHours() + "-" + 

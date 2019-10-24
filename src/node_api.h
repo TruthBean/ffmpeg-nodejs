@@ -1,11 +1,8 @@
-#ifndef EXTERNAL_NODE_API_H_
-#define EXTERNAL_NODE_API_H_
+#ifndef _ADDON_H_
+#define _ADDON_H_
 
-#define EXTERNAL_NAPI
-// #include "../node_modules/node-addon-api/src/node_api.h"
-// #include "../node_modules/node-addon-api/src/node_api_types.h"
-
-#define NAPI_EXPERIMENTAL
+#define NAPI_VERSION 5
+#include <node/js_native_api.h>
 #include <node/node_api.h>
 
 #ifndef __USE_UNIX98
@@ -19,7 +16,7 @@
 #define GET_AND_THROW_LAST_ERROR(env)                                                                                          \
     do                                                                                                                         \
     {                                                                                                                          \
-        const napi_extended_error_info *error_info;                                                                            \
+        const napi_extended_error_info *error_info = NULL;                                                                     \
         napi_get_last_error_info((env), &error_info);                                                                          \
         bool is_pending;                                                                                                       \
         napi_is_exception_pending((env), &is_pending);                                                                         \
@@ -28,6 +25,7 @@
         {                                                                                                                      \
             const char *error_message = error_info->error_message != NULL ? error_info->error_message : "empty error message"; \
             napi_throw_error((env), NULL, error_message);                                                                      \
+            return NULL                                                                                                        \
         }                                                                                                                      \
     } while (0)
 
@@ -87,4 +85,6 @@
         name, 0, func, 0, 0, 0, napi_default, 0 \
     }
 
-#endif //EXTERNAL_NODE_API_H_
+napi_value create_addon(napi_env env);
+
+#endif //_ADDON_H_

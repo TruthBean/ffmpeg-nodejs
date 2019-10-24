@@ -1,0 +1,10 @@
+{
+  "name": "ffmpeg-nodejs",
+  "dockerFile": "Dockerfile",
+  "extensions": [
+    "ms-vscode.cpptools",
+    "twxs.cmake",
+    "vector-of-bool.cmake-tools",
+    "dbaeumer.vscode-eslint"
+  ]
+}
