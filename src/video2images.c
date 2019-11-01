@@ -404,6 +404,7 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
                     {
                         retry += 1;
                         av_packet_unref(orig_pkt);
+                        av_frame_unref(frame);
                         continue;
                     }
                 }
@@ -411,6 +412,7 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
                 {
                     times += 1;
                     av_packet_unref(orig_pkt);
+                    av_frame_unref(frame);
                     continue;
                 }
 
@@ -437,6 +439,10 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
                 av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
                 frame_time_out.status = PENDIING;
                 frame_time_out.grab_time = get_now_microseconds();
+
+                av_packet_unref(orig_pkt);
+                av_frame_unref(frame);
+
                 continue;
             }
             if (ret < 0)
@@ -476,13 +482,16 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
                         break;
                     }
                 }
+                // av_frame_unref(result->frame);
                 av_log(NULL, AV_LOG_DEBUG, "frame ....................\n");
             }
-            // usleep(0);
+            av_usleep(0);
             frame_time_out.status = PENDIING;
             frame_time_out.grab_time = get_now_microseconds();
-            av_packet_unref(orig_pkt);
         }
+
+        av_packet_unref(orig_pkt);
+        av_frame_unref(frame);
     }
 
     __close(frame, orig_pkt);

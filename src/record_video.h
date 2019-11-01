@@ -18,7 +18,7 @@ typedef enum MuxingStreamType
     FLV,
     MP4,
     RAW
-};
+} MuxingStreamType;
 
 int record_video(const char *video_url, const char *output_filename, const enum MuxingStreamType type, const int record_seconds, const bool use_gpu);
 

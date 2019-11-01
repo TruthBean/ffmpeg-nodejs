@@ -50,6 +50,9 @@ npm install (or npm run compile)
 ```
 If you want more command, please see package.json scripts, and do not use cmake or make directly, because it not a pure c project, it is a NODEJS project.
 
+### note
+windows not support c11 yet, so don't use it on windows!
+
 Examples
 --------
 ```JavaScript

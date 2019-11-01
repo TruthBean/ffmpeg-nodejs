@@ -3,10 +3,20 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif // _WIN32
 #include <string.h>
 
+#ifdef _WIN32
+#include <time.h>
+#include <windows.h>
+#else
 #include <sys/time.h>
+#endif
 
+#include <libavutil/avstring.h>
+#include <libavutil/time.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/log.h>
 #include <libavutil/frame.h>

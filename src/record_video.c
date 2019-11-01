@@ -236,7 +236,8 @@ int record_video(const char *video_url, const char *output_filename, const enum 
 
     out_stream->sample_aspect_ratio = out_stream->time_base;
 
-    avformat_write_header(output_format_context, &opt);
+    int _h = avformat_write_header(output_format_context, &opt);
+    av_log(NULL, AV_LOG_ERROR, "avformat_write_header result: %d \n", _h);
 
     // start reading packets from stream and write them to file
 

@@ -485,19 +485,21 @@ static napi_value async_handle_video_to_image_buffer(napi_env env, napi_callback
     params = _params;
 
     napi_value async_resource = NULL;
-    status = napi_create_async_work(env, async_resource, resource_name, callback_execute, callback_completion, NULL, &(async_work_info.work));
+    status = napi_create_async_work(env, async_resource, resource_name, &callback_execute, &callback_completion, &_params, &(async_work_info.work));
     av_log(NULL, AV_LOG_DEBUG, "napi_create_async_work %d\n", status);
 
     napi_queue_async_work(env, async_work_info.work);
+
+    return NULL;
 }
 
-static void *consumer_callback_threadsafe(napi_env env, napi_value js_callback, void *context, void *data)
+static void consumer_callback_threadsafe(napi_env env, napi_value js_callback, void *context, void *data)
 {
     napi_status status;
     av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> consumer_callback_threadsafe\n");
     if (js_callback == NULL)
     {
-        return NULL;
+        return;
     }
 
     // napi_handle_scope scope;
@@ -619,7 +621,6 @@ static void *consumer_callback_threadsafe(napi_env env, napi_value js_callback, 
     }
 
     // napi_close_escapable_handle_scope(env, &scope);
-    return NULL;
 }
 
 static void handle_frame_data_threadly(FrameData *frameData)
@@ -639,12 +640,9 @@ static void handle_frame_data_threadly(FrameData *frameData)
     {
         frameData->abort = true;
     }
-    
-    
-    
 }
 
-static void *callback_thread(napi_env env, void *data)
+static void callback_thread(napi_env env, void *data)
 {
     av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> callback_thread \n");
     napi_acquire_threadsafe_function(async_work_info.func);
@@ -676,8 +674,6 @@ static void *callback_thread(napi_env env, void *data)
         .ret = -1};
 
     vis = _vis;
-
-    return NULL;
 }
 
 static void callback_thread_completion(napi_env env, napi_status status, void* data)
@@ -699,10 +695,9 @@ static void callback_thread_completion(napi_env env, napi_status status, void* d
     }
 }
 
-void *finalize(napi_env env, void *data, void *hint)
+void finalize(napi_env env, void *data, void *hint)
 {
     av_log(NULL, AV_LOG_DEBUG, "finalize consumer ........ \n");
-    return NULL;
 }
 
 napi_value async_handle_video_to_image_buffer_threadly(napi_env env, napi_callback_info info)
@@ -778,17 +773,19 @@ napi_value async_handle_video_to_image_buffer_threadly(napi_env env, napi_callba
     params = _params;
 
     napi_threadsafe_function result;
-    napi_create_threadsafe_function(env, callback, NULL, resource_name, 25, 1, NULL, finalize, NULL, consumer_callback_threadsafe, &result);
+    napi_create_threadsafe_function(env, callback, NULL, resource_name, 25, 1, NULL, &finalize, NULL, &consumer_callback_threadsafe, &result);
     napi_ref_threadsafe_function(env, result);
 
     async_work_info.func = result;
     thread = true;
 
     napi_value async_resource = NULL;
-    status = napi_create_async_work(env, async_resource, resource_name, callback_thread, callback_thread_completion, NULL, &(async_work_info.work));
+    status = napi_create_async_work(env, async_resource, resource_name, &callback_thread, &callback_thread_completion, NULL, &(async_work_info.work));
     av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> napi_create_async_work %d\n", status);
 
     napi_queue_async_work(env, async_work_info.work);
+
+    return NULL;
 }
 
 /**
@@ -804,7 +801,7 @@ napi_value handle_destroy_stream(napi_env env, napi_callback_info info)
     {
         while (true)
         {
-            sleep(0);
+            av_usleep(0);
             status = napi_acquire_threadsafe_function(async_work_info.func);
             av_log(NULL, AV_LOG_DEBUG, "napi_acquire_threadsafe_function status : %d \n", status);
             if (status == napi_closing)
@@ -896,7 +893,7 @@ napi_value handle_record_video(napi_env env, napi_callback_info info)
     // put param value into char array
     size_t input_filename_res;
     const size_t input_filename_len = length + 1;
-    char input_filename[input_filename_len];
+    char *input_filename;
     status = napi_get_value_string_utf8(env, argv[0], input_filename, length + 1, &input_filename_res);
 
     if (status != napi_ok)
@@ -916,7 +913,7 @@ napi_value handle_record_video(napi_env env, napi_callback_info info)
     // put param value into char array
     size_t output_filename_res;
     const size_t output_filename_len = length + 1;
-    char output_filename[output_filename_len];
+    char *output_filename;
     status = napi_get_value_string_utf8(env, argv[1], output_filename, length + 1, &output_filename_res);
 
     if (status != napi_ok)
@@ -984,11 +981,7 @@ void async_work_callback(uv_work_t *r)
     printf("async_work_callback \n");
     struct async_info *req = r->data;
     // Simulate CPU intensive process...
-#if defined _WIN32
-    Sleep(1000);
-#else
-    sleep(1);
-#endif
+    av_usleep(1000);
     
 }
 
@@ -1071,7 +1064,7 @@ napi_value *say_hello_callback(napi_env env, napi_callback_info info)
     return NULL;
 }
 
-void *async_work_job(uv_async_t* handle)
+void async_work_job(uv_async_t* handle)
 {
     /* 
     struct async_info* data = handle->data;
@@ -1081,7 +1074,6 @@ void *async_work_job(uv_async_t* handle)
     printf("napi_open_handle_scope \n");
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "napi_open_handle_scope error");
-        return NULL;
     }
 
     napi_async_context context = data->context;
@@ -1091,7 +1083,6 @@ void *async_work_job(uv_async_t* handle)
     printf("napi_create_int64 %d \n", data->output);
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "napi_create_int64 error");
-        return NULL;
     }
 
     napi_value callback;
@@ -1099,7 +1090,6 @@ void *async_work_job(uv_async_t* handle)
     status = napi_get_reference_value(env, data->callback, &callback);
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "napi_get_reference_value error");
-        return NULL;
     }
 
     napi_value result;
@@ -1108,18 +1098,14 @@ void *async_work_job(uv_async_t* handle)
     printf("napi_make_callback \n");
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "napi_make_callback error");
-        return NULL;
     }
 
     status = napi_async_destroy(env, data->context);
     printf("napi_async_destroy \n");
     if (status != napi_ok) {
         napi_throw_error(env, NULL, "napi_make_callback error");
-        return NULL;
     }
     */
-
-    return NULL;
 }
 
 napi_value say_hello(napi_env env, napi_callback_info info)
@@ -1162,7 +1148,7 @@ napi_value say_hello(napi_env env, napi_callback_info info)
     status = napi_create_reference(env, callback, 1, &fn_ref);
 
     // uv event loop
-    struct uv_loop_s loop = {};
+    struct uv_loop_s loop;
     struct uv_loop_s *loop_ptr = &loop;
 
     napi_get_uv_event_loop(env, &loop_ptr);
@@ -1180,11 +1166,11 @@ napi_value say_hello(napi_env env, napi_callback_info info)
         .context = context,
         .callback = fn_ref
     };
-    uv_work_t req = {};
+    uv_work_t req;
     req.data = (void*)&req_data;
 
-    uv_queue_work(loop_ptr, &req, async_work_callback, after_async_work_callback);
-    uv_async_init(loop_ptr, &async, async_work_job);
+    uv_queue_work(loop_ptr, &req, &async_work_callback, &after_async_work_callback);
+    uv_async_init(loop_ptr, &async, &async_work_job);
 
     int tmp = 0;
     struct async_send_info _data = {

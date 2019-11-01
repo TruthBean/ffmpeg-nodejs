@@ -9,10 +9,14 @@
   "scripts": {
     "postinstall": "cmake-js compile",
     "configure": "cmake-js configure",
+    "configure-with-vs2019": "cmake-js -G\"Visual Studio 16 2019\" configure",
     "clean": "cmake-js clean",
     "build": "cmake-js build",
+    "build-with-vs2019": "cmake-js -G\"Visual Studio 16 2019\" build",
     "compile": "cmake-js compile",
-    "rebuild": "cmake-js rebuild"
+    "compile-with-vs2019": "cmake-js -G\"Visual Studio 16 2019\" compile",
+    "rebuild": "cmake-js rebuild",
+    "rebuild-with-vs2019": "cmake-js -G\"Visual Studio 16 2019\" rebuild"
   },
   "author": "truthbean",
   "repository": {

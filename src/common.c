@@ -5,15 +5,25 @@ time_t get_now_microseconds()
     time_t result;
     time_t now_seconds;
 
+#ifdef _WIN32
+	now_seconds = time(NULL);
+	result = now_seconds;
+#else
     struct timeval tv;
     gettimeofday(&tv, NULL);
     now_seconds = tv.tv_sec;
-
     result = 1000000 * tv.tv_sec + tv.tv_usec;
+#endif
 
     char buff[20];
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now_seconds));
-    av_log(NULL, AV_LOG_DEBUG, "now: %s\n", buff);
+#ifdef _WIN32
+	struct tm now_time;
+	localtime_s(&now_time, &now_seconds);
+	strftime(buff, 20, "%Y-%m-%d-%H-%M-%S", &now_time);
+#else
+	strftime(buff, 20, "%Y-%m-%d-%H-%M-%S", localtime(&now_seconds));
+#endif
+	av_log(NULL, AV_LOG_DEBUG, "now: %s\n", buff);
 
     return result;
 }
@@ -149,7 +159,7 @@ void copy_frame_raw_data(const AVCodecContext *codec_context, FrameData *result)
                                                     SWS_BICUBIC, NULL, NULL, NULL);
 
     // 图片拉伸，数据转换
-    sws_scale(sws_context, result->frame->data, result->frame->linesize, 0, result->frame->height,
+    sws_scale(sws_context, (const uint8_t *const *)result->frame->data, result->frame->linesize, 0, result->frame->height,
               target_frame->data, target_frame->linesize);
 
     target_frame->height = target_height;
@@ -250,7 +260,7 @@ void copy_frame_data_and_transform_2_jpeg(const AVCodecContext *codec_context, F
                                                     SWS_BICUBIC, NULL, NULL, NULL);
 
     // 转换图像格式
-    sws_scale(sws_context, result->frame->data, result->frame->linesize, 0, result->frame->height,
+    sws_scale(sws_context, (const uint8_t *const *)result->frame->data, result->frame->linesize, 0, result->frame->height,
               target_frame->data, target_frame->linesize);
 
     target_frame->height = target_height;
@@ -301,7 +311,7 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
 {
     // 单位 微秒
     char str[12];
-    sprintf(str, "%d", timeout * 500000);
+    av_asprintf(str, "%d", timeout * 500000);
     av_dict_set(dictionary, "stimeout", str, 0);
 
     av_dict_set(dictionary, "analyzeduration", "600000", 0);
@@ -340,7 +350,7 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
 
     if (use_gpu)
     {
-        if (av_dict_set(dictionary, "hwaccel_device", "1", 0) < 0)
+        if (av_dict_set(dictionary, "hwaccel_device", "0", 0) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
         }
