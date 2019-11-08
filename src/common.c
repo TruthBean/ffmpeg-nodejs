@@ -311,7 +311,8 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
 {
     // 单位 微秒
     char str[12];
-    av_asprintf(str, "%d", timeout * 500000);
+    sprintf(str, "%d", timeout * 500000);
+    av_log(NULL, AV_LOG_INFO, "timeout : %s \n", str);
     av_dict_set(dictionary, "stimeout", str, 0);
 
     av_dict_set(dictionary, "analyzeduration", "600000", 0);

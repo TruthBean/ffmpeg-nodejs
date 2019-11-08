@@ -90,7 +90,7 @@ function testAsyncReadImageBuffer() {
 }
 
 function testAsyncReadImageBufferThreadly() {
-    let ffmpegNode = FFmpegNode.init(video_addr, 120, true, true, level.INFO, 0, true);
+    let ffmpegNode = FFmpegNode.init(video_addr, 120, true, true, level.DEBUG, 0, true);
     ffmpegNode.then((obj) => {
         obj.asyncReadImageBufferThreadly(100, target_type, 1);
         obj.on("data", (buffer) => {
@@ -126,8 +126,8 @@ function testAsyncReadImageBufferThreadly() {
 // videoFilePath = "http://192.168.1.198:3106";
 // FFmpegNode.recordVideo(video_addr, videoFilePath, -1, false, level.DEBUG, muxingStreamType.FLV);
 
-testAsyncReadImageBuffer();
-// testAsyncReadImageBufferThreadly();
+// testAsyncReadImageBuffer();
+testAsyncReadImageBufferThreadly();
 
 // FFmpegNode.sayHello(520, (output) => {
 //     console.log(output);
