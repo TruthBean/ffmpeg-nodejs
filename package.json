@@ -1,6 +1,6 @@
 {
   "name": "ffmpeg-nodejs",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "",
   "main": "index.js",
   "keywords": [
@@ -23,6 +23,6 @@
   "dependencies": {},
   "devDependencies": {},
   "engines": {
-    "node": ">=12.x"
+    "node": ">=10.x"
   }
 }

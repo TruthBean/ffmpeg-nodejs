@@ -489,15 +489,17 @@ static napi_value async_handle_video_to_image_buffer(napi_env env, napi_callback
     av_log(NULL, AV_LOG_DEBUG, "napi_create_async_work %d\n", status);
 
     napi_queue_async_work(env, async_work_info.work);
+
+    return NULL;
 }
 
-static void *consumer_callback_threadsafe(napi_env env, napi_value js_callback, void *context, void *data)
+static void consumer_callback_threadsafe(napi_env env, napi_value js_callback, void *context, void *data)
 {
     napi_status status;
     av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> consumer_callback_threadsafe\n");
     if (js_callback == NULL)
     {
-        return NULL;
+        return;
     }
 
     // napi_handle_scope scope;
@@ -619,7 +621,6 @@ static void *consumer_callback_threadsafe(napi_env env, napi_value js_callback, 
     }
 
     // napi_close_escapable_handle_scope(env, &scope);
-    return NULL;
 }
 
 static void handle_frame_data_threadly(FrameData *frameData)
@@ -639,12 +640,9 @@ static void handle_frame_data_threadly(FrameData *frameData)
     {
         frameData->abort = true;
     }
-
-
-
 }
 
-static void *callback_thread(napi_env env, void *data)
+static void callback_thread(napi_env env, void *data)
 {
     av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> callback_thread \n");
     napi_acquire_threadsafe_function(async_work_info.func);
@@ -676,8 +674,6 @@ static void *callback_thread(napi_env env, void *data)
         .ret = -1};
 
     vis = _vis;
-
-    return NULL;
 }
 
 static void callback_thread_completion(napi_env env, napi_status status, void* data)
@@ -699,10 +695,9 @@ static void callback_thread_completion(napi_env env, napi_status status, void* d
     }
 }
 
-void *finalize(napi_env env, void *data, void *hint)
+void finalize(napi_env env, void *data, void *hint)
 {
     av_log(NULL, AV_LOG_DEBUG, "finalize consumer ........ \n");
-    return NULL;
 }
 
 napi_value async_handle_video_to_image_buffer_threadly(napi_env env, napi_callback_info info)
@@ -778,17 +773,19 @@ napi_value async_handle_video_to_image_buffer_threadly(napi_env env, napi_callba
     params = _params;
 
     napi_threadsafe_function result;
-    napi_create_threadsafe_function(env, callback, NULL, resource_name, 25, 1, NULL, finalize, NULL, consumer_callback_threadsafe, &result);
+    napi_create_threadsafe_function(env, callback, NULL, resource_name, 25, 1, NULL, &finalize, NULL, &consumer_callback_threadsafe, &result);
     napi_ref_threadsafe_function(env, result);
 
     async_work_info.func = result;
     thread = true;
 
     napi_value async_resource = NULL;
-    status = napi_create_async_work(env, async_resource, resource_name, callback_thread, callback_thread_completion, NULL, &(async_work_info.work));
+    status = napi_create_async_work(env, async_resource, resource_name, &callback_thread, &callback_thread_completion, NULL, &(async_work_info.work));
     av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> napi_create_async_work %d\n", status);
 
     napi_queue_async_work(env, async_work_info.work);
+
+    return NULL;
 }
 
 /**

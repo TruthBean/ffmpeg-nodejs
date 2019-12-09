@@ -19,7 +19,7 @@ static int release_record_video_action(AVFormatContext *video_format_context, AV
 }
 
 /**
- * 视频录频
+ * 网络视频录频
  * @param video_url: 视频地址
  * @param output_filename: 录制视频的存储路径
  * @param record_seconds: 录制视频的时长，单位秒
@@ -236,7 +236,8 @@ int record_video(const char *video_url, const char *output_filename, const enum 
 
     out_stream->sample_aspect_ratio = out_stream->time_base;
 
-    avformat_write_header(output_format_context, &opt);
+    int _h = avformat_write_header(output_format_context, &opt);
+    av_log(NULL, AV_LOG_ERROR, "avformat_write_header result: %d \n", _h);
 
     // start reading packets from stream and write them to file
 
