@@ -7,6 +7,8 @@
 
 #include <sys/time.h>
 
+#include <libavutil/avstring.h>
+#include <libavutil/time.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/log.h>
 #include <libavutil/frame.h>

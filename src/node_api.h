@@ -1,8 +1,8 @@
 #ifndef _ADDON_H_
 #define _ADDON_H_
 
-#define NAPI_VERSION 5
-#include <node/js_native_api.h>
+#define NAPI_VERSION 4
+// #include <node/js_native_api.h>
 #include <node/node_api.h>
 
 #ifndef __USE_UNIX98
