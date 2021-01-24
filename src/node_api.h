@@ -1,6 +1,18 @@
 #ifndef _ADDON_H_
 #define _ADDON_H_
 
+
+/*
+        1           2           3           4           5           6
+v6.x                v6.14.2*
+v8.x    v8.0.0*     v8.10.0*    v8.11.2     v8.16.0
+v9.x    v9.0.0*     v9.3.0*     v9.11.0*
+v10.x   v10.0.0     v10.0.0     v10.0.0     v10.16.0    v10.17.0    v10.20.0
+v11.x   v11.0.0     v11.0.0     v11.0.0     v11.8.0
+v12.x   v12.0.0     v12.0.0     v12.0.0     v12.0.0     v12.11.0    v12.17.0
+v13.x   v13.0.0     v13.0.0     v13.0.0     v13.0.0     v13.0.0
+v14.x   v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0
+*/
 #define NAPI_VERSION 4
 // #include <node/js_native_api.h>
 #include <node/node_api.h>

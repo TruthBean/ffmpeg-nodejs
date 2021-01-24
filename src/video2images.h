@@ -27,6 +27,7 @@ typedef struct Video2ImageStream
     int ret;
     char *error_message;
     int frame_rate;
+    bool init;
 } Video2ImageStream;
 
 typedef struct FrameTimeOut
@@ -38,12 +39,12 @@ typedef struct FrameTimeOut
 
 typedef void(Video2ImagesCallback)(FrameData *data);
 
-Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id);
+void open_inputfile(Video2ImageStream *vis, const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id);
 
-void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type, Video2ImagesCallback callback, FrameData *result);
+void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type, Video2ImagesCallback callback, FrameData *result);
 
 void setBreak(bool b);
 
-void release(AVCodecContext *video_codec_context, AVFormatContext *format_context);
+void release(AVCodecContext *video_codec_context, AVFormatContext *format_context, bool init);
 
 #endif // FFMPEG_NODEJS_VIDEO2IMAGES_H

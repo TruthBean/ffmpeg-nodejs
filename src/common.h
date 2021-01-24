@@ -72,3 +72,7 @@ void copy_frame_data_and_transform_2_jpeg(const AVCodecContext *codec_context, F
 void copy_frame_raw_data(const AVCodecContext *codec_context, FrameData *result);
 
 void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp);
+
+void frame_data_deep_copy(FrameData *data, FrameData *dist_data);
+
+void free_frame_data(FrameData *data);

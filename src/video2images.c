@@ -1,6 +1,6 @@
 #include "./video2images.h"
 
-static FrameTimeOut frame_time_out;
+static volatile FrameTimeOut frame_time_out;
 
 /**
  * 连接视频地址，获取数据流
@@ -8,16 +8,16 @@ static FrameTimeOut frame_time_out;
  * @param nobuffer: video stream 是否设置缓存
  * @param use_gpu: 是否使用gpu加速
  * 
- * @return @see Video2ImageStream
+ * @param vis @see Video2ImageStream
  **/
-Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id)
+void open_inputfile(Video2ImageStream *result, const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id)
 {
     FrameTimeOut _frame_time_out = {
         .status = START,
         .grab_time = get_now_microseconds()};
 
     frame_time_out = _frame_time_out;
-    av_log(NULL, AV_LOG_DEBUG, "start time: %li\n", get_now_microseconds());
+    av_log(NULL, AV_LOG_DEBUG, "open_inputfile --> start time: %li\n", get_now_microseconds());
 
     int video_stream_idx = -1;
 
@@ -31,21 +31,22 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
 
     AVDictionary *dictionary = NULL;
 
-    Video2ImageStream result = {
-        .format_context = NULL,
-        .video_stream_idx = -1,
-        .video_codec_context = NULL,
-        .ret = -1};
+    result->format_context = NULL;
+    result->video_stream_idx = -1;
+    result->video_codec_context = NULL;
+    result->ret = -1;
 
     av_log(NULL, AV_LOG_DEBUG, "input url video addr %s \n", filename);
     int error = avformat_network_init();
     if (error != 0)
     {
         av_log(NULL, AV_LOG_ERROR, "network init error\n");
-        release(video_codec_context, format_context);
-        result.ret = -1;
-        return result;
+        release(video_codec_context, format_context, false);
+        result->ret = -1;
+        return;
     }
+
+    result->init = true;
 
     open_input_dictionary_set(&dictionary, nobuffer, timeout, use_gpu, use_tcp);
 
@@ -64,11 +65,12 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     av_log(NULL, AV_LOG_DEBUG, "input file: %s\n", filename);
     if ((ret = avformat_open_input(&format_context, filename, NULL, &dictionary)) != 0)
     {
+        result->init = false;
         av_log(NULL, AV_LOG_ERROR, "Couldn't open file %s: %d\n", filename, ret);
-        release(video_codec_context, format_context);
-        result.error_message = "avformat_open_input error, Couldn't open this file";
-        result.ret = -2;
-        return result;
+        release(video_codec_context, format_context, false);
+        result->error_message = "avformat_open_input error, Couldn't open this file";
+        result->ret = -2;
+        return;
     }
 
     av_dict_free(&dictionary);
@@ -77,10 +79,10 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     if (avformat_find_stream_info(format_context, NULL) < 0)
     {
         av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
-        release(video_codec_context, format_context);
-        result.error_message = "avformat_find_stream_info error";
-        result.ret = -3;
-        return result;
+        release(video_codec_context, format_context, true);
+        result->error_message = "avformat_find_stream_info error";
+        result->ret = -3;
+        return;
     }
 
     video_stream_idx = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
@@ -89,10 +91,10 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         av_log(NULL, AV_LOG_ERROR, "Could not find %s stream in input file '%s'\n",
                av_get_media_type_string(AVMEDIA_TYPE_VIDEO),
                filename);
-        release(video_codec_context, format_context);
-        result.error_message = "av_find_best_stream error";
-        result.ret = -4;
-        return result;
+        release(video_codec_context, format_context, true);
+        result->error_message = "av_find_best_stream error";
+        result->ret = -4;
+        return;
     }
 
     video_stream = format_context->streams[video_stream_idx];
@@ -110,19 +112,21 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     else if (codec_id == AV_CODEC_ID_HEVC)
     {
         if (use_gpu)
+        {
             codec = avcodec_find_decoder_by_name("hevc_nvenc");
+            av_dict_set(&opts, "gpu", gpu_id, 0);
+        }
         av_dict_set(&opts, "flags", "low_delay", 0);
-        av_dict_set(&opts, "gpu", gpu_id, 0);
     }
     if (codec == NULL)
         codec = avcodec_find_decoder(video_stream->codecpar->codec_id);
     if (!codec)
     {
         av_log(NULL, AV_LOG_ERROR, "Failed to find %s codec\n", av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
-        release(video_codec_context, format_context);
-        result.error_message = "avcodec_find_decoder error";
-        result.ret = -5;
-        return result;
+        release(video_codec_context, format_context, true);
+        result->error_message = "avcodec_find_decoder error";
+        result->ret = -5;
+        return;
     }
 
     // 每秒多少帧
@@ -133,10 +137,10 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     if (!parser_context)
     {
         av_log(NULL, AV_LOG_ERROR, "parser not found\n");
-        release(video_codec_context, format_context);
-        result.error_message = "parser not found";
-        result.ret = -6;
-        return result;
+        release(video_codec_context, format_context, true);
+        result->error_message = "parser not found";
+        result->ret = -6;
+        return;
     }
 
     video_codec_context = avcodec_alloc_context3(codec);
@@ -144,20 +148,20 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     {
         av_log(NULL, AV_LOG_ERROR, "Failed to allocate the %s codec context\n",
                av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
-        release(video_codec_context, format_context);
-        result.error_message = "avcodec_alloc_context3 error";
-        result.ret = -7;
-        return result;
+        release(video_codec_context, format_context, true);
+        result->error_message = "avcodec_alloc_context3 error";
+        result->ret = -7;
+        return;
     }
 
     if ((ret = avcodec_parameters_to_context(video_codec_context, video_stream->codecpar)) < 0)
     {
         av_log(NULL, AV_LOG_ERROR, "Failed to copy %s codec parameters to decoder context\n",
                av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
-        release(video_codec_context, format_context);
-        result.error_message = "avcodec_parameters_to_context error";
-        result.ret = -8;
-        return result;
+        release(video_codec_context, format_context, true);
+        result->error_message = "avcodec_parameters_to_context error";
+        result->ret = -8;
+        return;
     }
 
     if (avcodec_open2(video_codec_context, codec, &opts) < 0)
@@ -170,20 +174,20 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         if (!codec)
         {
             av_log(NULL, AV_LOG_ERROR, "Failed to find %s codec\n", av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
-            release(video_codec_context, format_context);
-            result.error_message = "avcodec_find_decoder error";
-            result.ret = -5;
-            return result;
+            release(video_codec_context, format_context, true);
+            result->error_message = "avcodec_find_decoder error";
+            result->ret = -5;
+            return;
         }
 
         parser_context = av_parser_init(codec->id);
         if (!parser_context)
         {
             av_log(NULL, AV_LOG_ERROR, "parser not found\n");
-            release(video_codec_context, format_context);
-            result.error_message = "parser not found";
-            result.ret = -6;
-            return result;
+            release(video_codec_context, format_context, true);
+            result->error_message = "parser not found";
+            result->ret = -6;
+            return;
         }
 
         avcodec_free_context(&video_codec_context);
@@ -192,29 +196,29 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
         {
             av_log(NULL, AV_LOG_ERROR, "Failed to allocate the %s codec context\n",
                    av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
-            release(video_codec_context, format_context);
-            result.error_message = "avcodec_alloc_context3 error";
-            result.ret = -7;
-            return result;
+            release(video_codec_context, format_context, true);
+            result->error_message = "avcodec_alloc_context3 error";
+            result->ret = -7;
+            return;
         }
 
         if ((ret = avcodec_parameters_to_context(video_codec_context, video_stream->codecpar)) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "Failed to copy %s codec parameters to decoder context\n",
                    av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
-            release(video_codec_context, format_context);
-            result.error_message = "avcodec_parameters_to_context error";
-            result.ret = -8;
-            return result;
+            release(video_codec_context, format_context, true);
+            result->error_message = "avcodec_parameters_to_context error";
+            result->ret = -8;
+            return;
         }
 
         if (avcodec_open2(video_codec_context, codec, &opts) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "Failed to open %s codec\n", av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
-            release(video_codec_context, format_context);
-            result.error_message = "Failed to open codec";
-            result.ret = -9;
-            return result;
+            release(video_codec_context, format_context, true);
+            result->error_message = "Failed to open codec";
+            result->ret = -9;
+            return;
         }
         // =======================================================================================================
     }
@@ -222,21 +226,19 @@ Video2ImageStream open_inputfile(const char *filename, const bool nobuffer, cons
     if (!video_stream)
     {
         av_log(NULL, AV_LOG_ERROR, "Could not find audio or video stream in the input, aborting\n");
-        release(video_codec_context, format_context);
-        result.error_message = "Could not find audio or video stream in the input";
-        result.ret = -10;
-        return result;
+        release(video_codec_context, format_context, true);
+        result->error_message = "Could not find audio or video stream in the input";
+        result->ret = -10;
+        return;
     }
 
-    result.format_context = format_context;
-    result.video_stream_idx = video_stream_idx;
-    result.video_stream = video_stream;
-    result.video_codec_context = video_codec_context;
-    result.parser_context = parser_context;
-    result.ret = 0;
-    result.frame_rate = input_frame_rate;
-
-    return result;
+    result->format_context = format_context;
+    result->video_stream_idx = video_stream_idx;
+    result->video_stream = video_stream;
+    result->video_codec_context = video_codec_context;
+    result->parser_context = parser_context;
+    result->ret = 0;
+    result->frame_rate = input_frame_rate;
 }
 
 static volatile bool isBreak = false;
@@ -249,23 +251,23 @@ void setBreak(bool b)
 /**
  * 释放内存
  */
-void release(AVCodecContext *video_codec_context, AVFormatContext *format_context)
+void release(AVCodecContext *video_codec_context, AVFormatContext *format_context, bool init)
 {
     isBreak = true;
-    // sleep(1);
+    av_usleep(1);
     frame_time_out.status = END;
     av_log(NULL, AV_LOG_DEBUG, "---> 3 ---> free memory\n");
 
     int ret;
 
-    if (video_codec_context)
+    if (video_codec_context != NULL)
     {
         av_log(NULL, AV_LOG_DEBUG, "avcodec_free_context ... \n");
         avcodec_free_context(&video_codec_context);
         video_codec_context = NULL;
     }
 
-    if (format_context)
+    if (format_context != NULL)
     {
         av_log(NULL, AV_LOG_DEBUG, "avformat_close_input ... \n");
         avformat_close_input(&format_context);
@@ -273,11 +275,14 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
         format_context = NULL;
     }
 
-    av_log(NULL, AV_LOG_DEBUG, "avformat_network_deinit ... \n");
-    ret = avformat_network_deinit();
-    if (ret < 0)
+    if (init)
     {
-        av_log(NULL, AV_LOG_ERROR, "avformat_network_deinit error \n");
+        av_log(NULL, AV_LOG_DEBUG, "avformat_network_deinit ... \n");
+        ret = avformat_network_deinit();
+        if (ret < 0)
+        {
+            av_log(NULL, AV_LOG_ERROR, "avformat_network_deinit error \n");
+        }
     }
 }
 
@@ -311,9 +316,16 @@ static int retry = 0;
  * @param type: 图片类型 @see ImageStreamType
  * @return @see FrameData
  **/
-void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type,
+void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type,
                        Video2ImagesCallback callback, FrameData *result)
 {
+    if (vis == NULL)
+    {
+        av_log(NULL, AV_LOG_ERROR, "Video is closed or not open\n");
+        result->ret = -2;
+        result->error_message = "Video is closed or not open";
+        return;
+    }
 
     int ret;
     AVFrame *frame = av_frame_alloc();
@@ -335,9 +347,6 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
         return;
     }
 
-    /* read frames from the file */
-    av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_now_microseconds());
-
     int times = 0;
 
     frame_time_out.status = PENDIING;
@@ -348,19 +357,54 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
         return;
     }
 
-    while (av_read_frame(vis.format_context, orig_pkt) >= 0)
+    int err_time = 0;
+    bool hasKeyFrame = false;
+    while (true)
     {
         if (isBreak)
         {
             __close(frame, orig_pkt);
+            av_log(NULL, AV_LOG_DEBUG, "video2images_grab --> isBreak \n");
             return;
         }
 
+        // av_usleep(0);
+        if (err_time > 10)
+        {
+            av_log(NULL, AV_LOG_DEBUG, "video2images_grab --> err_time > 10 \n");
+            break;
+        }
+
+        if (vis == NULL || !vis || vis->format_context == NULL || !vis->format_context || orig_pkt == NULL || !orig_pkt)
+        {
+            av_log(NULL, AV_LOG_DEBUG, "video2images_grab --> vis is null, or vis->format_context is null \n");
+            __close(frame, orig_pkt);
+            return;
+        }
+        else
+        {
+            /* read frames from the file */
+            av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_now_microseconds());
+            int ret = av_read_frame(vis->format_context, orig_pkt);
+            if (ret < 0)
+            {
+                av_log(NULL, AV_LOG_DEBUG, "av_read_frame error. \n");
+                err_time++;
+                continue;
+            }
+        }
+        if (isBreak)
+        {
+            av_log(NULL, AV_LOG_DEBUG, "video2images_grab --> isBreak... \n");
+            __close(frame, orig_pkt);
+            return;
+        }
         frame_time_out.status = GRAB;
         frame_time_out.grab_time = get_now_microseconds();
         av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_now_microseconds());
-        if (orig_pkt->stream_index == vis.video_stream_idx)
+        if (orig_pkt != NULL && orig_pkt && vis != NULL && vis && orig_pkt->stream_index == vis->video_stream_idx)
         {
+            av_log(NULL, AV_LOG_DEBUG, "video2images_grab --> has video stream \n");
             if (orig_pkt->flags & AV_PKT_FLAG_KEY)
             {
                 av_log(NULL, AV_LOG_DEBUG, "key frame\n");
@@ -369,7 +413,7 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
                     pts = 0;
                 }
             }
-            if (vis.video_stream == NULL)
+            if (vis->video_stream == NULL)
             {
                 av_log(NULL, AV_LOG_ERROR, "error: video stream is null\n");
                 result->ret = -13;
@@ -383,11 +427,12 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
             long pts_time = 0;
             // 获取帧数
             if (orig_pkt->pts >= 0)
-                pts_time = (long)(orig_pkt->pts * av_q2d(vis.video_stream->time_base) * vis.frame_rate);
+                pts_time = (long)(orig_pkt->pts * av_q2d(vis->video_stream->time_base) * vis->frame_rate);
             else
                 pts_time = pts++;
 
-            ret = avcodec_send_packet(vis.video_codec_context, orig_pkt);
+            av_log(NULL, AV_LOG_DEBUG, "begin avcodec_send_packet time: %li\n", get_now_microseconds());
+            ret = avcodec_send_packet(vis->video_codec_context, orig_pkt);
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_now_microseconds());
             if (isBreak)
             {
@@ -400,7 +445,7 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
                 av_log(NULL, AV_LOG_DEBUG, "retry: %d, hadHasFrames: %d, times: %d \n", retry, hadHasFrames, times);
                 if (!hadHasFrames)
                 {
-                    if (retry < 5)
+                    // if (retry < 5)
                     {
                         retry += 1;
                         av_packet_unref(orig_pkt);
@@ -408,7 +453,7 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
                         continue;
                     }
                 }
-                else if (times < vis.frame_rate)
+                else if (times < vis->frame_rate)
                 {
                     times += 1;
                     av_packet_unref(orig_pkt);
@@ -425,13 +470,14 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
                 return;
             }
 
-            chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
-            int c = vis.frame_rate / chose_frames;
-            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %d\n", vis.frame_rate, chose_frames, c);
+            chose_frames = chose_frames > vis->frame_rate ? vis->frame_rate : chose_frames;
+            int c = vis->frame_rate / chose_frames;
+            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %d\n", vis->frame_rate, chose_frames, c);
             long check = pts_time % c;
             av_log(NULL, AV_LOG_DEBUG, "check %ld\n", check);
 
-            ret = avcodec_receive_frame(vis.video_codec_context, frame);
+            av_frame_unref(frame);
+            ret = avcodec_receive_frame(vis->video_codec_context, frame);
             av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %li\n", get_now_microseconds());
             // 解码一帧数据
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
@@ -459,7 +505,7 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
             hadHasFrames = true;
             times = 0;
 
-            av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d frame_rate: %d\n", pts_time, chose_frames, vis.frame_rate);
+            av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d frame_rate: %d\n", pts_time, chose_frames, vis->frame_rate);
             // 判断帧数，是否取
             if (chose_now || check == c - 1)
             {
@@ -489,8 +535,14 @@ void video2images_grab(Video2ImageStream vis, int quality, int chose_frames, boo
             frame_time_out.grab_time = get_now_microseconds();
         }
 
-        av_packet_unref(orig_pkt);
-        av_frame_unref(frame);
+        if (orig_pkt != NULL)
+        {
+            av_packet_unref(orig_pkt);
+        }
+        if (frame != NULL)
+        {
+            av_frame_unref(frame);
+        }
     }
 
     __close(frame, orig_pkt);

@@ -168,9 +168,17 @@ void copy_frame_raw_data(const AVCodecContext *codec_context, FrameData *result)
     sws_context = NULL;
     av_freep(&outBuff);
     av_free(outBuff);
+    if (outBuff)
+    {
+        free(outBuff);
+    }
     outBuff = NULL;
     av_frame_unref(target_frame);
     av_frame_free(&target_frame);
+    if (target_frame)
+    {
+        free(target_frame);
+    }
     target_frame = NULL;
     return;
 }
@@ -282,6 +290,10 @@ void copy_frame_data_and_transform_2_jpeg(const AVCodecContext *codec_context, F
     // 释放内存
     av_freep(&images_dst_data[0]);
     av_free(images_dst_data[0]);
+    if (images_dst_data)
+    {
+        free(*images_dst_data);
+    }
     images_dst_data[0] = NULL;
     *images_dst_data = NULL;
 
@@ -301,11 +313,22 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
 {
     // 单位 微秒
     char str[12];
-    sprintf(str, "%d", timeout * 500000);
-    av_log(NULL, AV_LOG_DEBUG, "timeout : %s \n", str);
+    sprintf(str, "%d", timeout * 1000000);
+    av_log(NULL, AV_LOG_DEBUG, "timeout : %d \n", timeout);
+    // 当av_read_frame由于视频流断开而阻塞的时候，超时 timeout 秒后会断开连接;
     av_dict_set(dictionary, "stimeout", str, 0);
+    // av_dict_set_int(dictionary, "stimeout", (int64_t)timeout, 0);
+    // av_dict_set_int(dictionary, "start-on-prepared", (int64_t)1, 0);
 
-    av_dict_set(dictionary, "analyzeduration", "600000", 0);
+    // av_dict_set_int(dictionary, "max_cached_duration", (int64_t)10, 0);
+
+    av_dict_set(dictionary, "analyzeduration", "20000000", 0);
+    av_dict_set(dictionary, "probsize", "40960", 0);
+    // av_dict_set_int(dictionary, "analyzeduration", (int64_t)2000000, 0);
+    // av_dict_set_int(dictionary, "probsize", (int64_t)4096, 0);
+
+    // av_dict_set_int(dictionary, "max-fps", (int64_t)75, 0);
+    // av_dict_set_int(dictionary, "fps", (int64_t)25, 0);
 
     if (nobuffer)
     {
@@ -314,10 +337,14 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
     else
     {
         // 设置缓存大小
-        av_dict_set(dictionary, "buffer_size", "40960", 0);
-        av_dict_set(dictionary, "flush_packets", "", 0);
+        av_dict_set(dictionary, "buffer_size", "4096", 0);
+        av_dict_set(dictionary, "flush_packets", "1", 0);
         av_dict_set(dictionary, "max_delay", "0", 0);
-        av_dict_set(dictionary, "rtbufsize", "40960", 0);
+        av_dict_set(dictionary, "rtbufsize", "4096", 0);
+        // av_dict_set_int(dictionary, "buffer_size", (int64_t)40960, 0);
+        // av_dict_set_int(dictionary, "flush_packets", (int64_t)0, 0);
+        // av_dict_set_int(dictionary, "max_delay", (int64_t)0, 0);
+        // av_dict_set_int(dictionary, "rtbufsize", (int64_t)40960, 0);
     }
 
     if (use_tcp)
@@ -325,6 +352,16 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
         if (av_dict_set(dictionary, "rtsp_transport", "tcp", 0) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to tcp error\n");
+
+            // fall to udp
+            if (av_dict_set(dictionary, "rtsp_transport", "udp", 0) < 0)
+            {
+                av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to udp error\n");
+            }
+            else
+            {
+                av_dict_set(dictionary, "flush_packets", "1", 0);
+            }
         }
     }
     else
@@ -364,4 +401,66 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
             av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
         }
     }
+}
+
+void frame_data_deep_copy(FrameData *data, FrameData *dist_data)
+{
+    dist_data->pts = data->pts;
+    dist_data->type = data->type;
+    dist_data->quality = data->quality;
+
+    dist_data->file_size = data->file_size;
+    dist_data->ret = data->ret;
+    dist_data->isThreadly = data->isThreadly;
+    dist_data->abort = data->abort;
+
+    if (data->frame != NULL && data->frame)
+    {
+        av_log(NULL, AV_LOG_DEBUG, "frame_data_deep_copy --> clone data->frame \n");
+        dist_data->frame = av_frame_clone(data->frame);
+        // av_log(NULL, AV_LOG_DEBUG, "frame_data_deep_copy --> copy data->frame \n");
+        // av_frame_copy(dist_data->frame, data->frame);
+        // av_log(NULL, AV_LOG_DEBUG, "frame_data_deep_copy --> copy data->frame finish \n");
+        // break;
+    }
+    if (data->file_size > 0 && data->file_data != NULL && data->file_data)
+    {
+        av_log(NULL, AV_LOG_DEBUG, "frame_data_deep_copy --> data->file_data is not null \n");
+        dist_data->file_data = malloc(data->file_size);
+        memcpy(dist_data->file_data, data->file_data, data->file_size);
+    }
+    if (data->error_message != NULL)
+    {
+        dist_data->error_message = data->error_message;
+    }
+}
+
+void free_frame_data(FrameData *data)
+{
+    if (data == NULL || !data)
+    {
+        return;
+    }
+    if (data->frame != NULL && data->frame)
+    {
+        av_frame_unref(data->frame);
+        av_frame_free(&data->frame);
+        if (data->frame)
+        {
+            free(data->frame);
+        }
+        data->frame = NULL;
+    }
+    if (data->file_data != NULL && data->file_data)
+    {
+        free(data->file_data);
+        data->file_data = NULL;
+    }
+    data->pts = 0;
+    data->type = -1;
+    data->quality = 0;
+    data->file_size = 0;
+    data->ret = -1;
+    data->isThreadly = false;
+    data->abort = false;
 }

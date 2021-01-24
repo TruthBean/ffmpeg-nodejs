@@ -98,8 +98,8 @@ class FFmpegNode extends EventEmitter {
      * @param {number} frames: chose frames per second, default 1
      * @return {Promise<Buffer>} image buffer
      */
-    readImageBuffer(quality, type, frames) {
-        return this.syncReadImageBuffer(quality, type, frames);
+    async readImageBuffer(quality, type, frames) {
+        return await this.syncReadImageBuffer(quality, type, frames);
     }
 
     /**
@@ -109,7 +109,7 @@ class FFmpegNode extends EventEmitter {
      * @param {number} frames: chose frames per second, default 1
      * @return {Promise<Buffer>} image buffer
      */
-    syncReadImageBuffer(quality, type, frames) {
+    async syncReadImageBuffer(quality, type, frames) {
         if (!this.destroy) {
             if (typeof frames !== "number" || frames <= 0) frames = 1;
             if (type !== RGB && type !== YUV && type !== JPEG) type = "rgb";
@@ -122,7 +122,18 @@ class FFmpegNode extends EventEmitter {
             if (type === YUV) typeNo = 0;
             else if (type === RGB) typeNo = 1;
             else if (type === JPEG) typeNo = 2;
-            return ffmpeg_nodejs.syncReadImageBuffer(frames, typeNo, quality);
+            return new Promise((resolve, reject) => {
+                ffmpeg_nodejs.syncReadImageBuffer(frames, typeNo, quality).then((data) => {
+                    resolve(data);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        } else {
+            return new Promise((resolve, reject) => {
+                resolve(null);
+                reject(null);
+            });
         }
     }
 
