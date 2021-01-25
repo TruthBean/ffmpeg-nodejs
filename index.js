@@ -54,7 +54,7 @@ class FFmpegNode extends EventEmitter {
 
         self.destroy = false;
         return new Promise((resolve, reject) => {
-            ffmpeg_nodejs.initReadingVideo(self.url, timeout, nobuffer, useGpu, level, gpuId.toString(), useGpu).then((ignored) => {
+            ffmpeg_nodejs.initReadingVideo(self.url, timeout, nobuffer, useGpu, level, gpuId.toString(), useGpu, useTcp).then((ignored) => {
                 resolve(self);
             }).catch((err) => {
                 self.destroy = true;

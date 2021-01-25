@@ -881,6 +881,7 @@ napi_value handle_destroy_stream(napi_env env, napi_callback_info info)
 
             status = napi_release_threadsafe_function(async_work_info.func, napi_tsfn_abort);
             av_log(NULL, AV_LOG_DEBUG, "napi_release_threadsafe_function status : %d \n", status);
+            break;
         }
 
         napi_status status = napi_unref_threadsafe_function(env, async_work_info.func);

@@ -13,7 +13,7 @@ Preparation
 npm i cmake-js -g
 
 x install clang cmake g++
-NOTE: x means your system package manager command, like apt, yum, or something else.
+NOTE: x means your system package manager command, like apt, yum, dnf, or something else.
 ```
 
 Develop
@@ -46,9 +46,12 @@ If you had not installed ffmpeg-dev whose version is 4.x, and libjpeg, you shoul
 
 Then compiling command is as follows:
 ```bash
-npm install (or npm run compile)
+npm install (or npm run compile or yarn build)
 ```
 If you want more command, please see package.json scripts, and do not use cmake or make directly, because it not a pure c project, it is a NODEJS project.
+
+### note
+windows not support c11 yet, so don't use it on windows!
 
 Examples
 --------
@@ -79,7 +82,7 @@ switch (targetType) {
 let i = 0;
 
 function runWithCallback() {
-    let ffmpegNode = FFmpegNode.init(video_addr, 2, false, false, logLevel, 1);
+    let ffmpegNode = FFmpegNode.init(video_addr, 2, false, false, logLevel, 1, true);
 
     ffmpegNode.then((obj) => {
         console.info(targetType);
