@@ -17,7 +17,7 @@ typedef struct ReadImageBufferParams
 } ReadImageBufferParams;
 
 static volatile ReadImageBufferParams params;
-static volatile bool thread = false;
+// static volatile bool thread = false;
 
 /**
  * 初始化摄像头
@@ -136,7 +136,7 @@ static napi_value handle_init_read_video(napi_env env, napi_callback_info info)
     // 获取视频流数据，将其存在全局变量中
     open_inputfile(vis, input_filename, nobuffer, timeout, use_gpu, use_tcp, gpu_id);
 
-    if (vis == NULL)
+    if (vis == NULL || !vis)
     {
         av_log(NULL, AV_LOG_ERROR, "handle_init_read_video -->  Video2ImageStream is null \n");
     }
@@ -847,7 +847,7 @@ napi_value async_handle_video_to_image_buffer_threadly(napi_env env, napi_callba
     napi_ref_threadsafe_function(env, result);
 
     async_work_info.func = result;
-    thread = true;
+    // thread = true;
 
     napi_value async_resource = NULL;
     status = napi_create_async_work(env, async_resource, resource_name, &callback_thread, &callback_thread_completion, NULL, &(async_work_info.work));
@@ -1261,10 +1261,10 @@ napi_value say_hello(napi_env env, napi_callback_info info)
         req_data.output = tmp;
         _data.out = tmp;
     }
-    // async.data = (void*) &(_data);
-    // uv_async_send(&async);
-    // uv_run(loop_ptr, UV_RUN_NOWAIT);
-    // uv_stop(loop_ptr);
+    async.data = (void*) &(_data);
+    uv_async_send(&async);
+    uv_run(loop_ptr, UV_RUN_NOWAIT);
+    uv_stop(loop_ptr);
 
     printf("End Hello\n");
     return NULL;

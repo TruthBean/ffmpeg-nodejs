@@ -53,6 +53,20 @@ If you want more command, please see package.json scripts, and do not use cmake 
 ### note
 windows not support c11 yet, so don't use it on windows!
 
+### test in docker
+```shell
+docker run -it --name ffmpeg_nodejs --runtime=nvidia -e NVIDIA_DRIVER_CAPABILITIES=compute,utility,video -v "$(pwd)":/opt/ffmpeg_nodejs \
+  truthbean/cuda-ubuntu-node-ffmpeg:10.1-16-12-4.1 /bin/bash
+
+# docker run -it --name ffmpeg_nodejs -v "$(pwd)":/opt/ffmpeg_nodejs truthbean/ffmpeg-node-docker:4.1.3-10-ubuntu /bin/bash
+```
+
+```powershell
+docker run -it --name ffmpeg_nodejs -v ${pwd}:/opt/ffmpeg_nodejs truthbean/ffmpeg-node-docker:4.0.2-10-cuda9.2-ubuntu16 /bin/bash
+# docker run -it --name ffmpeg_nodejs --runtime=nvidia -e NVIDIA_DRIVER_CAPABILITIES=compute,utility,video -v ${pwd}:/opt/ffmpeg_nodejs truthbean/ffmpeg-node-docker:4.0.2-10-cuda9.2 /bin/bash
+
+```
+
 Examples
 --------
 ```JavaScript

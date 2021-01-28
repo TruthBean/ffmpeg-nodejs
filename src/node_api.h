@@ -14,13 +14,13 @@ v13.x   v13.0.0     v13.0.0     v13.0.0     v13.0.0     v13.0.0
 v14.x   v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0
 */
 #define NAPI_VERSION 4
-// #include <node/js_native_api.h>
+#include <node/js_native_api.h>
 #include <node/node_api.h>
 
 #ifndef __USE_UNIX98
 #define __USE_UNIX98
 #endif
-#include <node/uv.h>
+#include <uv.h>
 
 // Empty value so that macros here are able to return NULL or void
 #define NAPI_RETVAL_NOTHING // Intentionally blank #define

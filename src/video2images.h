@@ -16,6 +16,7 @@
 #include <libavutil/pixfmt.h>
 
 #include "./common.h"
+#include "./collection.h"
 
 typedef struct Video2ImageStream
 {
@@ -46,5 +47,11 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
 void setBreak(bool b);
 
 void release(AVCodecContext *video_codec_context, AVFormatContext *format_context, bool init);
+
+// ================================================================================================
+
+LinkedQueueNodeData grab_frame_to_queue(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, sem_t semaphore);
+
+void *producer(void *data);
 
 #endif // FFMPEG_NODEJS_VIDEO2IMAGES_H

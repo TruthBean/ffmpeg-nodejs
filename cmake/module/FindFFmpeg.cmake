@@ -20,7 +20,7 @@ else()
         pkg_check_modules(_FFMPEG_AVFORMAT libavformat)
         pkg_check_modules(_FFMPEG_AVUTIL libavutil)
         pkg_check_modules(_FFMPEG_SWSCALE libswscale)
-        # pkg_check_modules(_FFMPEG_AVDEVICE libavdevice)
+        pkg_check_modules(_FFMPEG_AVDEVICE libavdevice)
         pkg_check_modules(_FFMPEG_AVFILTER libavfilter)
     endif()
 
@@ -57,21 +57,21 @@ else()
             /opt/local/lib
             /sw/lib)
 
-#     find_path(FFMPEG_AVDEVICE_INCLUDE_DIR
-#             NAMES libavdevice/avdevice.h
-#             PATHS ${_FFMPEG_AVDEVICE_INCLUDE_DIRS}
-#             /usr/lib
-#             /usr/local/lib
-#             /opt/local/lib
-#             /sw/lib)
+    find_path(FFMPEG_AVDEVICE_INCLUDE_DIR
+            NAMES libavdevice/avdevice.h
+            PATHS ${_FFMPEG_AVDEVICE_INCLUDE_DIRS}
+            /usr/lib
+            /usr/local/lib
+            /opt/local/lib
+            /sw/lib)
 
-#     find_library(FFMPEG_LIBAVDEVICE
-#             NAMES avdevice
-#             PATHS ${_FFMPEG_AVDEVICE_INCLUDE_DIRs}
-#             /usr/lib
-#             /usr/local/lib
-#             /opt/local/lib
-#             /sw/lib)
+    find_library(FFMPEG_LIBAVDEVICE
+            NAMES avdevice
+            PATHS ${_FFMPEG_AVDEVICE_INCLUDE_DIRs}
+            /usr/lib
+            /usr/local/lib
+            /opt/local/lib
+            /sw/lib)
 
     find_path(FFMPEG_AVFILTER_INCLUDE_DIR
             NAMES libavfilter/avfilter.h
@@ -107,7 +107,7 @@ else()
                 ${FFMPEG_LIBAVCODEC}
                 ${FFMPEG_LIBAVFORMAT}
                 ${FFMPEG_LIBAVUTIL}
-                # ${FFMPEG_LIBAVDEVICE}
+                ${FFMPEG_LIBAVDEVICE}
                 ${FFMPEG_LIBAVFILTER}
                 ${FFMPEG_LIBSWSCALE})
     endif()

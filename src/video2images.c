@@ -1,6 +1,6 @@
 #include "./video2images.h"
 
-static volatile FrameTimeOut frame_time_out;
+// static volatile FrameTimeOut frame_time_out;
 
 /**
  * 连接视频地址，获取数据流
@@ -12,11 +12,11 @@ static volatile FrameTimeOut frame_time_out;
  **/
 void open_inputfile(Video2ImageStream *result, const char *filename, const bool nobuffer, const int64_t timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id)
 {
-    FrameTimeOut _frame_time_out = {
-        .status = START,
-        .grab_time = get_now_microseconds()};
+    // FrameTimeOut _frame_time_out = {
+    //    .status = START,
+    //    .grab_time = get_now_microseconds()};
 
-    frame_time_out = _frame_time_out;
+    // frame_time_out = _frame_time_out;
     av_log(NULL, AV_LOG_DEBUG, "open_inputfile --> start time: %li\n", get_now_microseconds());
 
     int video_stream_idx = -1;
@@ -265,7 +265,7 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
 {
     isBreak = true;
     av_usleep(1);
-    frame_time_out.status = END;
+    // frame_time_out.status = END;
     av_log(NULL, AV_LOG_DEBUG, "---> 3 ---> free memory\n");
 
     int ret;
@@ -359,8 +359,8 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
 
     int times = 0;
 
-    frame_time_out.status = PENDIING;
-    frame_time_out.grab_time = get_now_microseconds();
+    // frame_time_out.status = PENDIING;
+    // frame_time_out.grab_time = get_now_microseconds();
     if (isBreak)
     {
         __close(frame, orig_pkt);
@@ -409,8 +409,8 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
             __close(frame, orig_pkt);
             return;
         }
-        frame_time_out.status = GRAB;
-        frame_time_out.grab_time = get_now_microseconds();
+        // frame_time_out.status = GRAB;
+        // frame_time_out.grab_time = get_now_microseconds();
         av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_now_microseconds());
         if (orig_pkt != NULL && orig_pkt && vis != NULL && vis && orig_pkt->stream_index == vis->video_stream_idx)
         {
@@ -429,8 +429,8 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
                 result->ret = -13;
                 result->error_message = "video stream is null";
                 __close(frame, orig_pkt);
-                frame_time_out.status = END;
-                frame_time_out.grab_time = get_now_microseconds();
+                // frame_time_out.status = END;
+                // frame_time_out.grab_time = get_now_microseconds();
                 return;
             }
 
@@ -475,8 +475,8 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
                 __close(frame, orig_pkt);
                 result->ret = -14;
                 result->error_message = "Error while sending a packet to the decoder";
-                frame_time_out.status = END;
-                frame_time_out.grab_time = get_now_microseconds();
+                // frame_time_out.status = END;
+                // frame_time_out.grab_time = get_now_microseconds();
                 return;
             }
 
@@ -493,8 +493,8 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             {
                 av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
-                frame_time_out.status = PENDIING;
-                frame_time_out.grab_time = get_now_microseconds();
+                // frame_time_out.status = PENDIING;
+                // frame_time_out.grab_time = get_now_microseconds();
 
                 av_packet_unref(orig_pkt);
                 av_frame_unref(frame);
@@ -507,8 +507,8 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
                 __close(frame, orig_pkt);
                 result->ret = -15;
                 result->error_message = "Error while receive frame from a packet";
-                frame_time_out.status = END;
-                frame_time_out.grab_time = get_now_microseconds();
+                // frame_time_out.status = END;
+                // frame_time_out.grab_time = get_now_microseconds();
                 return;
             }
 
@@ -533,16 +533,16 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
                     av_log(NULL, AV_LOG_DEBUG, "result->isThreadly %d \n", result->isThreadly);
                     if (!result->isThreadly || result->abort)
                     {
-                        frame_time_out.status = END;
-                        frame_time_out.grab_time = get_now_microseconds();
+                        // frame_time_out.status = END;
+                        // frame_time_out.grab_time = get_now_microseconds();
                         break;
                     }
                 }
                 av_log(NULL, AV_LOG_DEBUG, "frame ....................\n");
             }
             av_usleep(0);
-            frame_time_out.status = PENDIING;
-            frame_time_out.grab_time = get_now_microseconds();
+            // frame_time_out.status = PENDIING;
+            // frame_time_out.grab_time = get_now_microseconds();
         }
 
         if (orig_pkt != NULL)
@@ -556,4 +556,112 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
     }
 
     __close(frame, orig_pkt);
+}
+
+// =================================================================================================================================
+
+LinkedQueueNodeData grab_frame_to_queue(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, sem_t semaphore) {
+    LinkedQueueNodeData result = {
+        .pts = 0,
+        .frame = NULL,
+        .ret = 0
+        };
+
+    int ret;
+    AVFrame *frame = av_frame_alloc();
+    if (!frame) {
+        av_log(NULL, AV_LOG_ERROR, "Could not allocate image frame\n");
+        result.ret = -1;
+        result.error_message = "Could not allocate image frame";
+        return result;
+    }
+
+    AVPacket *orig_pkt = av_packet_alloc();
+    if (!orig_pkt) {
+        av_log(NULL, AV_LOG_ERROR, "Couldn't alloc packet\n");
+        result.ret = -2;
+        result.error_message = "Couldn't alloc packet";
+        __close(frame, orig_pkt);
+        return result;
+    }
+
+    /* read frames from the file */
+    av_log(NULL, AV_LOG_DEBUG, "begin av_read_frame time: %li\n", get_now_microseconds());
+
+    while (av_read_frame(vis.format_context, orig_pkt) >= 0) {
+        av_log(NULL, AV_LOG_DEBUG, "end av_read_frame time: %li\n", get_now_microseconds());
+        if (orig_pkt->stream_index == vis.video_stream_idx) {
+            if (orig_pkt->flags & AV_PKT_FLAG_KEY) {
+                av_log(NULL, AV_LOG_DEBUG, "key frame\n");
+                if (orig_pkt->pts < 0) {
+                    pts = 0;
+                }
+            }
+            if (vis.video_stream == NULL) {
+                av_log(NULL, AV_LOG_ERROR, "error: video stream is null\n");
+                result.ret = -3;
+                result.error_message = "video stream is null";
+                __close(frame, orig_pkt);
+                return result;
+            }
+
+            long pts_time = 0;
+            // 获取帧数
+            if (orig_pkt->pts >= 0)
+                pts_time = (long)(orig_pkt->pts * av_q2d(vis.video_stream->time_base) * vis.frame_rate);
+            else
+                pts_time = pts++;
+
+            ret = avcodec_send_packet(vis.video_codec_context, orig_pkt);
+            av_log(NULL, AV_LOG_DEBUG, "end avcodec_send_packet time: %li\n", get_now_microseconds());
+            if (ret < 0) {
+                av_log(NULL, AV_LOG_ERROR, "Error while sending a packet to the decoder\n");
+                __close(frame, orig_pkt);
+                result.ret = -4;
+                result.error_message = "Error while sending a packet to the decoder";
+                return result;
+            }
+
+            ret = avcodec_receive_frame(vis.video_codec_context, frame);
+            av_log(NULL, AV_LOG_DEBUG, "end avcodec_receive_frame time: %li\n", get_now_microseconds());
+            // 解码一帧数据
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                av_log(NULL, AV_LOG_DEBUG, "Decode finished\n");
+                continue;
+            }
+            if (ret < 0) {
+                av_log(NULL, AV_LOG_ERROR, "Decode error\n");
+                __close(frame, orig_pkt);
+                result.ret = -4;
+                result.error_message = "Error while receive frame from a packet";
+                return result;
+            }
+
+            chose_frames = chose_frames > vis.frame_rate ? vis.frame_rate : chose_frames;
+            int c = vis.frame_rate / chose_frames;
+            av_log(NULL, AV_LOG_DEBUG, "frame_rate %d chose_frames %d c %d\n", vis.frame_rate, chose_frames ,c);
+            long check = pts_time % c;
+            av_log(NULL, AV_LOG_DEBUG, "check %ld\n", check);
+
+            av_log(NULL, AV_LOG_DEBUG, "pts_time: %ld chose_frames: %d frame_rate: %d\n", pts_time,
+                    chose_frames, vis.frame_rate);
+            // 判断帧数，是否取
+            if (check == c - 1) {
+                result.frame = frame;
+                if (queue == NULL) {
+                    av_log(NULL, AV_LOG_INFO, "queue is null\n");
+                }
+                fprintf(stdout, "queue real_size %d\n", queue->real_size);
+                push_linkedQueue(queue, result);
+                sem_post(&semaphore);
+                av_log(NULL, AV_LOG_INFO, "frame ....................\n");
+            }
+
+            av_packet_unref(orig_pkt);
+        }
+    }
+
+    __close(frame, orig_pkt);
+
+    return result;
 }

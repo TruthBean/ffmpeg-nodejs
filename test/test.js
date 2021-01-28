@@ -1,16 +1,14 @@
 const fs = require('fs');
 const FFmpegNode = require('../index');
 
-// let video_addr = "35435435345435345345345";
-let video_addr = "rtsp://admin:iec123456@192.168.1.71:554/h264/ch5/main/av_stream";
-// let video_addr = "http://ivi.bupt.edu.cn/hls/cctv1.m3u8";
-// let video_addr = "rtsp://admin:123456@192.168.1.61:554/h264/ch1/main/av_stream";
-// let video_addr = "rtsp://admin:123456@192.168.1.68:554/h264/ch1/main/av_stream";
+let video_addr = "http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8";
+video_addr = "rtsp://admin:iec123456@192.168.1.71:554/h264/ch5/main/av_stream";
+// video_addr = "http://ivi.bupt.edu.cn/hls/cctv1.m3u8";
+// video_addr = "rtsp://admin:123456@192.168.1.61:554/h264/ch1/main/av_stream";
+// video_addr = "rtsp://admin:123456@192.168.1.68:554/h264/ch1/main/av_stream";
+// video_addr = "rtsp://10.130.104.9/16854277_0"
 let dir = "/opt/ffmpeg_nodejs/test";
-// dir = "/mnt/h/oceanai-workspace/ffmpeg-node";
-// dir = "/media/oceanai/DevOps/oceanai-workspace/ffmpeg-node-cmake";
-// let dir = "/mnt/z/U/DevOps/javascript/ffmpeg-nodejs/test";
-// let dir = "/workspaces/ffmpeg-nodejs/test";
+dir = __dirname + "/tmp/";
 
 let level = FFmpegNode.LEVEL();
 let type = FFmpegNode.TYPE();
@@ -185,7 +183,7 @@ async function runWithoutCallback() {
 }
 
 function runWithCallback() {
-    let ffmpegNode = FFmpegNode.init(video_addr, 10, false, false, FFmpegNode.LEVEL().INFO, 0, true);
+    let ffmpegNode = FFmpegNode.init(video_addr, 10, false, false, FFmpegNode.LEVEL().DEBUG, 0, true);
     ffmpegNode.then((obj) => {
         obj.asyncReadImageBuffer(100, target_type, 10);
         obj.on("data", (buffer) => {
@@ -218,7 +216,7 @@ function runWithCallback() {
 let videoFilePath = dir + "/tmp/videos/buffers.flv";
 // FFmpegNode.recordVideo(rtsp_addr, videoFilePath, 5, true);
 
-// runWithCallback();
+runWithCallback();
 testReadImageStreamThreadly();
 
 setInterval(() => {
