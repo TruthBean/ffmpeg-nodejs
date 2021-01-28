@@ -11,6 +11,15 @@
 
 #include "./common.h"
 
-int record_video(const char *video_url, const char *output_filename, const int record_seconds, const bool use_gpu);
+typedef enum MuxingStreamType
+{
+    HLS,
+    MPEGTS,
+    FLV,
+    MP4,
+    RAW
+} MuxingStreamType;
+
+int record_video(const char *video_url, const char *output_filename, const enum MuxingStreamType type, const int record_seconds, const bool use_gpu);
 
 #endif //FFMPEG_NODEJS_RECORD_VIDEO_H

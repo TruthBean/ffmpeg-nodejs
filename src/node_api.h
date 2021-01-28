@@ -1,11 +1,20 @@
-#ifndef EXTERNAL_NODE_API_H_
-#define EXTERNAL_NODE_API_H_
+#ifndef _ADDON_H_
+#define _ADDON_H_
 
-#define EXTERNAL_NAPI
-// #include "../node_modules/node-addon-api/src/node_api.h"
-// #include "../node_modules/node-addon-api/src/node_api_types.h"
 
-#define NAPI_EXPERIMENTAL
+/*
+        1           2           3           4           5           6
+v6.x                v6.14.2*
+v8.x    v8.0.0*     v8.10.0*    v8.11.2     v8.16.0
+v9.x    v9.0.0*     v9.3.0*     v9.11.0*
+v10.x   v10.0.0     v10.0.0     v10.0.0     v10.16.0    v10.17.0    v10.20.0
+v11.x   v11.0.0     v11.0.0     v11.0.0     v11.8.0
+v12.x   v12.0.0     v12.0.0     v12.0.0     v12.0.0     v12.11.0    v12.17.0
+v13.x   v13.0.0     v13.0.0     v13.0.0     v13.0.0     v13.0.0
+v14.x   v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0
+*/
+#define NAPI_VERSION 4
+// #include <node/js_native_api.h>
 #include <node/node_api.h>
 
 #ifndef __USE_UNIX98
@@ -19,7 +28,7 @@
 #define GET_AND_THROW_LAST_ERROR(env)                                                                                          \
     do                                                                                                                         \
     {                                                                                                                          \
-        const napi_extended_error_info *error_info;                                                                            \
+        const napi_extended_error_info *error_info = NULL;                                                                     \
         napi_get_last_error_info((env), &error_info);                                                                          \
         bool is_pending;                                                                                                       \
         napi_is_exception_pending((env), &is_pending);                                                                         \
@@ -28,6 +37,7 @@
         {                                                                                                                      \
             const char *error_message = error_info->error_message != NULL ? error_info->error_message : "empty error message"; \
             napi_throw_error((env), NULL, error_message);                                                                      \
+            return NULL                                                                                                        \
         }                                                                                                                      \
     } while (0)
 
@@ -87,4 +97,6 @@
         name, 0, func, 0, 0, 0, napi_default, 0 \
     }
 
-#endif //EXTERNAL_NODE_API_H_
+napi_value create_addon(napi_env env);
+
+#endif //_ADDON_H_

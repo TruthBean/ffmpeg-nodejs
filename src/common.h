@@ -3,10 +3,21 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif // _WIN32
 #include <string.h>
 
+#ifdef _WIN32
+#include <time.h>
+#include <windows.h>
+#else
 #include <sys/time.h>
+#endif
 
+#include <libavutil/avstring.h>
+#include <libavutil/time.h>
+#include <libavutil/imgutils.h>
 #include <libavutil/log.h>
 #include <libavutil/frame.h>
 #include <libavcodec/avcodec.h>
@@ -14,20 +25,23 @@
 
 #include <jpeglib.h>
 
-enum ImageStreamType {
+enum ImageStreamType
+{
     YUV = 0,
     RGB,
     JPEG
 };
 
-enum FrameStatus {
+enum FrameStatus
+{
     START = 0,
     END = 1,
     GRAB = 2,
     PENDIING = 3
 };
 
-typedef struct FrameData {
+typedef struct FrameData
+{
     AVFrame *frame;
     long pts;
     enum ImageStreamType type;
@@ -39,12 +53,14 @@ typedef struct FrameData {
     char *error_message;
 
     bool isThreadly;
+
+    bool abort;
 } FrameData;
 
 time_t get_now_microseconds();
 
 void jpeg_write_mem(uint8_t *raw_data, int quality, unsigned int width, unsigned int height,
-                           unsigned char **jpeg_data, unsigned long *jpeg_size);
+                    unsigned char **jpeg_data, unsigned long *jpeg_size);
 
 /**
  * 拷贝avframe的数据，并转变成JPEG格式数据
@@ -62,3 +78,9 @@ void copy_frame_data_and_transform_2_jpeg(const AVCodecContext *codec_context, F
  * @return FrameData @see FrameData
  **/
 void copy_frame_raw_data(const AVCodecContext *codec_context, FrameData *result);
+
+void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, const int64_t timeout, const bool use_gpu, const bool use_tcp);
+
+void frame_data_deep_copy(FrameData *data, FrameData *dist_data);
+
+void free_frame_data(FrameData *data);
