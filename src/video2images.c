@@ -10,7 +10,7 @@ static volatile FrameTimeOut frame_time_out;
  * 
  * @param vis @see Video2ImageStream
  **/
-void open_inputfile(Video2ImageStream *result, const char *filename, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id)
+void open_inputfile(Video2ImageStream *result, const char *filename, const bool nobuffer, const int64_t timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id)
 {
     FrameTimeOut _frame_time_out = {
         .status = START,
@@ -29,6 +29,7 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
 
     int ret;
 
+    // AVDictionary *dictionary = av_malloc(sizeof(AVDictionary *));
     AVDictionary *dictionary = NULL;
 
     result->format_context = NULL;
@@ -36,20 +37,21 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
     result->video_codec_context = NULL;
     result->ret = -1;
 
-    av_log(NULL, AV_LOG_DEBUG, "input url video addr %s \n", filename);
-    int error = avformat_network_init();
+    av_log(NULL, AV_LOG_DEBUG, "open_inputfile --> input url video addr %s \n", filename);
+    /* int error = avformat_network_init();
     if (error != 0)
     {
         av_log(NULL, AV_LOG_ERROR, "network init error\n");
         release(video_codec_context, format_context, false);
         result->ret = -1;
         return;
-    }
+    }*/
 
     result->init = true;
 
     open_input_dictionary_set(&dictionary, nobuffer, timeout, use_gpu, use_tcp);
 
+    av_log(NULL, AV_LOG_DEBUG, "open_inputfile --> allowed_media_types : video \n");
     if (av_dict_set(&dictionary, "allowed_media_types", "video", 0) < 0)
     {
         av_log(NULL, AV_LOG_ERROR, "set allowed_media_types to video error\n");
@@ -61,6 +63,7 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
     // }
 
     // 初始化 format_context
+    av_log(NULL, AV_LOG_DEBUG, "open_inputfile --> avformat_alloc_context \n");
     format_context = avformat_alloc_context();
     av_log(NULL, AV_LOG_DEBUG, "input file: %s\n", filename);
     if ((ret = avformat_open_input(&format_context, filename, NULL, &dictionary)) != 0)
@@ -101,12 +104,13 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
 
     AVCodec *codec = NULL;
     AVDictionary *opts = NULL;
-    av_dict_set(&opts, "refcounted_frames", "true", 0);
+    av_dict_set(&opts, "refcounted_frames", "1", 0);
     enum AVCodecID codec_id = video_stream->codecpar->codec_id;
     // 判断摄像头视频格式是h264还是h265
     if (use_gpu && codec_id == AV_CODEC_ID_H264)
     {
         codec = avcodec_find_decoder_by_name("h264_cuvid");
+        // GPU to be used for decoding
         av_dict_set(&opts, "gpu", gpu_id, 0);
     }
     else if (codec_id == AV_CODEC_ID_HEVC)
@@ -114,8 +118,14 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
         if (use_gpu)
         {
             codec = avcodec_find_decoder_by_name("hevc_nvenc");
+            // GPU to be used for decoding
             av_dict_set(&opts, "gpu", gpu_id, 0);
         }
+        else
+        {
+            codec = avcodec_find_decoder_by_name("hevc");
+        }
+        // force low delay
         av_dict_set(&opts, "flags", "low_delay", 0);
     }
     if (codec == NULL)
@@ -260,14 +270,14 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
 
     int ret;
 
-    if (video_codec_context != NULL)
+    if (video_codec_context != NULL && video_codec_context)
     {
         av_log(NULL, AV_LOG_DEBUG, "avcodec_free_context ... \n");
         avcodec_free_context(&video_codec_context);
         video_codec_context = NULL;
     }
 
-    if (format_context != NULL)
+    if (format_context != NULL && format_context)
     {
         av_log(NULL, AV_LOG_DEBUG, "avformat_close_input ... \n");
         avformat_close_input(&format_context);
@@ -288,14 +298,14 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
 
 static void __close(AVFrame *frame, AVPacket *packet)
 {
-    if (frame != NULL)
+    if (frame != NULL && frame)
     {
         av_frame_unref(frame);
         av_frame_free(&frame);
         frame = NULL;
     }
 
-    if (packet != NULL)
+    if (packet != NULL && packet)
     {
         av_packet_unref(packet);
         av_packet_free(&packet);

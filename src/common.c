@@ -3,17 +3,17 @@
 time_t get_now_microseconds()
 {
     time_t result;
-    time_t now_seconds;
+    // time_t now_seconds;
 
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    now_seconds = tv.tv_sec;
+    // now_seconds = tv.tv_sec;
 
     result = 1000000 * tv.tv_sec + tv.tv_usec;
 
-    char buff[20];
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now_seconds));
-    av_log(NULL, AV_LOG_DEBUG, "now: %s\n", buff);
+    // char buff[20];
+    // strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now_seconds));
+    // av_log(NULL, AV_LOG_DEBUG, "now: %s\n", buff);
 
     return result;
 }
@@ -309,46 +309,82 @@ void copy_frame_data_and_transform_2_jpeg(const AVCodecContext *codec_context, F
     return;
 }
 
-void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, const int timeout, const bool use_gpu, const bool use_tcp)
+// av_dict_set 参数在 libavcodec/options_table.h libavformat/options_table.h
+void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, const int64_t timeout, const bool use_gpu, const bool use_tcp)
 {
-    // 单位 微秒
-    char str[12];
-    sprintf(str, "%d", timeout * 1000000);
-    av_log(NULL, AV_LOG_DEBUG, "timeout : %d \n", timeout);
+    const int64_t stimeout = timeout * 1000;
+    // av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> timeout : %ld \n", stimeout);
+    // set maximum timeout (in seconds) to wait for incoming connections (-1 is infinite, imply flag listen)
+    // av_dict_set_int(dictionary, "timeout", stimeout, 0);
+
+    // set timeout (in microseconds) of socket TCP I/O operations
+    // // 单位 微秒
+    // char str[12];
+    // sprintf(str, "%d", timeout * 1000000);
+    av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> stimeout : %ld \n", stimeout);
     // 当av_read_frame由于视频流断开而阻塞的时候，超时 timeout 秒后会断开连接;
-    av_dict_set(dictionary, "stimeout", str, 0);
-    // av_dict_set_int(dictionary, "stimeout", (int64_t)timeout, 0);
+    // av_dict_set(dictionary, "stimeout", str, 0);
+    av_dict_set_int(dictionary, "stimeout", stimeout, 0);
+
+
     // av_dict_set_int(dictionary, "start-on-prepared", (int64_t)1, 0);
 
     // av_dict_set_int(dictionary, "max_cached_duration", (int64_t)10, 0);
 
-    av_dict_set(dictionary, "analyzeduration", "20000000", 0);
-    av_dict_set(dictionary, "probsize", "40960", 0);
-    // av_dict_set_int(dictionary, "analyzeduration", (int64_t)2000000, 0);
-    // av_dict_set_int(dictionary, "probsize", (int64_t)4096, 0);
+    // specify how many microseconds are analyzed to probe the input
+    av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> analyzeduration : 155808000 \n");
+    // 1920 * 1080 * 25 * 3
+    // 1920x1080 25fps YUV420P
+    av_dict_set_int(dictionary, "analyzeduration", (int64_t)155808000, 0);
 
-    // av_dict_set_int(dictionary, "max-fps", (int64_t)75, 0);
+    av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> probsize : 2073600 \n");
+    av_dict_set_int(dictionary, "probsize", (int64_t)2073600, 0);
+
+    // fps default value is 25
     // av_dict_set_int(dictionary, "fps", (int64_t)25, 0);
 
+    // fflags的值(默认值是autobsf)：
+    //  flush_packets: reduce the latency by flushing out packets immediately
+    //  ignidx: ignore index
+    //  genpts: generate pts
+    //  nofillin: do not fill in missing values that can be exactly calculated
+    //  noparse: disable AVParsers, this needs nofillin too
+    //  igndts: ignore dts
+    //  discardcorrupt: discard corrupted frames
+    //  sortdts: try to interleave outputted packets by dts
+    //  fastseek: fast but inaccurate seeks
+    //  nobuffer: reduce the latency introduced by optional buffering
+    //  bitexact: do not write random/volatile data
+    //  shortest: stop muxing with the shortest stream
+    //  autobsf: add needed bsfs automatically
+    //  
     if (nobuffer)
     {
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> fflags : nobuffer \n");
         av_dict_set(dictionary, "fflags", "nobuffer", 0);
     }
     else
     {
+        av_dict_set(dictionary, "fflags", "autobsf", 0);
         // 设置缓存大小
-        av_dict_set(dictionary, "buffer_size", "4096", 0);
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> buffer_size : 4096 \n");
+        av_dict_set(dictionary, "buffer_size", "40960", 0);
+
+        // enable flushing of the I/O context after each packet，value is -1 ~ 1
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> flush_packets : 1 \n");
         av_dict_set(dictionary, "flush_packets", "1", 0);
-        av_dict_set(dictionary, "max_delay", "0", 0);
-        av_dict_set(dictionary, "rtbufsize", "4096", 0);
-        // av_dict_set_int(dictionary, "buffer_size", (int64_t)40960, 0);
-        // av_dict_set_int(dictionary, "flush_packets", (int64_t)0, 0);
-        // av_dict_set_int(dictionary, "max_delay", (int64_t)0, 0);
-        // av_dict_set_int(dictionary, "rtbufsize", (int64_t)40960, 0);
+        // maximum muxing or demuxing delay in microseconds
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> max_delay : 0 \n");
+        // av_dict_set(dictionary, "max_delay", "0", 0);
+        av_dict_set_int(dictionary, "max_delay", (int64_t)0, 0);
+        // max memory used for buffering real-time frames
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> rtbufsize : 4096 \n");
+        av_dict_set_int(dictionary, "rtbufsize", (int64_t)2073600, 0);
     }
 
     if (use_tcp)
     {
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> rtsp_transport : tcp \n");
         if (av_dict_set(dictionary, "rtsp_transport", "tcp", 0) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to tcp error\n");
@@ -366,6 +402,7 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
     }
     else
     {
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> rtsp_transport : udp \n");
         if (av_dict_set(dictionary, "rtsp_transport", "udp", 0) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "set rtsp_transport to udp error\n");
@@ -378,28 +415,32 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
 
     if (use_gpu)
     {
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel_device : 0 \n");
         if (av_dict_set(dictionary, "hwaccel_device", "0", 0) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "no hwaccel device\n");
         }
 
         // 使用cuda
-        if (av_dict_set(dictionary, "hwaccel", "cuda", 0) < 0)
+        /* av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel : cuda \n");
+        if (av_dict_set(dictionary, "hwaccel", "cuda", 1) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "cuda acceleration error\n");
-        }
+        } */
 
         // 使用 cuvid
-        if (av_dict_set(dictionary, "hwaccel", "cuvid", 0) < 0)
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel : cuvid \n");
+        if (av_dict_set(dictionary, "hwaccel", "cuvid", 1) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "cuvid acceleration error\n");
         }
 
         // 使用 opencl
-        if (av_dict_set(dictionary, "hwaccel", "opencl", 0) < 0)
+        /*av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel : opencl \n");
+        if (av_dict_set(dictionary, "hwaccel", "opencl", 1) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
-        }
+        }*/
     }
 }
 

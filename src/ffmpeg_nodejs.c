@@ -161,7 +161,8 @@ static napi_value handle_init_read_video(napi_env env, napi_callback_info info)
     else
     {
         av_log(NULL, AV_LOG_DEBUG, "handle_init_read_video ---> promise resolve\n");
-        napi_create_double(env, true, &result);
+        double zero = 0.0;
+        napi_create_double(env, zero, &result);
         status = napi_resolve_deferred(env, deferred, result);
         if (status != napi_ok)
         {
@@ -714,7 +715,7 @@ static void callback_thread(napi_env env, void *data)
         av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> frameData.frame not null \n");
         frameData.frame = NULL;
     }
-    if (frameData.file_data != NULL)
+    if (frameData.file_data != NULL && frameData.file_data)
     {
         av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> frameData.file_data not null \n");
         av_freep(&frameData.file_data);
