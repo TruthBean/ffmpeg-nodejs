@@ -5,7 +5,7 @@ build/*
 node_modules/*
 package-lock.json
 
-cmake-build-debug/*
+out/*
 
 tmp/*
 deps/

@@ -37,6 +37,7 @@ endif()
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
+MESSAGE(STATUS "project source dir: ${PROJECT_SOURCE_DIR}")
 SET(CMAKE_MODULE_PATH ${CMAKE_ROOT}/Modules ${PROJECT_SOURCE_DIR}/cmake/module)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
@@ -63,14 +64,15 @@ endif(WINDOWS)
 
 # node
 if(WINDOWS)
-    include_directories("${PROJECT_SOURCE_DIR}/packages/nodejs-12.13.0/include")
+    include_directories("${PROJECT_SOURCE_DIR}/packages/node-v12.20.1/include")
+    target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/node-v12.20.1/lib/node.lib")
 endif()
 
 # libjpeg
 if(WINDOWS)
     include_directories("${PROJECT_SOURCE_DIR}/packages/libjpeg-turbo-2.0.3/include")
 
-    if(CMAKE_CL_64)
+    # if(CMAKE_CL_64)
         target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/libjpeg-turbo-2.0.3/lib/jpeg.lib")
         target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/libjpeg-turbo-2.0.3/lib/turbojpeg.lib")
 
@@ -78,9 +80,9 @@ if(WINDOWS)
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${PROJECT_SOURCE_DIR}/packages/libjpeg-turbo-2.0.3/bin"
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    else(CMAKE_CL_64)
-        message(STATUS "Not support!")
-    endif()
+    # else(CMAKE_CL_64)
+    #    message(STATUS "Not support!")
+    # endif()
 else()
     find_package(TurboJpeg REQUIRED)
     mark_as_advanced(LIB_TURBO_JPEG_INCLUDE_DIR LIB_TURBO_JPEG_LIBRARIES)
@@ -124,7 +126,7 @@ endif()
 # ffmpeg
 if(WINDOWS)
     include_directories("${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/include")
-    if(CMAKE_CL_64)
+    # if(CMAKE_CL_64)
         link_directories("${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib")
 
         target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/avcodec-58.lib")
@@ -140,9 +142,9 @@ if(WINDOWS)
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/bin"
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    else()
-        message(STATUS "Not support!")
-    endif()
+    # else()
+    #    message(STATUS "Not support!")
+    # endif()
 else()
     find_package(FFmpeg REQUIRED)
     if(FFMPEG_FOUND)
@@ -185,5 +187,6 @@ else()
     endif()
 
 endif()
+
 
 #######################################################################################################

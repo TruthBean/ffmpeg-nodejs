@@ -55,6 +55,8 @@ typedef struct FrameData
     bool isThreadly;
 
     bool abort;
+
+    int chose_frames;
 } FrameData;
 
 time_t get_now_microseconds();

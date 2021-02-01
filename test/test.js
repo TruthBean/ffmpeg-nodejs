@@ -8,7 +8,7 @@ video_addr = "rtsp://admin:iec123456@192.168.1.71:554/h264/ch5/main/av_stream";
 // video_addr = "rtsp://admin:123456@192.168.1.68:554/h264/ch1/main/av_stream";
 // video_addr = "rtsp://10.130.104.9/16854277_0"
 let dir = "/opt/ffmpeg_nodejs/test";
-dir = __dirname + "/tmp/";
+dir = __dirname;
 
 let level = FFmpegNode.LEVEL();
 let type = FFmpegNode.TYPE();
@@ -137,6 +137,7 @@ async function testReadImageStreamThreadly() {
             begin = new Date();
             let name = dir + "/tmp/images/buffer-" + t1.getHours() + "-" + t1.getMinutes() + "-" + t1.getSeconds() + "-" + (i++) + suffix;
             console.info(name);
+            console.log(buffer);
             fs.writeFileSync(name, buffer);
             console.info("====================================");
             // fs.rmdirSync(name, { recursive: true });
@@ -216,7 +217,7 @@ function runWithCallback() {
 let videoFilePath = dir + "/tmp/videos/buffers.flv";
 // FFmpegNode.recordVideo(rtsp_addr, videoFilePath, 5, true);
 
-runWithCallback();
+// runWithCallback();
 testReadImageStreamThreadly();
 
 setInterval(() => {

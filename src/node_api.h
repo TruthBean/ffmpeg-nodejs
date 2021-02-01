@@ -20,7 +20,13 @@ v14.x   v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0
 #ifndef __USE_UNIX98
 #define __USE_UNIX98
 #endif
+
+#ifdef _WIN32
+#include <node/uv.h>
+#else
 #include <uv.h>
+#endif // _WIN32
+
 
 // Empty value so that macros here are able to return NULL or void
 #define NAPI_RETVAL_NOTHING // Intentionally blank #define

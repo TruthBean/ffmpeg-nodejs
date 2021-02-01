@@ -18,6 +18,12 @@
 #include "./common.h"
 #include "./collection.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <semaphore.h>
+#endif
+
 typedef struct Video2ImageStream
 {
     AVFormatContext *format_context;
@@ -29,6 +35,7 @@ typedef struct Video2ImageStream
     char *error_message;
     int frame_rate;
     bool init;
+    bool release;
 } Video2ImageStream;
 
 typedef struct FrameTimeOut
@@ -50,8 +57,10 @@ void release(AVCodecContext *video_codec_context, AVFormatContext *format_contex
 
 // ================================================================================================
 
+#ifndef _WIN32
 LinkedQueueNodeData grab_frame_to_queue(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, sem_t semaphore);
 
 void *producer(void *data);
+#endif
 
 #endif // FFMPEG_NODEJS_VIDEO2IMAGES_H

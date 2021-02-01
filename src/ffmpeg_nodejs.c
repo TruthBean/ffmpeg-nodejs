@@ -16,7 +16,7 @@ typedef struct ReadImageBufferParams
     int quality;
 } ReadImageBufferParams;
 
-static volatile ReadImageBufferParams params;
+// static volatile ReadImageBufferParams params;
 // static volatile bool thread = false;
 
 /**
@@ -71,7 +71,12 @@ static napi_value handle_init_read_video(napi_env env, napi_callback_info info)
     // put param value into char array
     size_t input_filename_res;
     const size_t input_filename_len = length + 1;
+#ifdef _WIN32
+    char* input_filename;
+#else
     char input_filename[input_filename_len];
+#endif // _WIN32
+
     status = napi_get_value_string_utf8(env, argv[0], input_filename, length + 1, &input_filename_res);
 
     if (status != napi_ok)
@@ -106,7 +111,11 @@ static napi_value handle_init_read_video(napi_env env, napi_callback_info info)
     // put param value into char array
     size_t gpu_id_res;
     const size_t gpu_id_len = length + 1;
+#ifdef _WIN32
+    char* gpu_id;
+#else
     char gpu_id[gpu_id_len];
+#endif // _WIN32
     status = napi_get_value_string_utf8(env, argv[5], gpu_id, length + 1, &gpu_id_res);
 
     if (status != napi_ok)
@@ -139,27 +148,7 @@ static napi_value handle_init_read_video(napi_env env, napi_callback_info info)
     if (vis == NULL || !vis)
     {
         av_log(NULL, AV_LOG_ERROR, "handle_init_read_video -->  Video2ImageStream is null \n");
-    }
 
-    av_log(NULL, AV_LOG_DEBUG, "handle_init_read_video -->  vis->ret %d \n", vis->ret);
-    if (vis->ret < 0)
-    {
-        // 处理错误信息
-        napi_value message;
-        status = napi_create_string_utf8(env, vis->error_message, NAPI_AUTO_LENGTH, &message);
-        if (status != napi_ok)
-        {
-            napi_throw_error(env, NULL, "error message create error");
-        }
-
-        status = napi_reject_deferred(env, deferred, message);
-        if (status != napi_ok)
-        {
-            napi_throw_error(env, NULL, "promise reject error");
-        }
-    }
-    else
-    {
         av_log(NULL, AV_LOG_DEBUG, "handle_init_read_video ---> promise resolve\n");
         double zero = 0.0;
         napi_create_double(env, zero, &result);
@@ -167,6 +156,37 @@ static napi_value handle_init_read_video(napi_env env, napi_callback_info info)
         if (status != napi_ok)
         {
             napi_throw_error(env, NULL, "promise resolve error");
+        }
+    }
+    else
+    {
+        av_log(NULL, AV_LOG_DEBUG, "handle_init_read_video -->  vis->ret %d \n", vis->ret);
+        if (vis->ret < 0)
+        {
+            // 处理错误信息
+            napi_value message;
+            status = napi_create_string_utf8(env, vis->error_message, NAPI_AUTO_LENGTH, &message);
+            if (status != napi_ok)
+            {
+                napi_throw_error(env, NULL, "error message create error");
+            }
+
+            status = napi_reject_deferred(env, deferred, message);
+            if (status != napi_ok)
+            {
+                napi_throw_error(env, NULL, "promise reject error");
+            }
+        }
+        else
+        {
+            av_log(NULL, AV_LOG_DEBUG, "handle_init_read_video ---> promise resolve\n");
+            double zero = 0.0;
+            napi_create_double(env, zero, &result);
+            status = napi_resolve_deferred(env, deferred, result);
+            if (status != napi_ok)
+            {
+                napi_throw_error(env, NULL, "promise resolve error");
+            }
         }
     }
 
@@ -354,6 +374,9 @@ static void callback_completion(napi_env env, napi_status status, void *data)
         .isThreadly = false
         };
 
+    ReadImageBufferParams *_params = (ReadImageBufferParams *)data;
+    ReadImageBufferParams params = *_params;
+
     video2images_grab(vis, params.quality, params.chose_frames, true, params.type, handle_frame_data, &frameData);
     av_log(NULL, AV_LOG_DEBUG, "callback_completion-> quality: %d  chose_frames: %d type: %d \n", params.quality, params.chose_frames, params.type);
 
@@ -503,10 +526,10 @@ static napi_value async_handle_video_to_image_buffer(napi_env env, napi_callback
         .quality = quality,
         .type = type};
 
-    params = _params;
+    // params = _params;
 
     napi_value async_resource = NULL;
-    status = napi_create_async_work(env, async_resource, resource_name, callback_execute, callback_completion, NULL, &(async_work_info.work));
+    status = napi_create_async_work(env, async_resource, resource_name, callback_execute, callback_completion, &_params, &(async_work_info.work));
     av_log(NULL, AV_LOG_DEBUG, "napi_create_async_work %d\n", status);
 
     napi_queue_async_work(env, async_work_info.work);
@@ -552,7 +575,7 @@ static void consumer_callback_threadsafe(napi_env env, napi_value js_callback, v
         {
             av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> node1 %ld \n", frame_data->pts);
 
-            av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> params.type .......>>>>>>> %d \n", params.type);
+            // av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> params.type .......>>>>>>> %d \n", params.type);
 
             /*
             if (params.type == JPEG)
@@ -675,9 +698,9 @@ static void handle_frame_data_threadly(FrameData *frameData)
         {
             av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> node1 %ld \n", frameData->pts);
 
-            av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> params.type .......>>>>>>> %d \n", params.type);
+            // av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> params.type .......>>>>>>> %d \n", params.type);
 
-            if (params.type == JPEG)
+            if (frameData->type == JPEG)
                 copy_frame_data_and_transform_2_jpeg(vis->video_codec_context, frameData);
             else
                 copy_frame_raw_data(vis->video_codec_context, frameData);
@@ -702,12 +725,25 @@ static void callback_thread(napi_env env, void *data)
 {
     av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> callback_thread \n");
     // napi_acquire_threadsafe_function(async_work_info.func);
+
+    if (data == NULL || !data)
+    {
+        av_log(NULL, AV_LOG_ERROR, "callback_thread data is null! \n");
+    }
+    ReadImageBufferParams* _params = (ReadImageBufferParams*)data;
+    ReadImageBufferParams params = *_params;
     FrameData frameData = {
         .pts = 0,
         .frame = NULL,
         .ret = 0,
         .isThreadly = true,
         .abort = false};
+    frameData.chose_frames = _params->chose_frames;
+    av_log(NULL, AV_LOG_DEBUG, "callback_thread data chose_frames: %d \n", _params->chose_frames);
+    frameData.type = _params->type;
+    av_log(NULL, AV_LOG_DEBUG, "callback_thread data type: %d \n", _params->type);
+    frameData.quality = _params->quality;
+    av_log(NULL, AV_LOG_DEBUG, "callback_thread data quality: %d \n", _params->quality);
     video2images_grab(vis, params.quality, params.chose_frames, false, params.type, handle_frame_data_threadly, &frameData);
     av_log(NULL, AV_LOG_INFO, "async_handle_video_to_image_buffer_threadly --> callback_thread exit \n");
     if (frameData.frame != NULL)
@@ -840,7 +876,7 @@ napi_value async_handle_video_to_image_buffer_threadly(napi_env env, napi_callba
         .quality = quality,
         .type = type};
 
-    params = _params;
+    // params = _params;
 
     napi_threadsafe_function result;
     napi_create_threadsafe_function(env, callback, NULL, resource_name, 1, 1, NULL, &finalize, NULL, &consumer_callback_threadsafe, &result);
@@ -850,7 +886,7 @@ napi_value async_handle_video_to_image_buffer_threadly(napi_env env, napi_callba
     // thread = true;
 
     napi_value async_resource = NULL;
-    status = napi_create_async_work(env, async_resource, resource_name, &callback_thread, &callback_thread_completion, NULL, &(async_work_info.work));
+    status = napi_create_async_work(env, async_resource, resource_name, &callback_thread, &callback_thread_completion, &_params, &(async_work_info.work));
     av_log(NULL, AV_LOG_DEBUG, "async_handle_video_to_image_buffer_threadly --> napi_create_async_work %d\n", status);
 
     napi_queue_async_work(env, async_work_info.work);
@@ -970,7 +1006,11 @@ napi_value handle_record_video(napi_env env, napi_callback_info info)
     // put param value into char array
     size_t input_filename_res;
     const size_t input_filename_len = length + 1;
+#ifdef _WIN32
+    char* input_filename;
+#else
     char input_filename[input_filename_len];
+#endif // _WIN32
     status = napi_get_value_string_utf8(env, argv[0], input_filename, length + 1, &input_filename_res);
 
     if (status != napi_ok)
@@ -990,7 +1030,11 @@ napi_value handle_record_video(napi_env env, napi_callback_info info)
     // put param value into char array
     size_t output_filename_res;
     const size_t output_filename_len = length + 1;
+#ifdef _WIN32
+    char* output_filename;
+#else
     char output_filename[output_filename_len];
+#endif // _WIN32
     status = napi_get_value_string_utf8(env, argv[1], output_filename, length + 1, &output_filename_res);
 
     if (status != napi_ok)

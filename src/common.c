@@ -6,8 +6,8 @@ time_t get_now_microseconds()
     time_t now_seconds;
 
 #ifdef _WIN32
-	now_seconds = time(NULL);
-	result = now_seconds;
+    now_seconds = time(NULL);
+    result = now_seconds;
 #else
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -18,13 +18,13 @@ time_t get_now_microseconds()
 
     char buff[20];
 #ifdef _WIN32
-	struct tm now_time;
-	localtime_s(&now_time, &now_seconds);
-	strftime(buff, 20, "%Y-%m-%d %H:%M:%S", &now_time);
+    struct tm now_time;
+    localtime_s(&now_time, &now_seconds);
+    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", &now_time);
 #else
-	strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now_seconds));
+    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now_seconds));
 #endif
-	av_log(NULL, AV_LOG_DEBUG, "now: %s\n", buff);
+    av_log(NULL, AV_LOG_DEBUG, "now: %s\n", buff);
 
     return result;
 }

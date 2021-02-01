@@ -559,7 +559,7 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
 }
 
 // =================================================================================================================================
-
+#ifndef _WIN32
 LinkedQueueNodeData grab_frame_to_queue(Video2ImageStream vis, int chose_frames, LinkedQueue *queue, sem_t semaphore) {
     LinkedQueueNodeData result = {
         .pts = 0,
@@ -665,3 +665,4 @@ LinkedQueueNodeData grab_frame_to_queue(Video2ImageStream vis, int chose_frames,
 
     return result;
 }
+#endif

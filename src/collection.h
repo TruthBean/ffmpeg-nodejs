@@ -5,7 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <time.h>
+#include <windows.h>
+#else
 #include <sys/time.h>
+#endif
 
 #include <libavutil/log.h>
 #include <libavutil/frame.h>
