@@ -51,38 +51,18 @@ if(WINDOWS)
 else()
     # thread
     target_link_libraries(${PROJECT_NAME} "-lpthread")
-
-    # target_link_libraries(${PROJECT_NAME} "-logg")
-    # target_link_libraries(${PROJECT_NAME} "-lfribidi")
-    # target_link_libraries(${PROJECT_NAME} "-lfontconfig")
-    # target_link_libraries(${PROJECT_NAME} "-lharfbuzz")
-    # target_link_libraries(${PROJECT_NAME} "-lglib-2.0")
-    # target_link_libraries(${PROJECT_NAME} "-lgraphite2")
 endif(WINDOWS)
 
 #######################################################################################################
 
 # node
 if(WINDOWS)
-    include_directories("${PROJECT_SOURCE_DIR}/packages/node-v12.20.1/include")
-    target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/node-v12.20.1/lib/node.lib")
+#
 endif()
 
 # libjpeg
 if(WINDOWS)
-    include_directories("${PROJECT_SOURCE_DIR}/packages/libjpeg-turbo-2.0.3/include")
-
-    # if(CMAKE_CL_64)
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/libjpeg-turbo-2.0.3/lib/jpeg.lib")
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/libjpeg-turbo-2.0.3/lib/turbojpeg.lib")
-
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${PROJECT_SOURCE_DIR}/packages/libjpeg-turbo-2.0.3/bin"
-                $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    # else(CMAKE_CL_64)
-    #    message(STATUS "Not support!")
-    # endif()
+#
 else()
     find_package(TurboJpeg REQUIRED)
     mark_as_advanced(LIB_TURBO_JPEG_INCLUDE_DIR LIB_TURBO_JPEG_LIBRARIES)
@@ -125,26 +105,7 @@ endif()
 
 # ffmpeg
 if(WINDOWS)
-    include_directories("${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/include")
-    # if(CMAKE_CL_64)
-        link_directories("${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib")
-
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/avcodec-58.lib")
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/avdevice-58.lib")
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/avfilter-7.lib")
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/avformat-58.lib")
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/avutil-56.lib")
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/postproc-55.lib")
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/swresample-3.lib")
-        target_link_libraries (${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/lib/swscale-5.lib")
-
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${PROJECT_SOURCE_DIR}/packages/ffmpeg-4.1.4/bin"
-                $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    # else()
-    #    message(STATUS "Not support!")
-    # endif()
+#
 else()
     find_package(FFmpeg REQUIRED)
     if(FFMPEG_FOUND)
@@ -187,6 +148,3 @@ else()
     endif()
 
 endif()
-
-
-#######################################################################################################

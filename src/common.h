@@ -22,6 +22,7 @@
 #include <libavutil/frame.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
+#include <libavformat/avformat.h>
 
 #include <jpeglib.h>
 
@@ -40,8 +41,28 @@ enum FrameStatus
     PENDIING = 3
 };
 
+typedef struct Video2ImageStream
+{
+    AVFormatContext *format_context;
+    AVStream *video_stream;
+    int video_stream_idx;
+    AVCodecContext *video_codec_context;
+    AVCodecParserContext *parser_context;
+    int ret;
+    char *error_message;
+    int frame_rate;
+    bool init;
+    bool release;
+
+    void *func;
+    void *ref;
+    void *work;
+} Video2ImageStream;
+
 typedef struct FrameData
 {
+    Video2ImageStream *vis;
+
     AVFrame *frame;
     long pts;
     enum ImageStreamType type;
@@ -57,6 +78,8 @@ typedef struct FrameData
     bool abort;
 
     int chose_frames;
+
+    void *func;
 } FrameData;
 
 time_t get_now_microseconds();

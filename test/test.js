@@ -30,7 +30,7 @@ switch (target_type) {
 let i = 0;
 
 async function testSyncReadImageBuffer() {
-    let ffmpegNode = await FFmpegNode.init(video_addr, 10, true, true, level.DEBUG, 0, true);
+    let ffmpegNode = await FFmpegNode.init(video_addr, 10, true, true, level.INFO, 0, true);
     let image = null;
     while (true) {
         try {
@@ -59,7 +59,7 @@ async function testSyncReadImageBuffer() {
 }
 
 function testAsyncReadImageBuffer() {
-    let ffmpegNode = FFmpegNode.init(video_addr, 10, true, true, level.DEBUG, 0, true);
+    let ffmpegNode = FFmpegNode.init(video_addr, 10, true, true, level.INFO, 0, true);
     ffmpegNode.then((obj) => {
         obj.readImageStream(100, target_type, 10);
         obj.on("data", (buffer) => {
@@ -126,7 +126,7 @@ function testAsyncReadImageBufferThreadly() {
 
 async function testReadImageStreamThreadly() {
     try {
-        let ffmpegNode = await FFmpegNode.init(video_addr, 10, false, true, level.DEBUG, 0, true);
+        let ffmpegNode = await FFmpegNode.init(video_addr, 10, false, true, level.INFO, 0, true);
         ffmpegNode.readImageStreamThreadly(100, target_type, 5);
         ffmpegNode.on("data", (buffer) => {
             let begin = new Date();
@@ -161,7 +161,7 @@ async function testReadImageStreamThreadly() {
 
 async function runWithoutCallback() {
     try {
-        let ffmpegNode = await FFmpegNode.init(video_addr, 10, false, false, FFmpegNode.LEVEL().DEBUG, 0, false);
+        let ffmpegNode = await FFmpegNode.init(video_addr, 10, false, false, FFmpegNode.LEVEL().INFO, 0, false);
         let image = null;
         while (true) {
             try {
@@ -184,7 +184,7 @@ async function runWithoutCallback() {
 }
 
 function runWithCallback() {
-    let ffmpegNode = FFmpegNode.init(video_addr, 10, false, false, FFmpegNode.LEVEL().DEBUG, 0, true);
+    let ffmpegNode = FFmpegNode.init(video_addr, 10, false, false, FFmpegNode.LEVEL().INFO, 0, true);
     ffmpegNode.then((obj) => {
         obj.asyncReadImageBuffer(100, target_type, 10);
         obj.on("data", (buffer) => {
@@ -217,8 +217,12 @@ function runWithCallback() {
 let videoFilePath = dir + "/tmp/videos/buffers.flv";
 // FFmpegNode.recordVideo(rtsp_addr, videoFilePath, 5, true);
 
+// testSyncReadImageBuffer();
+// testAsyncReadImageBuffer();
+testAsyncReadImageBufferThreadly();
+testAsyncReadImageBufferThreadly();
 // runWithCallback();
-testReadImageStreamThreadly();
+// testReadImageStreamThreadly();
 
 setInterval(() => {
     console.info("fffffffffffffff ....");

@@ -6,9 +6,7 @@ const INFO = 3, DEBUG = 2, ERROR = 1;
 const HLS = 0, MPEGTS = 1, FLV = 2, MP4 = 3, RAW = 4;
 class FFmpegNode extends EventEmitter {
 
-    static sayHello(input, callback) {
-        ffmpeg_nodejs.sayHello(input, callback);
-    }
+    libraryId = 0;
 
     /**
      * init
@@ -58,7 +56,9 @@ class FFmpegNode extends EventEmitter {
 
         self.destroy = false;
         return new Promise((resolve, reject) => {
-            ffmpeg_nodejs.initReadingVideo(self.url, timeout, nobuffer, useGpu, level, gpuId.toString(), useGpu, useTcp).then((ignored) => {
+            ffmpeg_nodejs.initReadingVideo(self.url, timeout, nobuffer, useGpu, level, gpuId.toString(), useGpu, useTcp).then((pointer) => {
+                self.libraryId = pointer;
+                console.info("library pointer: " + pointer);
                 resolve(self);
             }).catch((err) => {
                 self.destroy = true;
@@ -92,7 +92,7 @@ class FFmpegNode extends EventEmitter {
             level = INFO;
         if (typeof type !== "number")
             type = OTHER;
-        ffmpeg_nodejs.recordVideo(url, filename, recordSeconds, useGpu, level, type);
+        ffmpeg_nodejs.recordVideo(libraryId, url, filename, recordSeconds, useGpu, level, type);
     }
 
     /**
@@ -126,8 +126,9 @@ class FFmpegNode extends EventEmitter {
             if (type === YUV) typeNo = 0;
             else if (type === RGB) typeNo = 1;
             else if (type === JPEG) typeNo = 2;
+            let self = this;
             return new Promise((resolve, reject) => {
-                ffmpeg_nodejs.syncReadImageBuffer(frames, typeNo, quality).then((data) => {
+                ffmpeg_nodejs.syncReadImageBuffer(self.libraryId, frames, typeNo, quality).then((data) => {
                     resolve(data);
                 }).catch((err) => {
                     reject(err);
@@ -171,7 +172,7 @@ class FFmpegNode extends EventEmitter {
             else if (type === JPEG) typeNo = 2;
             let that = this;
             this.read = setInterval(() => {
-                ffmpeg_nodejs.asyncReadImageBuffer(typeNo, quality, frames, (obj) => {
+                ffmpeg_nodejs.asyncReadImageBuffer(that.libraryId, typeNo, quality, frames, (obj) => {
                     if (obj !== undefined && obj !== null) {
                         if (obj.error !== undefined && obj.error !== null) {
                             that.emit("error", obj.error);
@@ -213,7 +214,7 @@ class FFmpegNode extends EventEmitter {
             else if (type === RGB) typeNo = 1;
             else if (type === JPEG) typeNo = 2;
             let that = this;
-            ffmpeg_nodejs.asyncReadImageBufferThreadly(typeNo, quality, frames, (obj) => {
+            ffmpeg_nodejs.asyncReadImageBufferThreadly(that.libraryId, typeNo, quality, frames, (obj) => {
                 if (obj !== undefined && obj !== null) {
                     if (obj.error !== undefined && obj.error !== null) {
                         that.emit("error", obj.error);
@@ -234,7 +235,7 @@ class FFmpegNode extends EventEmitter {
             this.destroy = true;
             if (this.read)
                 clearInterval(this.read);
-            return ffmpeg_nodejs.destroyStream();
+            return ffmpeg_nodejs.destroyStream(this.libraryId);
         }
     }
 

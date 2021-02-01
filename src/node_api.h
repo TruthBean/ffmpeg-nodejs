@@ -13,7 +13,7 @@ v12.x   v12.0.0     v12.0.0     v12.0.0     v12.0.0     v12.11.0    v12.17.0
 v13.x   v13.0.0     v13.0.0     v13.0.0     v13.0.0     v13.0.0
 v14.x   v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0
 */
-#define NAPI_VERSION 4
+#define NAPI_VERSION 6
 #include <node/js_native_api.h>
 #include <node/node_api.h>
 

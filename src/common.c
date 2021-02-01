@@ -433,11 +433,11 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
         }
 
         // 使用cuda
-        /* av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel : cuda \n");
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel : cuda \n");
         if (av_dict_set(dictionary, "hwaccel", "cuda", 1) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "cuda acceleration error\n");
-        } */
+        }
 
         // 使用 cuvid
         av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel : cuvid \n");
@@ -447,11 +447,11 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
         }
 
         // 使用 opencl
-        /*av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel : opencl \n");
+        av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> hwaccel : opencl \n");
         if (av_dict_set(dictionary, "hwaccel", "opencl", 1) < 0)
         {
             av_log(NULL, AV_LOG_ERROR, "opencl acceleration error\n");
-        }*/
+        }
     }
 }
 
@@ -470,10 +470,6 @@ void frame_data_deep_copy(FrameData *data, FrameData *dist_data)
     {
         av_log(NULL, AV_LOG_DEBUG, "frame_data_deep_copy --> clone data->frame \n");
         dist_data->frame = av_frame_clone(data->frame);
-        // av_log(NULL, AV_LOG_DEBUG, "frame_data_deep_copy --> copy data->frame \n");
-        // av_frame_copy(dist_data->frame, data->frame);
-        // av_log(NULL, AV_LOG_DEBUG, "frame_data_deep_copy --> copy data->frame finish \n");
-        // break;
     }
     if (data->file_size > 0 && data->file_data != NULL && data->file_data)
     {
