@@ -51,6 +51,8 @@ typedef struct Video2ImageStream
     int ret;
     char *error_message;
     int frame_rate;
+
+    bool multiThread;
     bool init;
     bool release;
 
@@ -61,6 +63,7 @@ typedef struct Video2ImageStream
 
 typedef struct FrameData
 {
+    void *env;
     Video2ImageStream *vis;
 
     AVFrame *frame;
@@ -78,8 +81,6 @@ typedef struct FrameData
     bool abort;
 
     int chose_frames;
-
-    void *func;
 } FrameData;
 
 time_t get_now_microseconds();
@@ -104,7 +105,7 @@ void copy_frame_data_and_transform_2_jpeg(const AVCodecContext *codec_context, F
  **/
 void copy_frame_raw_data(const AVCodecContext *codec_context, FrameData *result);
 
-void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, const int64_t timeout, const bool use_gpu, const bool use_tcp);
+void open_input_dictionary_set(AVDictionary **dictionary, bool nobuffer, int64_t timeout, bool use_gpu, bool use_tcp);
 
 void frame_data_deep_copy(FrameData *data, FrameData *dist_data);
 

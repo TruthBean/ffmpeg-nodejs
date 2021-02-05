@@ -18,13 +18,23 @@ typedef struct AsyncWorkInfo
 
 typedef struct ReadImageBufferParams
 {
+    // init
+    char *filename;
+    bool nobuffer;
+    int64_t timeout;
+    bool use_gpu;
+    bool use_tcp;
+    char *gpu_id;
+
+    // grab image
     int chose_frames;
     int type;
     int quality;
+
+    // callback
     Video2ImageStream *vis;
     napi_ref ref;
     napi_async_work work;
-    napi_threadsafe_function func;
 } ReadImageBufferParams;
 
 #endif // FFMPEG_NODEJS_H

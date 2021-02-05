@@ -8,12 +8,12 @@
  * 
  * @param vis @see Video2ImageStream
  **/
-void open_inputfile(Video2ImageStream *result, const char *filename, const bool nobuffer, const int64_t timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id)
+void open_inputfile(Video2ImageStream *result, const char *filename, bool nobuffer, int64_t timeout, bool use_gpu, bool use_tcp, const char *gpu_id)
 {
-    uint64_t visPointer = (uint64_t)result;
+    int64_t visPointer = (int64_t)result;
     av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> start time: %li\n", visPointer, get_now_microseconds());
 
-    int video_stream_idx = -1;
+    int video_stream_idx;
 
     int ret;
 
@@ -67,6 +67,7 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
     av_dict_free(&dictionary);
     result->format_context->max_delay = 1;
 
+    av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avformat_find_stream_info \n", visPointer);
     if (avformat_find_stream_info(result->format_context, NULL) < 0)
     {
         av_log(NULL, AV_LOG_ERROR, "[%ld] Cannot find stream information\n", visPointer);
@@ -76,6 +77,7 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
         return;
     }
 
+    av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> av_find_best_stream \n", visPointer);
     video_stream_idx = av_find_best_stream(result->format_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     if (video_stream_idx < 0)
     {
@@ -94,29 +96,43 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
     av_dict_set(&opts, "refcounted_frames", "1", 0);
     enum AVCodecID codec_id = result->video_stream->codecpar->codec_id;
     // 判断摄像头视频格式是h264还是h265
-    if (use_gpu && codec_id == AV_CODEC_ID_H264)
+    if (codec_id == AV_CODEC_ID_H264)
     {
-        codec = avcodec_find_decoder_by_name("h264_cuvid");
-        // GPU to be used for decoding
-        av_dict_set(&opts, "gpu", gpu_id, 0);
+        if (use_gpu)
+        {
+            av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avcodec_find_decoder_by_name h264_cuvid \n", visPointer);
+            codec = avcodec_find_decoder_by_name("h264_cuvid");
+            // GPU to be used for decoding
+            av_dict_set(&opts, "gpu", gpu_id, 0);
+        }
+        else
+        {
+            av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avcodec_find_decoder_by_name h264 \n", visPointer);
+            codec = avcodec_find_decoder_by_name("h264");
+        }
     }
     else if (codec_id == AV_CODEC_ID_HEVC)
     {
         if (use_gpu)
         {
+            av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avcodec_find_decoder_by_name hevc_nvenc \n", visPointer);
             codec = avcodec_find_decoder_by_name("hevc_nvenc");
             // GPU to be used for decoding
             av_dict_set(&opts, "gpu", gpu_id, 0);
         }
         else
         {
+            av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avcodec_find_decoder_by_name hevc \n", visPointer);
             codec = avcodec_find_decoder_by_name("hevc");
         }
         // force low delay
         av_dict_set(&opts, "flags", "low_delay", 0);
     }
     if (codec == NULL)
+    {
+        av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avcodec_find_decoder \n", visPointer);
         codec = avcodec_find_decoder(result->video_stream->codecpar->codec_id);
+    }
     if (!codec)
     {
         av_log(NULL, AV_LOG_ERROR, "[%ld] Failed to find %s codec\n", visPointer, av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
@@ -130,6 +146,7 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
     int input_frame_rate = result->video_stream->r_frame_rate.num / result->video_stream->r_frame_rate.den;
     av_log(NULL, AV_LOG_DEBUG, "[%ld] input video frame rate: %d\n", visPointer, input_frame_rate);
 
+    av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> av_parser_init \n", visPointer);
     AVCodecParserContext *parser_context = av_parser_init(codec->id);
     if (!parser_context)
     {
@@ -140,6 +157,7 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
         return;
     }
 
+    av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avcodec_alloc_context3 \n", visPointer);
     result->video_codec_context = avcodec_alloc_context3(codec);
     if (!result->video_codec_context)
     {
@@ -151,6 +169,7 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
         return;
     }
 
+    av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avcodec_parameters_to_context \n", visPointer);
     if ((ret = avcodec_parameters_to_context(result->video_codec_context, result->video_stream->codecpar)) < 0)
     {
         av_log(NULL, AV_LOG_ERROR, "[%ld] Failed to copy %s codec parameters to decoder context\n", visPointer,
@@ -161,6 +180,7 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
         return;
     }
 
+    av_log(NULL, AV_LOG_DEBUG, "[%ld] open_inputfile --> avcodec_open2 \n", visPointer);
     if (avcodec_open2(result->video_codec_context, codec, &opts) < 0)
     {
         av_log(NULL, AV_LOG_WARNING, "[%ld] Failed to open %s codec\n", visPointer, av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
@@ -187,7 +207,10 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
             return;
         }
 
-        avcodec_free_context(&(result->video_codec_context));
+        if (&(result->video_codec_context) && result->video_codec_context)
+        {
+            avcodec_free_context(&(result->video_codec_context));
+        }
         result->video_codec_context = avcodec_alloc_context3(codec);
         if (!result->video_codec_context)
         {
@@ -240,23 +263,21 @@ void open_inputfile(Video2ImageStream *result, const char *filename, const bool 
  */
 void release(Video2ImageStream *vis)
 {
-    av_log(NULL, AV_LOG_DEBUG, "begin release \n");
-    if (vis == NULL || !vis)
+    if (vis == NULL || !vis || vis->release)
     {
         return;
     }
+    av_log(NULL, AV_LOG_DEBUG, "begin release \n");
     vis->release = true;
-    uint64_t visPointer = (uint64_t)vis;
+    int64_t visPointer = (int64_t)vis;
     av_log(NULL, AV_LOG_DEBUG, "[%ld] release ... \n", visPointer);
 
     AVCodecContext *video_codec_context = vis->video_codec_context;
     AVFormatContext *format_context = vis->format_context;
     bool init = vis->init;
 
-
     vis->release = true;
     av_usleep(1);
-    // frame_time_out.status = END;
     av_log(NULL, AV_LOG_DEBUG, "[%ld] ---> 3 ---> free memory\n", visPointer);
 
     int ret;
@@ -278,8 +299,8 @@ void release(Video2ImageStream *vis)
     if (format_context != NULL && format_context)
     {
         av_log(NULL, AV_LOG_DEBUG, "[%ld] avformat_close_input ... \n", visPointer);
-        avformat_close_input(&format_context);
-        avformat_free_context(format_context);
+        // avformat_close_input(&format_context);
+        // avformat_free_context(format_context);
         format_context = NULL;
     }
 
@@ -326,14 +347,19 @@ static void __close(AVFrame *frame, AVPacket *packet)
 void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type,
                        Video2ImagesCallback callback, FrameData *result)
 {
-    if (vis == NULL)
+    if (vis == NULL || vis->ret < 0)
     {
         av_log(NULL, AV_LOG_ERROR, "Video is closed or not open\n");
         result->ret = -2;
         result->error_message = "Video is closed or not open";
+        result->abort = true;
+        if (callback != NULL)
+        {
+            callback(result);
+        }
         return;
     }
-    uint64_t visPointer = (uint64_t)vis;
+    int64_t visPointer = (int64_t)vis;
 
     int pts = 0;
     int hadHasFrames = false;
@@ -346,6 +372,11 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
         av_log(NULL, AV_LOG_ERROR, "[%ld] Could not allocate image frame\n", visPointer);
         result->ret = -11;
         result->error_message = "Could not allocate image frame";
+        result->abort = true;
+        if (callback != NULL)
+        {
+            callback(result);
+        }
         return;
     }
 
@@ -355,6 +386,11 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
         av_log(NULL, AV_LOG_ERROR, "[%ld] Couldn't alloc packet\n", visPointer);
         result->ret = -12;
         result->error_message = "Couldn't alloc packet";
+        result->abort = true;
+        if (callback != NULL)
+        {
+            callback(result);
+        }
         __close(frame, orig_pkt);
         return;
     }
@@ -373,12 +409,17 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
     {
         if (vis->release)
         {
+            result->abort = true;
             __close(frame, orig_pkt);
             av_log(NULL, AV_LOG_DEBUG, "[%ld] video2images_grab --> isBreak \n", visPointer);
+            if (callback != NULL)
+            {
+                callback(result);
+            }
             return;
         }
 
-        // av_usleep(0);
+        av_usleep(0);
         if (err_time > 10)
         {
             av_log(NULL, AV_LOG_DEBUG, "[%ld] video2images_grab --> err_time > 10 \n", visPointer);
@@ -387,7 +428,12 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
 
         if (vis == NULL || !vis || vis->format_context == NULL || !vis->format_context || orig_pkt == NULL || !orig_pkt)
         {
+            result->abort = true;
             av_log(NULL, AV_LOG_DEBUG, "[%ld] video2images_grab --> vis is null, or vis->format_context is null \n", visPointer);
+            if (callback != NULL)
+            {
+                callback(result);
+            }
             __close(frame, orig_pkt);
             return;
         }
@@ -395,7 +441,7 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
         {
             /* read frames from the file */
             av_log(NULL, AV_LOG_DEBUG, "[%ld] begin av_read_frame time: %li\n", visPointer, get_now_microseconds());
-            int ret = av_read_frame(vis->format_context, orig_pkt);
+            ret = av_read_frame(vis->format_context, orig_pkt);
             if (ret < 0)
             {
                 av_log(NULL, AV_LOG_DEBUG, "[%ld] av_read_frame error. \n", visPointer);
@@ -406,6 +452,7 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
         if (vis->release)
         {
             av_log(NULL, AV_LOG_DEBUG, "[%ld] video2images_grab --> isBreak... \n", visPointer);
+            result->abort = true;
             __close(frame, orig_pkt);
             return;
         }
@@ -426,6 +473,11 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
                 av_log(NULL, AV_LOG_ERROR, "[%ld] error: video stream is null\n", visPointer);
                 result->ret = -13;
                 result->error_message = "video stream is null";
+                result->abort = true;
+                if (callback != NULL)
+                {
+                    callback(result);
+                }
                 __close(frame, orig_pkt);
                 return;
             }
@@ -442,6 +494,11 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
             av_log(NULL, AV_LOG_DEBUG, "[%ld] end avcodec_send_packet time: %li\n", visPointer, get_now_microseconds());
             if (vis->release)
             {
+                result->abort = true;
+                if (callback != NULL)
+                {
+                    callback(result);
+                }
                 __close(frame, orig_pkt);
                 return;
             }
@@ -467,6 +524,11 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
                 __close(frame, orig_pkt);
                 result->ret = -14;
                 result->error_message = "Error while sending a packet to the decoder";
+                result->abort = true;
+                if (callback != NULL)
+                {
+                    callback(result);
+                }
                 return;
             }
 
@@ -495,6 +557,11 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
                 __close(frame, orig_pkt);
                 result->ret = -15;
                 result->error_message = "Error while receive frame from a packet";
+                result->abort = true;
+                if (callback != NULL)
+                {
+                    callback(result);
+                }
                 return;
             }
 
@@ -524,6 +591,8 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
                     }
                 }
                 av_log(NULL, AV_LOG_DEBUG, "[%ld] frame ....................\n", visPointer);
+                pts_time = 0;
+                pts = 0;
             }
             av_usleep(0);
         }
@@ -539,4 +608,10 @@ void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bo
     }
 
     __close(frame, orig_pkt);
+
+    result->abort = true;
+    if (callback != NULL)
+    {
+        callback(result);
+    }
 }

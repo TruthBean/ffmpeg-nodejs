@@ -50,6 +50,14 @@ npm install (or npm run compile or yarn build)
 ```
 If you want more command, please see package.json scripts, and do not use cmake or make directly, because it not a pure c project, it is a NODEJS project.
 
+Or using cmake:
+````shell
+cmake "/mnt/z/U/DevOps/javascript/ffmpeg-nodejs" --no-warn-unused-cli -G"Unix Makefiles" -DCMAKE_JS_VERSION="6.1.0" \
+-DCMAKE_BUILD_TYPE="Release" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="/mnt/z/U/DevOps/javascript/ffmpeg-nodejs/build/Release" \
+-DCMAKE_JS_INC="/home/truthbean/.cmake-js/node-x64/v12.20.1/include/node" -DCMAKE_JS_SRC="" -DNODE_RUNTIME="node" \
+-DNODE_RUNTIMEVERSION="12.20.1" -DNODE_ARCH="x64" \
+-DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/clang -DCMAKE_C_COMPILER:FILEPATH=/usr/bin/clang -DCMAKE_BUILD_TYPE:STRING=RELEASE
+````
 ### note
 windows not support c11 yet, so don't use it on windows!
 

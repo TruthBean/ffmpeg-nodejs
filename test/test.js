@@ -59,7 +59,7 @@ async function testSyncReadImageBuffer() {
 }
 
 function testAsyncReadImageBuffer() {
-    let ffmpegNode = FFmpegNode.init(video_addr, 10, true, true, level.INFO, 0, true);
+    let ffmpegNode = FFmpegNode.init(video_addr, 10, true, true, level.DEBUG, 0, true);
     ffmpegNode.then((obj) => {
         obj.readImageStream(100, target_type, 10);
         obj.on("data", (buffer) => {
@@ -121,6 +121,35 @@ function testAsyncReadImageBufferThreadly() {
     }).catch(error => {
         console.log("init error.....");
         console.error(error);
+    });
+}
+
+function testAsyncGrabImageMultithreadedly() {
+    let ffmpegNode = FFmpegNode.asyncGrabImageMultithreadedly({url: video_addr, timeout: 10, nobuffer: true, useGpu: true, level: level.DEBUG, gpuId: 0, useTcp: true, quality: 80, type: target_type, frames: 1});
+
+    ffmpegNode.on("data", (buffer) => {
+        console.info(buffer);
+        let begin = new Date();
+        // 模拟延迟300ms
+        // for (var start = Date.now(); Date.now() - start <= 300;) { }
+        let t1 = new Date();
+        console.info(t1.getTime() - begin.getTime());
+        begin = new Date();
+        let name = dir + "/tmp/images/buffer-" + t1.getHours() + "-" + t1.getMinutes() + "-" + t1.getSeconds() + "-" + (i++) + suffix;
+        console.info(name);
+        fs.writeFileSync(name, buffer);
+        console.info("====================================");
+        // fs.rmdirSync(name, { recursive: true });
+        if (t1.getSeconds() % 50 === 0) {
+            obj.close();
+            return;
+        }
+        // console.info(t1.getSeconds(), i++);
+    });
+    ffmpegNode.on("error", (error) => {
+        console.log("on data error............");
+        console.error(error);
+        obj.close();
     });
 }
 
@@ -219,8 +248,11 @@ let videoFilePath = dir + "/tmp/videos/buffers.flv";
 
 // testSyncReadImageBuffer();
 // testAsyncReadImageBuffer();
-testAsyncReadImageBufferThreadly();
-testAsyncReadImageBufferThreadly();
+// testAsyncReadImageBufferThreadly();
+testAsyncGrabImageMultithreadedly();
+testAsyncGrabImageMultithreadedly();
+testAsyncGrabImageMultithreadedly();
+testAsyncGrabImageMultithreadedly();
 // runWithCallback();
 // testReadImageStreamThreadly();
 

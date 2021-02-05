@@ -4,16 +4,17 @@ const ffmpeg_nodejs = require("./build/Release/ffmpeg_nodejs");
 const JPEG = "jpeg", YUV = "yuv", RGB = "rgb";
 const INFO = 3, DEBUG = 2, ERROR = 1;
 const HLS = 0, MPEGTS = 1, FLV = 2, MP4 = 3, RAW = 4;
+
 class FFmpegNode extends EventEmitter {
 
     libraryId = 0;
 
     /**
      * init
-     * @param {String} url 
+     * @param {String} url
+     * @param {number} timeout
      * @param {boolean} nobuffer
      * @param {boolean} useGpu
-     * @param {number} timeout
      * @param {number} level
      * @param {number} gpuId
      * @param {boolean} useTcp
@@ -56,22 +57,24 @@ class FFmpegNode extends EventEmitter {
 
         self.destroy = false;
         return new Promise((resolve, reject) => {
-            ffmpeg_nodejs.initReadingVideo(self.url, timeout, nobuffer, useGpu, level, gpuId.toString(), useGpu, useTcp).then((pointer) => {
-                self.libraryId = pointer;
-                console.info("library pointer: " + pointer);
-                resolve(self);
-            }).catch((err) => {
-                self.destroy = true;
-                reject(err);
-            });
+            ffmpeg_nodejs.initReadingVideo(self.url, timeout, nobuffer, useGpu, level, gpuId.toString(), useTcp)
+                .then((pointer) => {
+                    self.libraryId = pointer;
+                    console.info("library pointer: " + pointer);
+                    resolve(self);
+                })
+                .catch((err) => {
+                    self.destroy = true;
+                    reject(err);
+                });
         });
     }
 
     /**
      * record video
-     * @param {string} url 
-     * @param {string} filename 
-     * @param {number} recordSeconds 
+     * @param {string} url
+     * @param {string} filename
+     * @param {number} recordSeconds
      * @param {boolean} useGpu
      * @param {number} level
      * @param {number} type
@@ -92,7 +95,7 @@ class FFmpegNode extends EventEmitter {
             level = INFO;
         if (typeof type !== "number")
             type = OTHER;
-        ffmpeg_nodejs.recordVideo(libraryId, url, filename, recordSeconds, useGpu, level, type);
+        ffmpeg_nodejs.recordVideo(url, filename, recordSeconds, useGpu, level, type);
     }
 
     /**
@@ -225,6 +228,94 @@ class FFmpegNode extends EventEmitter {
                 }
             });
         }
+    }
+
+    /**
+     * init
+     * @param {String} url
+     * @param {number} timeout
+     * @param {boolean} nobuffer
+     * @param {boolean} useGpu
+     * @param {number} level
+     * @param {number} gpuId
+     * @param {boolean} useTcp
+     * @param {number} quality: jpeg quality
+     * @param {string} type: rgb, yuv or jpeg
+     * @param {number} frames: chose frames per second, default 1
+     * @return {FFmpegNode}
+     */
+    static asyncGrabImageMultithreadedly({url, timeout = 5, nobuffer = false, useGpu = false,
+                                             level = this.LEVEL().INFO, gpuId = 0, useTcp = true,
+                                             quality = 100, type = this.TYPE().JPEG, frames = 1}) {
+        let self = new FFmpegNode();
+
+        if (typeof url !== "string")
+            throw new Error("url must be string type");
+        self.url = url;
+
+        if (typeof timeout !== "number")
+            throw new Error("timeout must be number");
+
+        if (typeof nobuffer !== "boolean") {
+            console.error("nobuffer must be boolean type, it turn to default false");
+            nobuffer = false;
+        }
+
+        if (typeof useGpu !== "boolean") {
+            console.error("useGpu must be boolean type, it turn to default false");
+            useGpu = false;
+        }
+
+        if (typeof level !== "number") {
+            console.error("level must be number type, it turn to default INFO");
+            level = INFO;
+        }
+
+        if (typeof gpuId !== "number") {
+            console.error("gpuId must be number type, it turn to default 0");
+            gpuId = 0;
+        }
+
+        if (typeof useTcp !== "boolean") {
+            console.error("useTcp must be boolean type, it turn to default false");
+            useTcp = false;
+        }
+
+        self.destroy = false;
+        if (!this.destroy) {
+            if (typeof frames !== "number" || frames <= 0) frames = 1;
+            if (type !== RGB && type !== YUV && type !== JPEG) type = "rgb";
+
+            if (typeof quality !== "number") quality = 80;
+            else if (quality <= 0) quality = 80;
+            else if (quality >= 100) quality = 100;
+
+            let typeNo = 0;
+            if (type === YUV) typeNo = 0;
+            else if (type === RGB) typeNo = 1;
+            else if (type === JPEG) typeNo = 2;
+            ffmpeg_nodejs.asyncGrabImageMultithreadedly(self.url, timeout, nobuffer, useGpu, level, gpuId.toString(),
+                useTcp, typeNo, quality, frames, (obj) => {
+                    console.info(obj);
+                    if (obj !== undefined && obj !== null) {
+                        if (obj.error !== undefined && obj.error !== null) {
+                            console.info(obj.error);
+                            self.emit("error", obj.error);
+                        }
+                        if (obj.libraryId !== undefined && obj.libraryId != null) {
+                            console.info(obj.libraryId);
+                            self.libraryId = obj.libraryId;
+                        }
+                        if (obj.data !== undefined && obj.data !== null) {
+                            console.info(obj.data);
+                            self.emit("data", obj.data);
+                        }
+                    }
+                });
+        } else {
+            self.emit("error", "FfmpegNodejs is closed.");
+        }
+        return self;
     }
 
     /**

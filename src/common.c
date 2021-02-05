@@ -69,7 +69,7 @@ void jpeg_write_mem(uint8_t *raw_data, int quality, unsigned int width, unsigned
     jpeg_start_compress(&jpeg_struct, TRUE);
 
     // 一行数据所占字节数:如果图片为RGB，这个值要*3.灰度图像不用
-    int row_stride = width * 3;
+    unsigned int row_stride = width * 3;
     JSAMPROW row_pointer[1];
     while (jpeg_struct.next_scanline < height)
     {
@@ -191,7 +191,6 @@ void copy_frame_raw_data(const AVCodecContext *codec_context, FrameData *result)
         free(target_frame);
     }
     target_frame = NULL;
-    return;
 }
 
 /**
@@ -301,10 +300,7 @@ void copy_frame_data_and_transform_2_jpeg(const AVCodecContext *codec_context, F
     // 释放内存
     av_freep(&images_dst_data[0]);
     av_free(images_dst_data[0]);
-    if (images_dst_data)
-    {
-        free(*images_dst_data);
-    }
+    free(*images_dst_data);
     images_dst_data[0] = NULL;
     *images_dst_data = NULL;
 
@@ -316,14 +312,12 @@ void copy_frame_data_and_transform_2_jpeg(const AVCodecContext *codec_context, F
     av_frame_unref(target_frame);
     av_frame_free(&target_frame);
     target_frame = NULL;
-
-    return;
 }
 
 // av_dict_set 参数在 libavcodec/options_table.h libavformat/options_table.h
 void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, const int64_t timeout, const bool use_gpu, const bool use_tcp)
 {
-    const int64_t stimeout = timeout * 1000;
+    const int64_t stimeout = timeout * 1000 * 1000;
     // av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> timeout : %ld \n", stimeout);
     // set maximum timeout (in seconds) to wait for incoming connections (-1 is infinite, imply flag listen)
     // av_dict_set_int(dictionary, "timeout", stimeout, 0);
@@ -331,7 +325,7 @@ void open_input_dictionary_set(AVDictionary **dictionary, const bool nobuffer, c
     // set timeout (in microseconds) of socket TCP I/O operations
     // // 单位 微秒
     // char str[12];
-    // sprintf(str, "%d", timeout * 1000000);
+    // sprintf(str, "%d", stimeout);
     av_log(NULL, AV_LOG_DEBUG, "open_input_dictionary_set --> stimeout : %ld \n", stimeout);
     // 当av_read_frame由于视频流断开而阻塞的时候，超时 timeout 秒后会断开连接;
     // av_dict_set(dictionary, "stimeout", str, 0);

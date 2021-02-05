@@ -32,7 +32,7 @@ typedef struct FrameTimeOut
 
 typedef void(Video2ImagesCallback)(FrameData *data);
 
-void open_inputfile(Video2ImageStream *vis, const char *filename, const bool nobuffer, const int64_t timeout, const bool use_gpu, const bool use_tcp, const char *gpu_id);
+void open_inputfile(Video2ImageStream *vis, const char *filename, bool nobuffer, int64_t timeout, bool use_gpu, bool use_tcp, const char *gpu_id);
 
 void video2images_grab(Video2ImageStream *vis, int quality, int chose_frames, bool chose_now, enum ImageStreamType type, Video2ImagesCallback callback, FrameData *result);
 
