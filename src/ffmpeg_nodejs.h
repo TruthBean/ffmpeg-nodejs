@@ -9,13 +9,6 @@
 #include "./video2images.c"
 #include "./record_video.c"
 
-typedef struct AsyncWorkInfo
-{
-    napi_ref ref;
-    napi_async_work work;
-    napi_threadsafe_function func;
-} AsyncWorkInfo; //async_work_info = {NULL, NULL};
-
 typedef struct ReadImageBufferParams
 {
     // init

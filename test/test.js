@@ -141,7 +141,7 @@ function testAsyncGrabImageMultithreadedly() {
         console.info("====================================");
         // fs.rmdirSync(name, { recursive: true });
         if (t1.getSeconds() % 50 === 0) {
-            obj.close();
+            ffmpegNode.close();
             return;
         }
         // console.info(t1.getSeconds(), i++);
@@ -149,7 +149,7 @@ function testAsyncGrabImageMultithreadedly() {
     ffmpegNode.on("error", (error) => {
         console.log("on data error............");
         console.error(error);
-        obj.close();
+        ffmpegNode.close();
     });
 }
 
@@ -250,9 +250,9 @@ let videoFilePath = dir + "/tmp/videos/buffers.flv";
 // testAsyncReadImageBuffer();
 // testAsyncReadImageBufferThreadly();
 testAsyncGrabImageMultithreadedly();
-testAsyncGrabImageMultithreadedly();
-testAsyncGrabImageMultithreadedly();
-testAsyncGrabImageMultithreadedly();
+// testAsyncGrabImageMultithreadedly();
+// testAsyncGrabImageMultithreadedly();
+// testAsyncGrabImageMultithreadedly();
 // runWithCallback();
 // testReadImageStreamThreadly();
 

@@ -14,8 +14,8 @@ v13.x   v13.0.0     v13.0.0     v13.0.0     v13.0.0     v13.0.0
 v14.x   v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0     v14.0.0
 */
 #define NAPI_VERSION 6
-#include <node/js_native_api.h>
-#include <node/node_api.h>
+#include <js_native_api.h>
+#include <node_api.h>
 
 #ifndef __USE_UNIX98
 #define __USE_UNIX98

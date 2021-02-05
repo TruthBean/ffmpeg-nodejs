@@ -296,18 +296,15 @@ class FFmpegNode extends EventEmitter {
             else if (type === JPEG) typeNo = 2;
             ffmpeg_nodejs.asyncGrabImageMultithreadedly(self.url, timeout, nobuffer, useGpu, level, gpuId.toString(),
                 useTcp, typeNo, quality, frames, (obj) => {
-                    console.info(obj);
                     if (obj !== undefined && obj !== null) {
                         if (obj.error !== undefined && obj.error !== null) {
-                            console.info(obj.error);
+                            console.warn(obj.error);
                             self.emit("error", obj.error);
                         }
                         if (obj.libraryId !== undefined && obj.libraryId != null) {
-                            console.info(obj.libraryId);
                             self.libraryId = obj.libraryId;
                         }
                         if (obj.data !== undefined && obj.data !== null) {
-                            console.info(obj.data);
                             self.emit("data", obj.data);
                         }
                     }
